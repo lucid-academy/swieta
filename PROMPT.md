@@ -50,19 +50,31 @@ znaków i spacji. Tym samym skryptem obrabiaj grafikę mapy.
 
 Przypisz każdemu wydarzeniu jedną kategorię (muzyka, warsztaty, dzieci i rodziny, jedzenie, sztuka, sąsiedzkie) i dowolną liczbę tagów (pod dachem, z psem, dla dzieci, zapisy, przy jedzeniu, dla seniorów). Przypisania oprzyj na treści opisów, nie na domysłach — przy wątpliwych pokaż mi listę do zatwierdzenia. Kategoria steruje kolorem pinu, tagi filtrami. 
 
-ETAP 2 — KALIBRACJA
-Mapa to stylizowana grafika rastrowa (img/mapa-bydgoskie.jpg), nie
-jest geograficznie dokładna. NIE przeliczaj GPS na piksele wzorem —
-wyjdą przekłamania.
+ETAP 2 — MAPA Z DANYCH RZECZYWISTYCH
+Mapa NIE jest generowaną grafiką. Rysujemy ją jako SVG z prawdziwej
+geometrii OpenStreetMap, żeby przebieg ulic zgadzał się z rzeczywistością
+— mieszkańcy dzielnicy muszą rozpoznać swoje ulice.
 
-Napisz tools/kalibracja.html: wczytuje grafikę i listę lokalizacji
-z danych, pokazuje którą lokalizację ustawiam, po kliknięciu na mapie
-zapisuje pozycję jako procent szerokości i wysokości, pozwala poprawić
-już ustawione, na końcu eksportuje JSON do wklejenia w dane.
-Pozycje w procentach, nigdy w pikselach.
+Pobierz z Overpass API wycinek obejmujący wszystkie lokalizacje
+z etapu 1, z zapasem: ulice z hierarchią (główne / boczne / pieszo),
+park, zbiornik wodny (Martówka), obrysy większych budynków publicznych.
+Zapisz do repo jako dane/mapa-bydgoskie.js — pobieramy raz,
+strona ma działać bez internetu.
 
-GPS zostaje w danych obok pozycji na mapie — potrzebny do nawigacji
-i liczenia czasu przejścia.
+Wyrenderuj jako SVG, obrócone o 90° w prawo (dłuższa oś pionowo).
+Stylizacja w CSS, nie w danych: kremowe tło z fakturą papieru, ciepła
+stonowana paleta, zróżnicowane grubości linii wg hierarchii ulic,
+przygaszona zieleń parku, czytelny błękit wody. Ma wyglądać jak
+secesyjna mapa, ale mieć prawdziwą geometrię.
+
+Skoro geometria jest rzeczywista, pozycje pinów przeliczaj wprost
+ze współrzędnych GPS. Kalibracja ręczna niepotrzebna — pomiń
+tools/kalibracja.html.
+
+Przesuwanie i zoom przez transformację na całym SVG. Nazwy ulic
+pojawiają się dopiero przy większym powiększeniu.
+
+Róża wiatrów i skala rysowane w SVG. W stopce atrybucja OpenStreetMap.
 
 ETAP 3 — INTERFEJS
 1. Mapa: grafika + piny w HTML/CSS na wierzchu. Wszystkie etykiety
