@@ -47,9 +47,15 @@ Zdjęcia w zrodla/zdjecia/ nazwane zgodnie z odwołaniami w programie
 (biblio1-3, hub1-2, mariani1-3, pchli1-3, pies1-3, sztuki1-3,
 obiad1-3, spacer1-3). Napisz tools/zdjecia.js — dłuższy bok 1200 px,
 jakość ~80, miniatury 400 px, wynik do img/, nazwy bez polskich
-znaków i spacji. Tym samym skryptem obrabiaj grafikę mapy.
+znaków i spacji. Tym samym skryptem obrabiaj ozdobną grafikę nagłówka.
 
-Przypisz każdemu wydarzeniu jedną kategorię (muzyka, warsztaty, dzieci i rodziny, jedzenie, sztuka, sąsiedzkie) i dowolną liczbę tagów (pod dachem, z psem, dla dzieci, zapisy, przy jedzeniu, dla seniorów). Przypisania oprzyj na treści opisów, nie na domysłach — przy wątpliwych pokaż mi listę do zatwierdzenia. Kategoria steruje kolorem pinu, tagi filtrami. 
+Przypisz każdemu wydarzeniu jedną kategorię (muzyka, warsztaty,
+dzieci i rodziny, jedzenie, sztuka, sąsiedzkie) i dowolną liczbę
+tagów. Tagi wynikają z treści opisów, nie z listy ustalonej z góry —
+zestaw na dziś to: na dworze, weź udział, kawa i jedzenie, dla dzieci.
+Brak tagu znaczy „nie wiemy", nie „nie dotyczy". Przy wątpliwych
+pokaż mi listę do zatwierdzenia. Kategoria steruje kolorem pinu,
+tagi filtrami.
 
 ETAP 2 — MAPA Z DANYCH RZECZYWISTYCH
 Mapa NIE jest generowaną grafiką. Rysujemy ją jako SVG z prawdziwej
@@ -83,7 +89,8 @@ ETAP 3 — INTERFEJS
    ekranu. Nazwy ulic są częścią SVG, bo muszą jechać z geometrią.
    Na ozdobnej grafice nagłówka nie ma i nie będzie żadnego tekstu.
    Piny klimatyczne, w stylu mapy, z numerem lub ikoną kategorii.
-   Pole kliknięcia min. 44 px. Zoom i przesuwanie palcem.
+   Pole kliknięcia min. 44 px. Warstwa pinów jedzie tą samą
+   transformacją co SVG (zoom i przesuwanie opisane w etapie 2).
 2. Panel wydarzenia: tytuł, godziny, miejsce, opis, zdjęcia
    (miniatura → pełna po kliknięciu), linki zewnętrzne, przycisk
    "prowadź mnie" otwierający nawigację po GPS.
@@ -94,7 +101,8 @@ ETAP 3 — INTERFEJS
    podzielone przez 80 m/min. Ostrzegaj, gdy przejście nie mieści
    się między końcem jednego a początkiem drugiego wydarzenia.
 4. Trasa na mapie: łagodny łuk linią kreskowaną, nie prosta.
-   Kolejność chronologiczna, nie po odległości.
+   Rysowana w SVG, razem z geometrią — inaczej rozjedzie się
+   z ulicami przy zoomie. Kolejność chronologiczna, nie po odległości.
 5. [PUNKT DOJDZIE PÓŹNIEJ — mechanika angażująca. Zostaw na to
    miejsce w strukturze danych i w interfejsie, nie projektuj
    pod komplet funkcji, którego nie znasz.]
@@ -104,11 +112,14 @@ ETAP 3 — INTERFEJS
 ZASADY
 - Mobile first. Ludzie otwierają to jedną ręką, w tłumie, na słabym
   zasięgu, w sierpniowym słońcu. Waga strony i kontrast mają
-  znaczenie. Zdjęcia ładowane leniwie.
+  znaczenie. Zdjęcia ładowane leniwie. Wyjątek: wierność geometrii
+  mapy jest ważniejsza niż jej waga — przy sporze pokaż warianty
+  z wagami i zapytaj.
 - Silnik niezależny od święta. Drugie święto (Chełmińskie
-  Przedmieście) to podmiana pliku z danymi, grafiki i kalibracji —
-  nie nowy projekt. Nazwa, daty, kolory, kategorie i punkty
-  siedzą w danych, nie w kodzie.
+  Przedmieście) to podmiana pliku z danymi i nowe pobranie geometrii
+  z Overpass dla tamtej dzielnicy — nie nowy projekt. Renderer musi
+  wczytać dowolny wycinek OSM, nie tylko ten. Nazwa, daty, kolory,
+  kategorie i punkty siedzą w danych, nie w kodzie.
 - Kierunek wizualny zaproponuj sam, pod sąsiedzkie święto dzielnicy
   i pod klimat mapy. Moja domyślna paleta z lab (ciemny cyberpunk,
   #7B2FFF / #22D3EE) tutaj nie pasuje. Fonty systemowe albo
