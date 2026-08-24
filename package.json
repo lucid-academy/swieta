@@ -1,0 +1,13 @@
+{
+  "name": "swieta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interaktywna mapa-przewodnik po świętach dzielnicowych w Toruniu. Zależności dotyczą wyłącznie narzędzi z tools/ — sama strona (index.html) nie używa żadnych bibliotek.",
+  "type": "module",
+  "scripts": {
+    "zdjecia": "node tools/zdjecia.js"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}
