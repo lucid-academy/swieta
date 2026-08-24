@@ -15,7 +15,8 @@ STRUKTURA
   otwarty z dysku i na GitHub Pages.
 - dane/bydgoskie.js — wszystkie treści jako window.DANE = {...}.
   Świadomie .js zamiast .json, żeby działało przez file://.
-- img/ — grafika mapy i przetworzone zdjęcia.
+- dane/mapa-bydgoskie.js — geometria z OSM.
+- img/ — przetworzone zdjęcia i ozdobna grafika nagłówka.
 - zrodla/ — materiały wejściowe, w .gitignore, nie ruszaj zawartości.
 - tools/ — narzędzia pomocnicze.
 
@@ -77,9 +78,11 @@ pojawiają się dopiero przy większym powiększeniu.
 Róża wiatrów i skala rysowane w SVG. W stopce atrybucja OpenStreetMap.
 
 ETAP 3 — INTERFEJS
-1. Mapa: grafika + piny w HTML/CSS na wierzchu. Wszystkie etykiety
-   HTML-em, na grafice nie ma i nie będzie żadnego tekstu. Piny
-   klimatyczne, w stylu mapy, z numerem lub ikoną kategorii.
+1. Mapa: SVG z etapu 2 + piny w HTML/CSS na wierzchu. Piny i etykiety
+   wydarzeń zostają w HTML — mają być klikalne i dostępne dla czytników
+   ekranu. Nazwy ulic są częścią SVG, bo muszą jechać z geometrią.
+   Na ozdobnej grafice nagłówka nie ma i nie będzie żadnego tekstu.
+   Piny klimatyczne, w stylu mapy, z numerem lub ikoną kategorii.
    Pole kliknięcia min. 44 px. Zoom i przesuwanie palcem.
 2. Panel wydarzenia: tytuł, godziny, miejsce, opis, zdjęcia
    (miniatura → pełna po kliknięciu), linki zewnętrzne, przycisk
