@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>XVII Święto Bydgoskiego Przedmieścia</title>
+<meta name="description" content="Mapa-przewodnik po XVII Święcie Bydgoskiego Przedmieścia w Toruniu, 29–30 sierpnia 2026.">
+<style>
+/* ——————————————————————————————————————————————————————————
+   Paleta: secesyjna mapa dzielnicy. Ciepły papier, brązowy tusz,
+   przygaszona zieleń parku, spokojny błękit Wisły.
+   Cała stylizacja siedzi tutaj — dane niosą wyłącznie geometrię.
+   —————————————————————————————————————————————————————————— */
+:root {
+  --papier:        #F2E7D2;
+  --papier-cien:   #E7D8BC;
+  --tusz:          #4A3B26;
+  --tusz-jasny:    #6B5940;
+  --ulica-glowna:  #7A6244;
+  --ulica-lokalna: #9B8562;
+  --ulica-pieszo:  #B39E77;
+  --park:          #C2CDA8;
+  --park-obrys:    #A9B78C;
+  --woda:          #A3C0D2;
+  --woda-obrys:    #8AAABF;
+  --budynek:       #E0CDA9;
+  --budynek-obrys: #C3A97F;
+  --akcent:        #9C3B2E;
+
+  --szeryf: Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Times New Roman', serif;
+  --bezszeryf: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--papier);
+  color: var(--tusz);
+  font-family: var(--bezszeryf);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: none;
+}
+
+/* ——— nagłówek ——— */
+header {
+  flex: none;
+  padding: .7rem 1rem .6rem;
+  background: var(--papier-cien);
+  border-bottom: 1px solid rgba(74, 59, 38, .18);
+}
+header h1 {
+  margin: 0;
+  font-family: var(--szeryf);
+  font-size: clamp(1.05rem, 4.2vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: .01em;
+  line-height: 1.15;
+}
+header p {
+  margin: .18rem 0 0;
+  font-size: .8rem;
+  color: var(--tusz-jasny);
+}
+
+/* ——— mapa ——— */
+#mapa {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;              /* gesty obsługujemy sami */
+  background-color: var(--papier);
+  /* Faktura papieru: ziarno z filtru SVG w data-URI, więc bez plików zewnętrznych. */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 22% 18%, rgba(255,252,242,.55), transparent 70%),
+    radial-gradient(ellipse 70% 70% at 82% 78%, rgba(176,150,106,.20), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23z)' opacity='0.28'/%3E%3C/svg%3E");
+  background-blend-mode: normal, multiply, multiply;
+}
+
+#plansza { display: block; width: 100%; height: 100%; }
+
+/* Kreski w stałej grubości ekranowej — mapa nie tyje przy przybliżaniu. */
+#plansza path { vector-effect: non-scaling-stroke; }
+
+.zielen   { fill: var(--park);   stroke: var(--park-obrys);   stroke-width: 1; }
+.woda     { fill: var(--woda);   stroke: var(--woda-obrys);   stroke-width: 1; }
+.rzeka    { fill: none;          stroke: var(--woda);         stroke-width: 3; stroke-linecap: round; }
+.budynek  { fill: var(--budynek);stroke: var(--budynek-obrys);stroke-width: .8; }
+
+.pieszo   { fill: none; stroke: var(--ulica-pieszo);  stroke-width: 1;   stroke-dasharray: 3 2.5; stroke-linecap: round; }
+.lokalne  { fill: none; stroke: var(--ulica-lokalna); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.glowne   { fill: none; stroke: var(--ulica-glowna); stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Nazwy ulic wchodzą dopiero przy większym powiększeniu. */
+#nazwy { opacity: 0; transition: opacity .18s ease; pointer-events: none; }
+#nazwy.widoczne { opacity: 1; }
+#nazwy text {
+  font-family: var(--szeryf);
+  font-size: 11px;
+  fill: var(--tusz);
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--papier);
+  stroke-width: 3.5;
+  stroke-linejoin: round;
+}
+
+/* ——— furnitura: róża wiatrów i skala, nieruchome względem ekranu ——— */
+#furnitura { position: absolute; inset: 0; pointer-events: none; }
+#furnitura text { font-family: var(--szeryf); fill: var(--tusz); }
+.roza-linia { stroke: var(--tusz); stroke-width: 1; fill: none; }
+.roza-ramie { fill: var(--tusz); }
+.roza-ramie-jasne { fill: var(--papier); stroke: var(--tusz); stroke-width: .8; }
+.skala-kreska { stroke: var(--tusz); stroke-width: 1.6; fill: none; stroke-linecap: square; }
+
+/* ——— piny (HTML, nie SVG — mają być klikalne i czytelne dla czytnika ekranu) ——— */
+#piny { position: absolute; inset: 0; pointer-events: none; }
+.pin {
+  position: absolute;
+  width: 44px; height: 44px;          /* pole dotyku, nie rozmiar rysunku */
+  margin: -44px 0 0 -22px;            /* czubek pinu w punkcie */
+  border: 0; padding: 0;
+  background: none;
+  pointer-events: auto;
+  cursor: pointer;
+  display: grid; place-items: end center;
+}
+.pin i {
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%;
+  background: var(--kolor, var(--akcent));
+  color: #FFF6E6;
+  font: 600 12px/1 var(--bezszeryf);
+  font-style: normal;
+  box-shadow: 0 1px 0 rgba(0,0,0,.28), 0 2px 6px rgba(74,59,38,.35);
+  border: 1.5px solid rgba(255,246,230,.85);
+  transform: translateY(-6px);
+}
+.pin:focus-visible i { outline: 3px solid var(--tusz); outline-offset: 2px; }
+
+/* ——— stopka ——— */
+footer {
+  flex: none;
+  padding: .45rem 1rem calc(.45rem + env(safe-area-inset-bottom));
+  background: var(--papier-cien);
+  border-top: 1px solid rgba(74, 59, 38, .18);
+  font-size: .68rem;
+  line-height: 1.35;
+  color: var(--tusz-jasny);
+}
+footer a { color: inherit; }
+
+/* ——— sterowanie zoomem ——— */
+#zoom {
+  position: absolute; right: .6rem; bottom: .6rem;
+  display: flex; flex-direction: column; gap: .35rem;
+}
+#zoom button {
+  width: 44px; height: 44px;
+  font: 400 22px/1 var(--szeryf);
+  color: var(--tusz);
+  background: rgba(242,231,210,.92);
+  border: 1px solid rgba(74,59,38,.35);
+  border-radius: 6px;
+  cursor: pointer;
+}
+#zoom button:active { background: var(--papier-cien); }
+
+@media (prefers-reduced-motion: reduce) {
+  #nazwy { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="tytul">Święto dzielnicy</h1>
+  <p id="podtytul"></p>
+</header>
+
+<main id="mapa">
+  <svg id="plansza" role="img" aria-label="Mapa Bydgoskiego Przedmieścia z lokalizacjami wydarzeń">
+    <g id="scena">
+      <g id="w-zielen"></g>
+      <g id="w-woda"></g>
+      <g id="w-budynki"></g>
+      <g id="w-pieszo"></g>
+      <g id="w-lokalne"></g>
+      <g id="w-glowne"></g>
+      <g id="nazwy"></g>
+    </g>
+  </svg>
+  <div id="piny"></div>
+  <svg id="furnitura" aria-hidden="true"></svg>
+  <div id="zoom">
+    <button type="button" id="blizej" aria-label="Przybliż">+</button>
+    <button type="button" id="dalej" aria-label="Oddal">−</button>
+  </div>
+</main>
+
+<footer>
+  <span id="stopka-swieto"></span>
+  Podkład mapowy: dane © autorzy <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, licencja ODbL.
+</footer>
+
+<script src="dane/bydgoskie.js"></script>
+<script src="dane/mapa-bydgoskie.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var DANE = window.DANE, MAPA = window.MAPA;
+  var SVG = 'http://www.w3.org/2000/svg';
+
+  /* ————————————————————————————————————————————————
+     Rzutowanie.
+
+     Dane niosą metry od północno-zachodniego rogu wycinka (x na wschód,
+     y na południe). Dzielnica jest szersza niż wyższa, więc obracamy ją
+     o 90° w prawo — dłuższa oś staje pionowo i mapa wypełnia telefon.
+
+     Obrót o 90° w prawo: (x, y) -> (wysokosc - y, x).
+     ———————————————————————————————————————————————— */
+  var OBROT = true;
+
+  function rzutuj(x, y) {
+    return OBROT ? [MAPA.wysokosc - y, x] : [x, y];
+  }
+  var PLOTNO = OBROT
+    ? { w: MAPA.wysokosc, h: MAPA.szerokosc }
+    : { w: MAPA.szerokosc, h: MAPA.wysokosc };
+
+  /** GPS -> te same metry co geometria. Stąd biorą się pozycje pinów. */
+  function zGps(lat, lng) {
+    var r = MAPA.rzutowanie;
+    return rzutuj(
+      (lng - MAPA.bbox.zachod) * r.metrNaStopien * r.skalaDlugosci,
+      (MAPA.bbox.polnoc - lat) * r.metrNaStopien
+    );
+  }
+
+  /* ———————————————— rysowanie geometrii ———————————————— */
+
+  function doSciezki(plaskie, zamkniety) {
+    var d = '', i;
+    for (i = 0; i < plaskie.length; i += 2) {
+      var p = rzutuj(plaskie[i], plaskie[i + 1]);
+      d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+    }
+    return d + (zamkniety ? 'Z' : '');
+  }
+
+  function warstwa(idWezla, obiekty, klasa, tylkoZamkniete) {
+    var kawalki = [];
+    for (var i = 0; i < obiekty.length; i++) {
+      var o = obiekty[i];
+      if (tylkoZamkniete === true && !o.z) continue;
+      if (tylkoZamkniete === false && o.z) continue;
+      kawalki.push('<path class="' + klasa + '" d="' + doSciezki(o.p, !!o.z) + '"/>');
+    }
+    document.getElementById(idWezla).innerHTML = kawalki.join('');
+  }
+
+  var W = MAPA.warstwy;
+  warstwa('w-zielen',   W.zielen,         'zielen');
+  warstwa('w-woda',     W.woda,           'woda',  true);
+  warstwa('w-budynki',  W.budynki,        'budynek');
+  warstwa('w-pieszo',   W.ulice.pieszo,   'pieszo');
+  warstwa('w-lokalne',  W.ulice.lokalne,  'lokalne');
+  warstwa('w-glowne',   W.ulice.glowne,   'glowne');
+
+  // Rzeki i strumienie to linie, nie obszary — dopisujemy je osobno,
+  // bo wypełnione zalałyby pół mapy.
+  (function rzeki() {
+    var kawalki = [];
+    for (var i = 0; i < W.woda.length; i++) {
+      if (!W.woda[i].z) kawalki.push('<path class="rzeka" d="' + doSciezki(W.woda[i].p, false) + '"/>');
+    }
+    document.getElementById('w-woda').insertAdjacentHTML('beforeend', kawalki.join(''));
+  })();
+
+  /* ———————————————— nazwy ulic ———————————————— */
+  // Jedna nazwa potrafi być rozbita na kilkanaście odcinków. Bierzemy
+  // najdłuższy z nich, żeby nie powtarzać „Mickiewicza" dwanaście razy.
+
+  (function nazwyUlic() {
+    var najlepsze = {};
+    var zrodla = W.ulice.glowne.concat(W.ulice.lokalne);
+
+    for (var i = 0; i < zrodla.length; i++) {
+      var o = zrodla[i];
+      if (!o.n || o.p.length < 4) continue;
+      var dl = 0;
+      for (var j = 2; j < o.p.length; j += 2) {
+        dl += Math.hypot(o.p[j] - o.p[j - 2], o.p[j + 1] - o.p[j - 1]);
+      }
+      if (!najlepsze[o.n] || dl > najlepsze[o.n].dl) najlepsze[o.n] = { o: o, dl: dl };
+    }
+
+    var kawalki = [];
+    Object.keys(najlepsze).forEach(function (nazwa) {
+      var wpis = najlepsze[nazwa];
+      if (wpis.dl < 60) return;                       // za krótkie, podpis by nie wszedł
+
+      // Najdłuższy odcinek nadaje kąt — podpis siada wzdłuż ulicy.
+      var p = wpis.o.p, najD = 0, a = null, b = null;
+      for (var j = 2; j < p.length; j += 2) {
+        var d = Math.hypot(p[j] - p[j - 2], p[j + 1] - p[j - 1]);
+        if (d > najD) { najD = d; a = rzutuj(p[j - 2], p[j - 1]); b = rzutuj(p[j], p[j + 1]); }
+      }
+      if (!a || najD < 40) return;
+
+      var kat = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
+      if (kat > 90) kat -= 180;                        // nigdy do góry nogami
+      if (kat < -90) kat += 180;
+
+      var sx = (a[0] + b[0]) / 2, sy = (a[1] + b[1]) / 2;
+      kawalki.push(
+        '<text transform="translate(' + sx.toFixed(1) + ' ' + sy.toFixed(1) +
+        ') rotate(' + kat.toFixed(1) + ')" dy="-3">' +
+        nazwa.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</text>'
+      );
+    });
+    document.getElementById('nazwy').innerHTML = kawalki.join('');
+  })();
+
+  /* ———————————————— piny z GPS ———————————————— */
+
+  var kolory = {};
+  (DANE.kategorie || []).forEach(function (k) { kolory[k.id] = k.kolor; });
+
+  var piny = [];
+  DANE.lokalizacje.forEach(function (l, i) {
+    if (!l.gps) return;
+    var poz = zGps(l.gps.lat, l.gps.lng);
+    var ile = DANE.wydarzenia.filter(function (w) { return w.lokalizacja === l.id; });
+    var kat = ile.length ? ile[0].kategoria : null;
+
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pin';
+    b.style.setProperty('--kolor', kolory[kat] || 'var(--akcent)');
+    b.innerHTML = '<i>' + (i + 1) + '</i>';
+    b.title = l.nazwa;
+    b.setAttribute('aria-label',
+      l.nazwa + ', ' + l.adres + ', ' + ile.length + (ile.length === 1 ? ' wydarzenie' : ' wydarzenia') +
+      (l.przyblizone ? ', położenie przybliżone' : ''));
+    document.getElementById('piny').appendChild(b);
+    piny.push({ wezel: b, x: poz[0], y: poz[1] });
+  });
+
+  /* ———————————————— przesuwanie i zoom ———————————————— */
+
+  var mapa = document.getElementById('mapa');
+  var plansza = document.getElementById('plansza');
+  var scena = document.getElementById('scena');
+  var wezelNazw = document.getElementById('nazwy');
+
+  var k = 1, tx = 0, ty = 0, kDopasowane = 1, wPx = 0, hPx = 0;
+  var PROG_NAZW = 2.2;          // ile razy bliżej niż dopasowanie, żeby pokazać nazwy
+
+  function dopasuj() {
+    var r = mapa.getBoundingClientRect();
+    wPx = Math.max(1, Math.round(r.width));
+    hPx = Math.max(1, Math.round(r.height));
+    plansza.setAttribute('viewBox', '0 0 ' + wPx + ' ' + hPx);   // 1 jednostka SVG = 1 px
+    kDopasowane = Math.min(wPx / PLOTNO.w, hPx / PLOTNO.h) * 0.98;
+    return kDopasowane;
+  }
+
+  function ogranicz() {
+    var kMin = kDopasowane * 0.85, kMaks = kDopasowane * 9;
+    k = Math.min(kMaks, Math.max(kMin, k));
+    // Nie pozwalamy odpłynąć mapie poza ekran.
+    var szer = PLOTNO.w * k, wys = PLOTNO.h * k;
+    var luz = 0.35;
+    tx = Math.min(wPx * luz, Math.max(wPx - szer - wPx * luz, tx));
+    ty = Math.min(hPx * luz, Math.max(hPx - wys - hPx * luz, ty));
+    if (szer < wPx) tx = (wPx - szer) / 2;
+    if (wys < hPx) ty = (hPx - wys) / 2;
+  }
+
+  var czeka = false;
+  function rysuj() {
+    if (czeka) return;
+    czeka = true;
+    requestAnimationFrame(function () {
+      czeka = false;
+      ogranicz();
+      scena.setAttribute('transform', 'translate(' + tx.toFixed(2) + ' ' + ty.toFixed(2) + ') scale(' + k.toFixed(5) + ')');
+      for (var i = 0; i < piny.length; i++) {
+        piny[i].wezel.style.transform =
+          'translate(' + (piny[i].x * k + tx).toFixed(1) + 'px,' + (piny[i].y * k + ty).toFixed(1) + 'px)';
+      }
+      wezelNazw.classList.toggle('widoczne', k > kDopasowane * PROG_NAZW);
+      rysujSkale();
+    });
+  }
+
+  function zoomWokol(ekranX, ekranY, mnoznik) {
+    var poprzednie = k;
+    k *= mnoznik;
+    ogranicz();
+    var faktyczny = k / poprzednie;
+    tx = ekranX - (ekranX - tx) * faktyczny;
+    ty = ekranY - (ekranY - ty) * faktyczny;
+    rysuj();
+  }
+
+  var wskazniki = new Map();
+  var poprzedniDystans = 0, poprzedniSrodek = null;
+
+  mapa.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('.pin') || e.target.closest('#zoom')) return;
+    mapa.setPointerCapture(e.pointerId);
+    wskazniki.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    poprzedniDystans = 0;
+  });
+
+  mapa.addEventListener('pointermove', function (e) {
+    if (!wskazniki.has(e.pointerId)) return;
+    e.preventDefault();
+    var stary = wskazniki.get(e.pointerId);
+    wskazniki.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    var lista = Array.from(wskazniki.values());
+    var pud = mapa.getBoundingClientRect();
+
+    if (lista.length === 1) {
+      tx += e.clientX - stary.x;
+      ty += e.clientY - stary.y;
+      rysuj();
+      return;
+    }
+    // Szczypanie dwoma palcami.
+    var dystans = Math.hypot(lista[0].x - lista[1].x, lista[0].y - lista[1].y);
+    var srodek = {
+      x: (lista[0].x + lista[1].x) / 2 - pud.left,
+      y: (lista[0].y + lista[1].y) / 2 - pud.top
+    };
+    if (poprzedniDystans > 0) {
+      if (poprzedniSrodek) { tx += srodek.x - poprzedniSrodek.x; ty += srodek.y - poprzedniSrodek.y; }
+      zoomWokol(srodek.x, srodek.y, dystans / poprzedniDystans);
+    }
+    poprzedniDystans = dystans;
+    poprzedniSrodek = srodek;
+  });
+
+  function koniec(e) {
+    wskazniki.delete(e.pointerId);
+    if (wskazniki.size < 2) { poprzedniDystans = 0; poprzedniSrodek = null; }
+  }
+  mapa.addEventListener('pointerup', koniec);
+  mapa.addEventListener('pointercancel', koniec);
+
+  mapa.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var pud = mapa.getBoundingClientRect();
+    zoomWokol(e.clientX - pud.left, e.clientY - pud.top, Math.exp(-e.deltaY * 0.0016));
+  }, { passive: false });
+
+  document.getElementById('blizej').addEventListener('click', function () { zoomWokol(wPx / 2, hPx / 2, 1.45); });
+  document.getElementById('dalej').addEventListener('click', function () { zoomWokol(wPx / 2, hPx / 2, 1 / 1.45); });
+
+  /* ———————————————— róża wiatrów i skala ———————————————— */
+
+  var furnitura = document.getElementById('furnitura');
+
+  function rozaWiatrow(cx, cy, r) {
+    // Ośmioramienna gwiazda w duchu secesji. Mapa jest obrócona o 90°
+    // w prawo, więc północ geograficzna wskazuje w prawo ekranu.
+    var obrot = OBROT ? 90 : 0;
+    var ramiona = '';
+    for (var i = 0; i < 8; i++) {
+      var dlugie = i % 2 === 0;
+      var dl = dlugie ? r : r * 0.52;
+      var sz = dlugie ? r * 0.16 : r * 0.11;
+      var kat = i * 45;
+      ramiona +=
+        '<g transform="rotate(' + kat + ')">' +
+          '<path class="' + (dlugie ? 'roza-ramie' : 'roza-ramie-jasne') + '" d="M0 0 L' + sz + ' ' + (-dl * 0.42) + ' L0 ' + (-dl) + ' Z"/>' +
+          '<path class="roza-ramie-jasne" d="M0 0 L' + (-sz) + ' ' + (-dl * 0.42) + ' L0 ' + (-dl) + ' Z"/>' +
+        '</g>';
+    }
+    return '<g transform="translate(' + cx + ' ' + cy + ') rotate(' + obrot + ')">' +
+      '<circle class="roza-linia" r="' + (r * 0.62) + '"/>' +
+      '<circle class="roza-linia" r="' + (r * 0.30) + '"/>' +
+      ramiona +
+      '<g transform="rotate(' + (-obrot) + ')">' +
+        '<text x="' + (OBROT ? r + 9 : 0) + '" y="' + (OBROT ? 4 : -r - 5) + '" ' +
+        'font-size="12" font-weight="700" text-anchor="middle">N</text>' +
+      '</g>' +
+    '</g>';
+  }
+
+  var STOPNIE = [25, 50, 100, 200, 500, 1000, 2000];
+
+  function rysujSkale() {
+    var metry = STOPNIE[0];
+    for (var i = 0; i < STOPNIE.length; i++) {
+      if (STOPNIE[i] * k <= 130) metry = STOPNIE[i];
+    }
+    var dl = metry * k;
+    var x0 = 14, y0 = hPx - 20;
+
+    furnitura.setAttribute('viewBox', '0 0 ' + wPx + ' ' + hPx);
+    furnitura.innerHTML =
+      rozaWiatrow(wPx - 42, 46, 22) +
+      '<g transform="translate(' + x0 + ' ' + y0 + ')">' +
+        '<path class="skala-kreska" d="M0 -7 L0 0 L' + dl.toFixed(1) + ' 0 L' + dl.toFixed(1) + ' -7"/>' +
+        '<path class="skala-kreska" d="M' + (dl / 2).toFixed(1) + ' -4 L' + (dl / 2).toFixed(1) + ' 0"/>' +
+        '<text x="' + (dl / 2).toFixed(1) + '" y="14" font-size="11" text-anchor="middle">' +
+          (metry >= 1000 ? (metry / 1000) + ' km' : metry + ' m') +
+        '</text>' +
+      '</g>';
+  }
+
+  /* ———————————————— start ———————————————— */
+
+  function przelicz(pierwszy) {
+    var poprzednieDopasowanie = kDopasowane;
+    dopasuj();
+    if (pierwszy) {
+      k = kDopasowane;
+      tx = (wPx - PLOTNO.w * k) / 2;
+      ty = (hPx - PLOTNO.h * k) / 2;
+    } else if (poprzednieDopasowanie > 0) {
+      k *= kDopasowane / poprzednieDopasowanie;      // zachowaj krotność przybliżenia
+    }
+    rysuj();
+  }
+
+  // Nagłówek i stopka z danych — w kodzie nie ma nazwy święta.
+  var s = DANE.swieto;
+  document.getElementById('tytul').textContent = s.nazwa;
+  document.title = s.nazwa;
+  var dni = s.dni.map(function (d) {
+    var cz = d.data.split('-');
+    return d.nazwa.toLowerCase() + ' ' + (+cz[2]) + '.' + cz[1];
+  });
+  document.getElementById('podtytul').textContent =
+    s.dzielnica + ', ' + s.miasto + ' — ' + dni.join(' i ') + ' ' + s.dni[0].data.slice(0, 4);
+  document.getElementById('stopka-swieto').textContent = (s.stopka ? s.stopka + '. ' : '');
+
+  przelicz(true);
+  addEventListener('resize', function () { przelicz(false); });
+})();
+</script>
+</body>
+</html>
