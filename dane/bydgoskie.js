@@ -46,9 +46,9 @@ window.DANE = {
      w index.html. Nowe święto może użyć tych samych nazw ikon. */
   kategorie: [
     { id: 'muzyka',     nazwa: 'Muzyka',           kolor: '#A8382C', ikona: 'nuta' },
-    { id: 'jedzenie',   nazwa: 'Jedzenie',         kolor: '#C2691F', ikona: 'talerz' },
-    { id: 'warsztaty',  nazwa: 'Warsztaty',        kolor: '#B08A1E', ikona: 'nozyce' },
-    { id: 'dzieci',     nazwa: 'Dzieci i rodziny', kolor: '#3F8A4F', ikona: 'latawiec' },
+    { id: 'jedzenie',   nazwa: 'Jedzenie',         kolor: '#A95B1B', ikona: 'talerz' },
+    { id: 'warsztaty',  nazwa: 'Warsztaty',        kolor: '#896C17', ikona: 'nozyce' },
+    { id: 'dzieci',     nazwa: 'Dzieci i rodziny', kolor: '#397E48', ikona: 'latawiec' },
     { id: 'sasiedzkie', nazwa: 'Sąsiedzkie',       kolor: '#2F6B92', ikona: 'dom' },
     { id: 'sztuka',     nazwa: 'Sztuka',           kolor: '#6B4489', ikona: 'paleta' }
   ],
@@ -357,10 +357,22 @@ window.DANE = {
       lokalizacja: 'amfiteatr',
       miejsce: 'Amfiteatr w Parku Miejskim',
       opis: '',
-      linki: [],
+      linki: [
+        { etykieta: 'Posłuchaj: „Señora de hermosura” (Juan del Encina)', url: 'https://www.youtube.com/watch?v=-NGY3PSKyaA' }
+      ],
       zdjecia: [],
       kategoria: 'muzyka',
       tagi: ['na-dworze'],
+      /* Wydarzenie promowane — pasek z odliczaniem na górze strony.
+         Pasek znika sam po zakończeniu; jeśli promowanych jest kilka,
+         pokazuje najbliższe nadchodzące. `ikona` może wskazać plik z logo,
+         brak = ikona kategorii. */
+      promocja: {
+        haslo: 'Pierwszy koncert wieczoru',
+        etykietaLinku: 'Posłuchaj',
+        url: 'https://www.youtube.com/watch?v=-NGY3PSKyaA',
+        ikona: null
+      },
       dodatki: {}
     },
 

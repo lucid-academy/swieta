@@ -16,24 +16,28 @@
    kod nie zna nazwy święta.
    ══════════════════════════════════════════════════════════════ */
 :root {
-  --papier:        #F2E7D2;
-  --papier-cien:   #E7D8BC;
-  --papier-jasny:  #FAF3E4;
-  --tusz:          #4A3B26;
-  --tusz-jasny:    #6B5940;
-  --tusz-mgla:     #8C7A5F;
-  --kreska:        rgba(74, 59, 38, .20);
-  --kreska-mocna:  rgba(74, 59, 38, .42);
+  /* Barwy wyciągnięte wprost ze zdjęć Bydgoskiego Przedmieścia — cała ich
+     siódemka mieści się w jednej rodzinie sepii i ochry. Tożsamość warstw
+     niosą tekstury (stippling koron, kreskowanie wody), nie nasycenie,
+     dzięki czemu tusz ulic może być ciemniejszy niż wcześniej. */
+  --papier:        #EBD9B7;
+  --papier-cien:   #DFC9A2;
+  --papier-jasny:  #F6EAD0;
+  --tusz:          #4B402F;
+  --tusz-jasny:    #6E6349;
+  --tusz-mgla:     #8E8163;
+  --kreska:        rgba(75, 64, 47, .22);
+  --kreska-mocna:  rgba(75, 64, 47, .45);
 
-  --ulica-glowna:  #7A6244;
-  --ulica-lokalna: #9B8562;
-  --ulica-pieszo:  #B39E77;
-  --park:          #C2CDA8;
-  --park-obrys:    #A9B78C;
-  --woda:          #A3C0D2;
-  --woda-obrys:    #8AAABF;
-  --budynek:       #E0CDA9;
-  --budynek-obrys: #C3A97F;
+  --ulica-glowna:  #57482F;
+  --ulica-lokalna: #7E6B4C;
+  --ulica-pieszo:  #A08A66;
+  --park:          #B9B189;
+  --park-obrys:    #8E8760;
+  --woda:          #A9BEC4;   /* przygaszony, ale wciąż błękit — rzeka to główny punkt orientacyjny */
+  --woda-obrys:    #5E7784;
+  --budynek:       #D9C39B;
+  --budynek-obrys: #7A6749;
 
   --akcent:        #9C3B2E;
   --ostrzezenie:   #B4471F;
@@ -93,6 +97,45 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 #dni button + button { border-left: none; }
 #dni button[aria-pressed="true"] { background: var(--tusz); color: var(--papier-jasny); border-color: var(--tusz); }
 
+/* ─────────── pasek promowanego wydarzenia ─────────── */
+#promo {
+  flex: none; display: flex; align-items: center; gap: .6rem;
+  padding: .4rem .5rem;
+  background: var(--papier-cien);
+  border-bottom: 1px solid var(--kreska);
+}
+#promo[hidden] { display: none; }
+#promo .znak {
+  flex: none; width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; overflow: hidden;
+  background: var(--kolor, var(--akcent)); color: #FBF4E4;
+  border: 1.5px solid rgba(251,244,228,.85);
+  box-shadow: 0 1px 4px rgba(75,64,47,.4);
+}
+#promo .znak svg { width: 18px; height: 18px; fill: currentColor; }
+#promo .znak img { width: 100%; height: 100%; object-fit: cover; }
+#promo .tresc { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 0; cursor: pointer; }
+/* Trzy ciasne wiersze bez zawijania — pasek nie może zjadać mapy. */
+#promo .tresc > p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#promo .haslo {
+  margin: 0; font-size: .61rem; letter-spacing: .05em; text-transform: uppercase;
+  line-height: 1.25; color: var(--tusz-mgla);
+}
+#promo .co { margin: 0; font-family: var(--szeryf); font-size: .88rem; line-height: 1.25; }
+#promo .zegar { margin: 0; font-size: .72rem; line-height: 1.3; color: var(--tusz-jasny); font-variant-numeric: tabular-nums; }
+#promo .zegar.trwa { color: var(--akcent); font-weight: 600; }
+#promo .sluchaj {
+  flex: none; min-height: 40px; padding: .4rem .65rem;
+  display: inline-flex; align-items: center; gap: .35rem;
+  background: var(--tusz); color: var(--papier-jasny);
+  border-radius: 6px; font-size: .82rem; text-decoration: none;
+}
+#promo .sluchaj svg { width: 15px; height: 15px; fill: currentColor; }
+#promo .zwin {
+  flex: none; width: 34px; height: 40px; background: none; border: 0;
+  cursor: pointer; color: var(--tusz-mgla); font-size: 1.1rem; line-height: 1;
+}
+
 /* ─────────── mapa ─────────── */
 #mapa {
   position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;
@@ -108,10 +151,25 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 #plansza { display: block; width: 100%; height: 100%; }
 #plansza path { vector-effect: non-scaling-stroke; }
 
-.zielen  { fill: var(--park);    stroke: var(--park-obrys);    stroke-width: 1; }
-.woda    { fill: var(--woda);    stroke: var(--woda-obrys);    stroke-width: 1; }
+/* Barwy wzorów przez CSS, nie przez atrybuty — pewniej działa ze zmiennymi. */
+#korony > rect { fill: var(--park); }
+#korony > g    { fill: var(--park-obrys); }
+#fale   > rect { fill: var(--woda); }
+#fale   > path { stroke: var(--woda-obrys); }
+#mur    > rect { fill: var(--budynek); }
+#mur    > path { stroke: var(--budynek-obrys); }
+
+/* Przygaszenie brzegów — mocne tam, gdzie nie ma treści, znikome w środku. */
+#winieta {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 78% 68% at 50% 47%,
+    rgba(58,46,28,0) 62%, rgba(58,46,28,.10) 82%, rgba(58,46,28,.22) 100%);
+}
+
+.zielen  { fill: url(#korony);   stroke: var(--park-obrys);    stroke-width: 1; }
+.woda    { fill: url(#fale);     stroke: var(--woda-obrys);    stroke-width: 1.2; }
 .rzeka   { fill: none;           stroke: var(--woda);          stroke-width: 3; stroke-linecap: round; }
-.budynek { fill: var(--budynek); stroke: var(--budynek-obrys); stroke-width: .8; }
+.budynek { fill: url(#mur);      stroke: var(--budynek-obrys); stroke-width: 1; }
 .pieszo  { fill: none; stroke: var(--ulica-pieszo);  stroke-width: 1;   stroke-dasharray: 3 2.5; stroke-linecap: round; }
 .lokalne { fill: none; stroke: var(--ulica-lokalna); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .glowne  { fill: none; stroke: var(--ulica-glowna);  stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -540,8 +598,41 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 
 <div id="dni" role="group" aria-label="Wybór dnia"></div>
 
+<aside id="promo" hidden aria-live="polite">
+  <span class="znak" id="promo-znak" aria-hidden="true"></span>
+  <button type="button" class="tresc" id="promo-tresc">
+    <p class="haslo" id="promo-haslo"></p>
+    <p class="co" id="promo-co"></p>
+    <p class="zegar" id="promo-zegar"></p>
+  </button>
+  <a class="sluchaj" id="promo-sluchaj" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span id="promo-etykieta">Posłuchaj</span>
+  </a>
+  <button type="button" class="zwin" id="promo-zwin" aria-label="Ukryj zapowiedź">✕</button>
+</aside>
+
 <main id="mapa">
   <svg id="plansza" role="img" aria-label="Mapa dzielnicy z lokalizacjami wydarzeń">
+    <defs>
+      <!-- Korony drzew jako stippling — park poznaje się po fakturze, nie po zieleni. -->
+      <pattern id="korony" width="14" height="14" patternUnits="userSpaceOnUse">
+        <rect width="14" height="14" fill="var(--park)"/>
+        <g fill="var(--park-obrys)" opacity=".85">
+          <circle cx="3" cy="3.5" r="2.1"/><circle cx="9.5" cy="6" r="2.6"/>
+          <circle cx="5" cy="10" r="2.3"/><circle cx="12" cy="12" r="1.8"/>
+        </g>
+      </pattern>
+      <!-- Woda: kreskowanie jak na starych mapach, na zachowanym błękicie. -->
+      <pattern id="fale" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)">
+        <rect width="9" height="9" fill="var(--woda)"/>
+        <path d="M0 3 H9 M0 7 H9" stroke="var(--woda-obrys)" stroke-width=".7" opacity=".7"/>
+      </pattern>
+      <!-- Budynki: delikatny szraf pod kątem. -->
+      <pattern id="mur" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="4" height="4" fill="var(--budynek)"/>
+        <path d="M0 0 V4" stroke="var(--budynek-obrys)" stroke-width=".5" opacity=".45"/>
+      </pattern>
+    </defs>
     <g id="scena">
       <g id="w-zielen"></g>
       <g id="w-woda"></g>
@@ -554,6 +645,7 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     </g>
   </svg>
   <div id="piny"></div>
+  <div id="winieta" aria-hidden="true"></div>
   <svg id="furnitura" aria-hidden="true"></svg>
   <div id="zoom">
     <button type="button" id="obroc" aria-label="Obróć mapę">
@@ -1139,6 +1231,19 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     }
   }
 
+  /* Wzory siedzą w układzie współrzędnych mapy, więc bez korekty rosłyby razem
+     z przybliżeniem — przy dziewięciokrotnym zoomie korony drzew zrobiłyby się
+     wielkimi kołami. Kontrskalujemy je, tak samo jak kreski trzymamy
+     w non-scaling-stroke: tusz jest na ekranie, geometria pod spodem. */
+  var WZORY = [['korony', ''], ['fale', ' rotate(-18)'], ['mur', ' rotate(45)']];
+  function skalujWzory() {
+    var s = (1 / k).toFixed(4);
+    for (var i = 0; i < WZORY.length; i++) {
+      var w = $(WZORY[i][0]);
+      if (w) w.setAttribute('patternTransform', 'scale(' + s + ')' + WZORY[i][1]);
+    }
+  }
+
   var czeka = false;
   function rysuj() {
     if (czeka) return;
@@ -1147,6 +1252,7 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
       czeka = false;
       ogranicz();
       scena.setAttribute('transform', 'translate(' + tx.toFixed(2) + ' ' + ty.toFixed(2) + ') scale(' + k.toFixed(5) + ')');
+      skalujWzory();
       rozsunPiny();
       wezelNazw.classList.toggle('widoczne', k > kDopasowane * PROG_NAZW);
       rysujFurniture();
@@ -1237,6 +1343,26 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
       '" font-size="12" font-weight="700" text-anchor="middle">N</text></g></g>';
   }
 
+  /* Ozdobna ramka i narożniki — w warstwie ekranowej, nie w mapie, więc
+     obramowują okno i nie jadą z geometrią. Trzymają się krawędzi, gdzie
+     i tak nie ma pinów. */
+  function ramka(w, h) {
+    function naroznik(x, y, obr) {
+      return '<g transform="translate(' + x + ' ' + y + ') rotate(' + obr + ')" fill="none" ' +
+        'stroke="var(--tusz)" stroke-width="1.5" opacity=".5">' +
+        '<path d="M5 34 C5 15 15 5 34 5"/>' +
+        '<path d="M10 38 C10 21 21 10 38 10" stroke-width=".85"/>' +
+        '<path d="M17 12 C26 12 31 7 29 2" stroke-width=".8"/>' +
+        '<path d="M12 17 C12 26 7 31 2 29" stroke-width=".8"/>' +
+        '<circle cx="20" cy="20" r="2.2" fill="var(--tusz)" stroke="none" opacity=".7"/></g>';
+    }
+    return '<g pointer-events="none">' +
+      '<rect x="7" y="7" width="' + (w - 14) + '" height="' + (h - 14) + '" fill="none" stroke="var(--tusz)" stroke-width="2" opacity=".42"/>' +
+      '<rect x="12" y="12" width="' + (w - 24) + '" height="' + (h - 24) + '" fill="none" stroke="var(--tusz)" stroke-width=".7" opacity=".3"/>' +
+      naroznik(12, 12, 0) + naroznik(w - 12, 12, 90) +
+      naroznik(w - 12, h - 12, 180) + naroznik(12, h - 12, 270) + '</g>';
+  }
+
   function rysujFurniture() {
     var metry = STOPNIE[0];
     for (var i = 0; i < STOPNIE.length; i++) if (STOPNIE[i] * k <= 130) metry = STOPNIE[i];
@@ -1245,7 +1371,7 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
         var kropki = kotwice.map(function (p) {
       return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="2.5" fill="var(--tusz)" opacity=".55"/>';
     }).join('');
-    furnitura.innerHTML = rozaWiatrow(wPx - 42, 46, 22) + kropki +
+    furnitura.innerHTML = ramka(wPx, hPx) + rozaWiatrow(wPx - 42, 46, 22) + kropki +
       '<g transform="translate(14 ' + y0 + ')">' +
         '<path class="skala-kreska" d="M0 -7 L0 0 L' + dl.toFixed(1) + ' 0 L' + dl.toFixed(1) + ' -7"/>' +
         '<path class="skala-kreska" d="M' + (dl / 2).toFixed(1) + ' -4 L' + (dl / 2).toFixed(1) + ' 0"/>' +
@@ -1861,6 +1987,112 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
       }
     });
   }
+
+  /* ═══════════════ pasek promowanego wydarzenia ═══════════════
+
+     Odliczanie do najbliższego nadchodzącego wydarzenia z polem `promocja`.
+     Po jego zakończeniu pasek znika sam, a gdy promowanych jest kilka,
+     przeskakuje na następne. Godziny liczymy w czasie lokalnym urządzenia,
+     bo taki ma człowiek stojący na Bydgoskim. */
+
+  var KLUCZ_PROMO = 'promo-ukryte:' + (DANE.swieto.id || 'swieto');
+
+  function kiedy(w) {
+    var d = DNI[w.dzien];
+    if (!d) return null;
+    return new Date(d.data + 'T' + w.od + ':00');
+  }
+  function kiedyKoniec(w) {
+    var d = DNI[w.dzien];
+    if (!d) return null;
+    // Bez godziny zakończenia dajemy wydarzeniu dwie godziny, żeby pasek
+    // nie zniknął w sekundzie rozpoczęcia koncertu.
+    return w.do ? new Date(d.data + 'T' + w.do + ':00')
+                : new Date(kiedy(w).getTime() + 2 * 3600e3);
+  }
+
+  function odliczanie(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    var dni = Math.floor(s / 86400), godz = Math.floor(s % 86400 / 3600);
+    var min = Math.floor(s % 3600 / 60), sek = s % 60;
+    if (dni > 0)  return 'za ' + dni + zOdmiana(dni, ' dzień', ' dni', ' dni') + ' ' + godz + ' godz.';
+    if (godz > 0) return 'za ' + godz + ' godz. ' + min + ' min';
+    if (min > 0)  return 'za ' + min + ' min ' + sek + ' s';
+    return 'za ' + sek + ' s';
+  }
+
+  (function pasekPromo() {
+    var pasek = $('promo');
+    if (!pasek) return;
+    try { if (localStorage.getItem(KLUCZ_PROMO) === 'tak') return; } catch (e) {}
+
+    var promowane = DANE.wydarzenia.filter(function (w) { return w.promocja && kiedy(w); });
+    if (!promowane.length) return;
+
+    var licznik = null, okresLicznika = 0, biezace = null;
+
+    function wybierz() {
+      var teraz = Date.now();
+      var czynne = promowane.filter(function (w) { return kiedyKoniec(w).getTime() > teraz; })
+        .sort(function (a, b) { return kiedy(a) - kiedy(b); });
+      return czynne[0] || null;
+    }
+
+    function pokaz(w) {
+      var kat = KATEGORIE[w.kategoria] || {};
+      var p = w.promocja;
+      $('promo-znak').style.setProperty('--kolor', kat.kolor || 'var(--akcent)');
+      $('promo-znak').innerHTML = p.ikona
+        ? '<img src="' + bezpiecznie(p.ikona) + '" alt="">'
+        : ikona(IKONY[kat.ikona] || IKONY.punkt);
+      $('promo-haslo').textContent = p.haslo || 'Nie przegap';
+      $('promo-co').textContent = w.tytul.replace(/\s+—\s+koncert$/, '');
+      if (p.url) {
+        $('promo-sluchaj').href = p.url;
+        $('promo-etykieta').textContent = p.etykietaLinku || 'Posłuchaj';
+        $('promo-sluchaj').hidden = false;
+      } else {
+        $('promo-sluchaj').hidden = true;
+      }
+      pasek.hidden = false;
+    }
+
+    function tyknij() {
+      var w = wybierz();
+      if (!w) { pasek.hidden = true; clearInterval(licznik); return; }
+      if (w !== biezace) { biezace = w; pokaz(w); }
+
+      var doStartu = kiedy(w).getTime() - Date.now();
+      var zegar = $('promo-zegar');
+      if (doStartu <= 0) {
+        zegar.textContent = 'trwa teraz — ' + w.miejsce;
+        zegar.classList.add('trwa');
+      } else {
+        var d = DNI[w.dzien];
+        var skrotDnia = d.nazwa.toLowerCase().slice(0, 3) + '.';
+        zegar.textContent = odliczanie(doStartu) + ' · ' + skrotDnia + ' ' + w.od;
+        zegar.classList.remove('trwa');
+      }
+      // Sekundy tykają tylko na finiszu — dalej wystarcza pół minuty.
+      var chcianyOkres = doStartu > 3600e3 ? 30000 : 1000;
+      if (okresLicznika !== chcianyOkres) {
+        clearInterval(licznik);
+        licznik = setInterval(tyknij, chcianyOkres);
+        okresLicznika = chcianyOkres;
+      }
+    }
+
+    $('promo-tresc').addEventListener('click', function () {
+      if (biezace) pokazWydarzenie(biezace.id, function () { zamknijArkusz(); });
+    });
+    $('promo-zwin').addEventListener('click', function () {
+      pasek.hidden = true;
+      clearInterval(licznik);
+      try { localStorage.setItem(KLUCZ_PROMO, 'tak'); } catch (e) {}
+    });
+
+    tyknij();
+  })();
 
   /* ═══════════════ przełącznik dni ═══════════════ */
 
