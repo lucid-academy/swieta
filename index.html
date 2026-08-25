@@ -3,19 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>XVII Święto Bydgoskiego Przedmieścia</title>
-<meta name="description" content="Mapa-przewodnik po XVII Święcie Bydgoskiego Przedmieścia w Toruniu, 29–30 sierpnia 2026.">
+<title>Święto dzielnicy</title>
+<meta name="description" content="Mapa-przewodnik po święcie dzielnicowym: program, plan zwiedzania i czasy przejścia między wydarzeniami.">
+<meta name="theme-color" content="#E7D8BC">
 <style>
-/* ——————————————————————————————————————————————————————————
-   Paleta: secesyjna mapa dzielnicy. Ciepły papier, brązowy tusz,
-   przygaszona zieleń parku, spokojny błękit Wisły.
-   Cała stylizacja siedzi tutaj — dane niosą wyłącznie geometrię.
-   —————————————————————————————————————————————————————————— */
+/* ══════════════════════════════════════════════════════════════
+   Kierunek: secesyjna mapa dzielnicy. Ciepły papier, brązowy tusz,
+   przygaszona zieleń parku, spokojny błękit Wisły. Krój szeryfowy
+   na nagłówki i podpisy na mapie, bezszeryfowy na treść.
+
+   Cała stylizacja siedzi tutaj. Dane niosą geometrię i treść,
+   kod nie zna nazwy święta.
+   ══════════════════════════════════════════════════════════════ */
 :root {
   --papier:        #F2E7D2;
   --papier-cien:   #E7D8BC;
+  --papier-jasny:  #FAF3E4;
   --tusz:          #4A3B26;
   --tusz-jasny:    #6B5940;
+  --tusz-mgla:     #8C7A5F;
+  --kreska:        rgba(74, 59, 38, .20);
+  --kreska-mocna:  rgba(74, 59, 38, .42);
+
   --ulica-glowna:  #7A6244;
   --ulica-lokalna: #9B8562;
   --ulica-pieszo:  #B39E77;
@@ -25,95 +34,104 @@
   --woda-obrys:    #8AAABF;
   --budynek:       #E0CDA9;
   --budynek-obrys: #C3A97F;
+
   --akcent:        #9C3B2E;
+  --ostrzezenie:   #B4471F;
+  --wiele:         #5E4B33;   /* pin z wydarzeniami z różnych kategorii */
 
   --szeryf: Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Times New Roman', serif;
-  --bezszeryf: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bezszeryf: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  --pasek-wys: 58px;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
-  margin: 0;
-  height: 100%;
+  margin: 0; height: 100%;
   background: var(--papier);
   color: var(--tusz);
   font-family: var(--bezszeryf);
+  font-size: 16px;
   -webkit-text-size-adjust: 100%;
 }
+body { display: flex; flex-direction: column; overscroll-behavior: none; }
 
-body {
-  display: flex;
-  flex-direction: column;
-  overscroll-behavior: none;
-}
+button { font: inherit; color: inherit; }
+a { color: var(--akcent); }
 
-/* ——— nagłówek ——— */
+/* ─────────── nagłówek ─────────── */
 header {
   flex: none;
-  padding: .7rem 1rem .6rem;
+  padding: .55rem .9rem .5rem;
   background: var(--papier-cien);
-  border-bottom: 1px solid rgba(74, 59, 38, .18);
+  border-bottom: 1px solid var(--kreska);
+  display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
 }
 header h1 {
   margin: 0;
   font-family: var(--szeryf);
-  font-size: clamp(1.05rem, 4.2vw, 1.5rem);
-  font-weight: 600;
-  letter-spacing: .01em;
-  line-height: 1.15;
+  font-size: clamp(1rem, 4vw, 1.35rem);
+  font-weight: 600; line-height: 1.15;
 }
-header p {
-  margin: .18rem 0 0;
-  font-size: .8rem;
-  color: var(--tusz-jasny);
-}
+header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 
-/* ——— mapa ——— */
+/* ─────────── przełącznik dni ─────────── */
+#dni {
+  flex: none; display: flex; gap: 1px;
+  background: var(--papier-cien);
+  border-bottom: 1px solid var(--kreska);
+  padding: 0 .55rem .45rem;
+}
+#dni button {
+  flex: 1; min-height: 36px; padding: .3rem .4rem;
+  background: transparent; border: 1px solid var(--kreska-mocna);
+  font-size: .82rem; cursor: pointer;
+}
+#dni button:first-child { border-radius: 5px 0 0 5px; }
+#dni button:last-child  { border-radius: 0 5px 5px 0; }
+#dni button + button { border-left: none; }
+#dni button[aria-pressed="true"] { background: var(--tusz); color: var(--papier-jasny); border-color: var(--tusz); }
+
+/* ─────────── mapa ─────────── */
 #mapa {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-  touch-action: none;              /* gesty obsługujemy sami */
+  position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;
+  touch-action: none;
   background-color: var(--papier);
-  /* Faktura papieru: ziarno z filtru SVG w data-URI, więc bez plików zewnętrznych. */
+  /* Faktura papieru z filtru SVG w data-URI — bez plików zewnętrznych. */
   background-image:
     radial-gradient(ellipse 80% 60% at 22% 18%, rgba(255,252,242,.55), transparent 70%),
     radial-gradient(ellipse 70% 70% at 82% 78%, rgba(176,150,106,.20), transparent 70%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23z)' opacity='0.28'/%3E%3C/svg%3E");
   background-blend-mode: normal, multiply, multiply;
 }
-
 #plansza { display: block; width: 100%; height: 100%; }
-
-/* Kreski w stałej grubości ekranowej — mapa nie tyje przy przybliżaniu. */
 #plansza path { vector-effect: non-scaling-stroke; }
 
-.zielen   { fill: var(--park);   stroke: var(--park-obrys);   stroke-width: 1; }
-.woda     { fill: var(--woda);   stroke: var(--woda-obrys);   stroke-width: 1; }
-.rzeka    { fill: none;          stroke: var(--woda);         stroke-width: 3; stroke-linecap: round; }
-.budynek  { fill: var(--budynek);stroke: var(--budynek-obrys);stroke-width: .8; }
+.zielen  { fill: var(--park);    stroke: var(--park-obrys);    stroke-width: 1; }
+.woda    { fill: var(--woda);    stroke: var(--woda-obrys);    stroke-width: 1; }
+.rzeka   { fill: none;           stroke: var(--woda);          stroke-width: 3; stroke-linecap: round; }
+.budynek { fill: var(--budynek); stroke: var(--budynek-obrys); stroke-width: .8; }
+.pieszo  { fill: none; stroke: var(--ulica-pieszo);  stroke-width: 1;   stroke-dasharray: 3 2.5; stroke-linecap: round; }
+.lokalne { fill: none; stroke: var(--ulica-lokalna); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.glowne  { fill: none; stroke: var(--ulica-glowna);  stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; }
 
-.pieszo   { fill: none; stroke: var(--ulica-pieszo);  stroke-width: 1;   stroke-dasharray: 3 2.5; stroke-linecap: round; }
-.lokalne  { fill: none; stroke: var(--ulica-lokalna); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.glowne   { fill: none; stroke: var(--ulica-glowna); stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; }
-
-/* Nazwy ulic wchodzą dopiero przy większym powiększeniu. */
 #nazwy { opacity: 0; transition: opacity .18s ease; pointer-events: none; }
 #nazwy.widoczne { opacity: 1; }
 #nazwy text {
-  font-family: var(--szeryf);
-  font-size: 11px;
-  fill: var(--tusz);
-  text-anchor: middle;
-  paint-order: stroke;
-  stroke: var(--papier);
-  stroke-width: 3.5;
-  stroke-linejoin: round;
+  font-family: var(--szeryf); font-size: 11px; fill: var(--tusz);
+  text-anchor: middle; paint-order: stroke;
+  stroke: var(--papier); stroke-width: 3.5; stroke-linejoin: round;
 }
 
-/* ——— furnitura: róża wiatrów i skala, nieruchome względem ekranu ——— */
+/* trasa planu — łagodny łuk, nie prosta */
+#trasa path {
+  fill: none; stroke: var(--akcent); stroke-width: 2.5;
+  stroke-dasharray: 7 5; stroke-linecap: round;
+  vector-effect: non-scaling-stroke; opacity: .85;
+}
+
+/* ─────────── furnitura mapy ─────────── */
 #furnitura { position: absolute; inset: 0; pointer-events: none; }
 #furnitura text { font-family: var(--szeryf); fill: var(--tusz); }
 .roza-linia { stroke: var(--tusz); stroke-width: 1; fill: none; }
@@ -121,62 +139,261 @@ header p {
 .roza-ramie-jasne { fill: var(--papier); stroke: var(--tusz); stroke-width: .8; }
 .skala-kreska { stroke: var(--tusz); stroke-width: 1.6; fill: none; stroke-linecap: square; }
 
-/* ——— piny (HTML, nie SVG — mają być klikalne i czytelne dla czytnika ekranu) ——— */
+/* ─────────── piny ─────────── */
 #piny { position: absolute; inset: 0; pointer-events: none; }
 .pin {
-  position: absolute;
-  width: 44px; height: 44px;          /* pole dotyku, nie rozmiar rysunku */
-  margin: -44px 0 0 -22px;            /* czubek pinu w punkcie */
-  border: 0; padding: 0;
-  background: none;
-  pointer-events: auto;
-  cursor: pointer;
-  display: grid; place-items: end center;
-}
-.pin i {
+  position: absolute; left: 0; top: 0;
+  width: 44px; height: 44px;               /* pole dotyku, nie rozmiar rysunku */
+  margin: -40px 0 0 -22px;                 /* czubek w punkcie */
+  border: 0; padding: 0; background: none;
+  pointer-events: auto; cursor: pointer;
   display: grid; place-items: center;
-  width: 26px; height: 26px;
-  border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%;
-  background: var(--kolor, var(--akcent));
-  color: #FFF6E6;
-  font: 600 12px/1 var(--bezszeryf);
-  font-style: normal;
-  box-shadow: 0 1px 0 rgba(0,0,0,.28), 0 2px 6px rgba(74,59,38,.35);
-  border: 1.5px solid rgba(255,246,230,.85);
-  transform: translateY(-6px);
+  transition: opacity .16s ease;
 }
-.pin:focus-visible i { outline: 3px solid var(--tusz); outline-offset: 2px; }
+.pin .medalion {
+  position: relative;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  background: var(--kolor, var(--akcent));
+  color: #FBF4E4;
+  border: 1.5px solid rgba(251, 244, 228, .9);
+  border-radius: 50%;
+  box-shadow: 0 1px 0 rgba(0,0,0,.3), 0 3px 7px rgba(74,59,38,.4);
+}
+/* szpic pinu — mały trójkąt pod medalionem */
+.pin .medalion::after {
+  content: ''; position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%) translateY(-3px);
+  border: 5px solid transparent;
+  border-top-color: var(--kolor, var(--akcent));
+}
+.pin svg { width: 16px; height: 16px; fill: currentColor; display: block; }
+.pin .ile {
+  position: absolute; top: -5px; right: -6px;
+  min-width: 17px; height: 17px; padding: 0 4px;
+  background: var(--papier-jasny); color: var(--tusz);
+  border: 1px solid var(--kreska-mocna); border-radius: 9px;
+  font: 600 10px/15px var(--bezszeryf);
+}
+.pin.przygaszony { opacity: .22; }
+.pin.wplanie .medalion { box-shadow: 0 0 0 3px var(--akcent), 0 3px 7px rgba(74,59,38,.4); }
+.pin:focus-visible .medalion { outline: 3px solid var(--tusz); outline-offset: 3px; }
+.pin.przyblizony .medalion { border-style: dashed; }
 
-/* ——— stopka ——— */
-footer {
-  flex: none;
-  padding: .45rem 1rem calc(.45rem + env(safe-area-inset-bottom));
+/* ─────────── dolny pasek ─────────── */
+#pasek {
+  flex: none; display: flex;
   background: var(--papier-cien);
-  border-top: 1px solid rgba(74, 59, 38, .18);
-  font-size: .68rem;
-  line-height: 1.35;
+  border-top: 1px solid var(--kreska);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+#pasek button {
+  flex: 1; min-height: var(--pasek-wys);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: none; border: 0; cursor: pointer;
+  font-size: .68rem; color: var(--tusz-jasny);
+  position: relative;
+}
+#pasek button svg { width: 21px; height: 21px; fill: currentColor; }
+#pasek button[aria-expanded="true"] { color: var(--tusz); background: rgba(74,59,38,.07); }
+#pasek .licznik {
+  position: absolute; top: 6px; left: 50%; margin-left: 6px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--akcent); color: #FBF4E4;
+  border-radius: 8px; font: 600 10px/16px var(--bezszeryf);
+}
+
+/* ─────────── arkusz (panel wysuwany) ─────────── */
+#arkusz {
+  /* Kończy się nad dolnym paskiem, żeby dało się przeskoczyć wprost
+     z programu do planu bez zamykania panelu. */
+  position: fixed; z-index: 20;
+  left: 0; right: 0; bottom: calc(var(--pasek-wys) + env(safe-area-inset-bottom));
+  max-height: 74vh; display: flex; flex-direction: column;
+  background: var(--papier-jasny);
+  border-top: 1px solid var(--kreska-mocna);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -6px 26px rgba(74,59,38,.28);
+  transform: translateY(101%);
+  transition: transform .24s cubic-bezier(.32,.72,.35,1);
+}
+#arkusz.otwarty { transform: none; }
+#arkusz { border-radius: 14px 14px 0 0; }
+#arkusz[hidden] { display: none; }
+
+#arkusz-gora {
+  flex: none; display: flex; align-items: center; gap: .5rem;
+  padding: .55rem .5rem .5rem .9rem;
+  border-bottom: 1px solid var(--kreska);
+}
+#arkusz-gora h2 {
+  flex: 1; margin: 0; min-width: 0;
+  font-family: var(--szeryf); font-size: 1.02rem; font-weight: 600; line-height: 1.2;
+}
+#arkusz-gora button {
+  flex: none; width: 44px; height: 44px;
+  background: none; border: 0; cursor: pointer; border-radius: 8px;
+  display: grid; place-items: center;
+}
+#arkusz-gora button:hover { background: rgba(74,59,38,.08); }
+#arkusz-gora button[hidden] { display: none; }   /* bez tego selektor elementu bije [hidden] */
+#arkusz-gora button svg { width: 20px; height: 20px; fill: var(--tusz); }
+#arkusz-tresc {
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: .8rem .9rem 1.2rem;
+  overscroll-behavior: contain;
+}
+
+/* ─────────── treść: lista wydarzeń ─────────── */
+.dzien-naglowek {
+  position: sticky; top: -.8rem; z-index: 1;
+  margin: 1rem -.9rem .5rem; padding: .35rem .9rem;
+  background: var(--papier-cien);
+  font-family: var(--szeryf); font-size: .82rem; letter-spacing: .06em; text-transform: uppercase;
   color: var(--tusz-jasny);
 }
-footer a { color: inherit; }
+.dzien-naglowek:first-child { margin-top: 0; }
 
-/* ——— sterowanie zoomem ——— */
-#zoom {
-  position: absolute; right: .6rem; bottom: .6rem;
-  display: flex; flex-direction: column; gap: .35rem;
+.wydarzenie {
+  width: 100%; text-align: left;
+  display: grid; grid-template-columns: auto auto 1fr; gap: .1rem .6rem; align-items: start;
+  padding: .65rem .2rem; background: none; border: 0;
+  border-bottom: 1px solid var(--kreska); cursor: pointer;
 }
+.wydarzenie:last-child { border-bottom: 0; }
+.wydarzenie .godz {
+  grid-column: 1; grid-row: 1 / 3;
+  font-variant-numeric: tabular-nums; font-size: .8rem; font-weight: 600;
+  color: var(--tusz-jasny); padding-top: .1rem; white-space: nowrap;
+}
+.wydarzenie .tyt { grid-column: 3; grid-row: 1; font-size: .93rem; line-height: 1.3; }
+.wydarzenie .msc { grid-column: 3; grid-row: 2; font-size: .76rem; color: var(--tusz-mgla); margin-top: .15rem; }
+.kropka {
+  grid-column: 2; grid-row: 1 / 3;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--kolor); margin-top: .28rem;
+}
+
+/* ─────────── treść: szczegóły wydarzenia ─────────── */
+.meta { display: flex; flex-wrap: wrap; gap: .3rem .8rem; font-size: .84rem; color: var(--tusz-jasny); margin-bottom: .5rem; }
+.meta b { font-weight: 600; color: var(--tusz); }
+.opis { font-size: .93rem; line-height: 1.55; white-space: pre-wrap; margin: .7rem 0; }
+.opis:empty { display: none; }
+.brak-opisu {
+  margin: .7rem 0; padding: .6rem .75rem;
+  background: var(--papier-cien); border-left: 3px solid var(--kreska-mocna);
+  font-size: .85rem; color: var(--tusz-jasny);
+}
+
+.znaczki { display: flex; flex-wrap: wrap; gap: .35rem; margin: .6rem 0; }
+.znaczek {
+  padding: .2rem .55rem; border-radius: 11px;
+  background: var(--papier-cien); border: 1px solid var(--kreska);
+  font-size: .74rem; color: var(--tusz-jasny);
+}
+.znaczek.kat { background: var(--kolor); color: #FBF4E4; border-color: transparent; }
+
+.zdjecia { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: .4rem; margin: .8rem 0; }
+.zdjecia button { padding: 0; border: 1px solid var(--kreska); background: none; cursor: pointer; border-radius: 3px; overflow: hidden; }
+.zdjecia img { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+
+.linki { display: flex; flex-direction: column; gap: .3rem; margin: .8rem 0; }
+.linki a { font-size: .88rem; }
+
+.dzialania { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0 .3rem; }
+.przycisk {
+  flex: 1 1 auto; min-height: 46px; padding: .5rem .9rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  background: var(--tusz); color: var(--papier-jasny);
+  border: 1px solid var(--tusz); border-radius: 7px;
+  font-size: .88rem; cursor: pointer; text-decoration: none;
+}
+.przycisk.pusty { background: none; color: var(--tusz); }
+.przycisk.pusty[aria-pressed="true"] { background: var(--akcent); border-color: var(--akcent); color: var(--papier-jasny); }
+.przycisk svg { width: 17px; height: 17px; fill: currentColor; }
+
+/* ─────────── treść: planer ─────────── */
+.plan-poz { display: grid; grid-template-columns: auto 1fr; gap: .1rem .7rem; padding: .6rem 0; }
+.plan-poz .godz { font-variant-numeric: tabular-nums; font-weight: 600; font-size: .84rem; white-space: nowrap; }
+.plan-poz .tyt { font-size: .93rem; line-height: 1.3; }
+.plan-poz .msc { grid-column: 2; font-size: .76rem; color: var(--tusz-mgla); margin-top: .15rem; }
+.plan-poz .usun { grid-column: 2; justify-self: start; margin-top: .3rem; background: none; border: 0; padding: .2rem 0; font-size: .76rem; color: var(--akcent); cursor: pointer; text-decoration: underline; }
+
+.przejscie {
+  display: flex; align-items: center; gap: .45rem;
+  margin-left: .4rem; padding: .4rem 0 .4rem .9rem;
+  border-left: 2px dashed var(--kreska-mocna);
+  font-size: .78rem; color: var(--tusz-jasny);
+}
+.przejscie svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
+.przejscie.zaciasno { color: var(--ostrzezenie); font-weight: 600; }
+.przejscie.zaciasno svg { fill: var(--ostrzezenie); }
+
+/* ─────────── treść: luki i filtry ─────────── */
+.luka { padding: .75rem 0; border-bottom: 1px solid var(--kreska); }
+.luka:last-child { border-bottom: 0; }
+.luka h3 { margin: 0 0 .25rem; font-family: var(--szeryf); font-size: .95rem; font-weight: 600; }
+.luka p { margin: 0; font-size: .87rem; line-height: 1.5; color: var(--tusz-jasny); }
+
+.grupa-filtrow { margin-bottom: 1.1rem; }
+.grupa-filtrow h3 { margin: 0 0 .45rem; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--tusz-mgla); font-weight: 600; }
+.filtry { display: flex; flex-wrap: wrap; gap: .4rem; }
+.filtr {
+  min-height: 38px; padding: .35rem .7rem;
+  background: var(--papier-cien); border: 1px solid var(--kreska-mocna); border-radius: 19px;
+  font-size: .82rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+.filtr[aria-pressed="true"] { background: var(--kolor, var(--tusz)); color: #FBF4E4; border-color: transparent; }
+.filtr .plamka { width: 10px; height: 10px; border-radius: 50%; background: var(--kolor); }
+.filtr[aria-pressed="true"] .plamka { background: #FBF4E4; }
+
+.pusto { padding: 1.6rem .5rem; text-align: center; color: var(--tusz-mgla); font-size: .9rem; line-height: 1.55; }
+
+/* ─────────── atrybucja podkładu (wymagana licencją ODbL) ─────────── */
+#atrybucja {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  margin: 0; padding: 2px 56px 3px .55rem;
+  font-size: 10px; line-height: 1.3; color: var(--tusz-jasny);
+  background: rgba(242, 231, 210, .72);
+  border-top: 1px solid var(--kreska);
+  pointer-events: auto;
+}
+#atrybucja a { color: inherit; }
+
+/* ─────────── sterowanie zoomem ─────────── */
+#zoom { position: absolute; right: .55rem; bottom: 1.5rem; display: flex; flex-direction: column; gap: .35rem; }
 #zoom button {
-  width: 44px; height: 44px;
-  font: 400 22px/1 var(--szeryf);
-  color: var(--tusz);
-  background: rgba(242,231,210,.92);
-  border: 1px solid rgba(74,59,38,.35);
-  border-radius: 6px;
-  cursor: pointer;
+  width: 44px; height: 44px; font: 400 22px/1 var(--szeryf);
+  background: rgba(242,231,210,.94); border: 1px solid var(--kreska-mocna);
+  border-radius: 7px; cursor: pointer;
 }
 #zoom button:active { background: var(--papier-cien); }
 
+/* ─────────── podgląd zdjęcia ─────────── */
+#lupa {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(38, 30, 20, .93);
+  display: grid; grid-template-rows: 1fr auto; place-items: center;
+  padding: 1rem;
+}
+#lupa[hidden] { display: none; }
+#lupa img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 3px; }
+#lupa .zamknij {
+  position: absolute; top: .6rem; right: .6rem; width: 44px; height: 44px;
+  background: rgba(250,243,228,.15); border: 0; border-radius: 8px; cursor: pointer;
+  display: grid; place-items: center;
+}
+#lupa .zamknij svg { width: 22px; height: 22px; fill: #FAF3E4; }
+#lupa .podpis { color: #E7D8BC; font-size: .8rem; padding-top: .7rem; text-align: center; }
+
+/* ─────────── większe ekrany ─────────── */
+@media (min-width: 720px) {
+  #arkusz { right: auto; width: 400px; max-height: calc(100vh - 190px); border-radius: 0 14px 0 0; }
+  #pasek button { flex-direction: row; gap: .45rem; font-size: .8rem; }
+}
 @media (prefers-reduced-motion: reduce) {
-  #nazwy { transition: none; }
+  #arkusz, #nazwy, .pin { transition: none; }
 }
 </style>
 </head>
@@ -187,8 +404,10 @@ footer a { color: inherit; }
   <p id="podtytul"></p>
 </header>
 
+<div id="dni" role="group" aria-label="Wybór dnia"></div>
+
 <main id="mapa">
-  <svg id="plansza" role="img" aria-label="Mapa Bydgoskiego Przedmieścia z lokalizacjami wydarzeń">
+  <svg id="plansza" role="img" aria-label="Mapa dzielnicy z lokalizacjami wydarzeń">
     <g id="scena">
       <g id="w-zielen"></g>
       <g id="w-woda"></g>
@@ -197,20 +416,41 @@ footer a { color: inherit; }
       <g id="w-lokalne"></g>
       <g id="w-glowne"></g>
       <g id="nazwy"></g>
+      <g id="trasa"></g>
     </g>
   </svg>
   <div id="piny"></div>
   <svg id="furnitura" aria-hidden="true"></svg>
   <div id="zoom">
-    <button type="button" id="blizej" aria-label="Przybliż">+</button>
-    <button type="button" id="dalej" aria-label="Oddal">−</button>
+    <button type="button" id="blizej" aria-label="Przybliż mapę">+</button>
+    <button type="button" id="dalej" aria-label="Oddal mapę">−</button>
   </div>
+  <p id="atrybucja">Podkład: ©&nbsp;autorzy
+    <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, ODbL</p>
 </main>
 
-<footer>
-  <span id="stopka-swieto"></span>
-  Podkład mapowy: dane © autorzy <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, licencja ODbL.
-</footer>
+<nav id="pasek" aria-label="Sekcje"></nav>
+
+<section id="arkusz" hidden aria-labelledby="arkusz-tytul">
+  <div id="arkusz-gora">
+    <button type="button" id="wstecz" hidden aria-label="Wróć">
+      <svg viewBox="0 0 24 24"><path d="M15.5 3.6 7 12l8.5 8.4 1.6-1.6L10.2 12l6.9-6.8z"/></svg>
+    </button>
+    <h2 id="arkusz-tytul"></h2>
+    <button type="button" id="zamknij-arkusz" aria-label="Zamknij">
+      <svg viewBox="0 0 24 24"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg>
+    </button>
+  </div>
+  <div id="arkusz-tresc"></div>
+</section>
+
+<div id="lupa" hidden>
+  <img id="lupa-obraz" alt="">
+  <p class="podpis" id="lupa-podpis"></p>
+  <button type="button" class="zamknij" id="zamknij-lupe" aria-label="Zamknij zdjęcie">
+    <svg viewBox="0 0 24 24"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg>
+  </button>
+</div>
 
 <script src="dane/bydgoskie.js"></script>
 <script src="dane/mapa-bydgoskie.js"></script>
@@ -219,154 +459,286 @@ footer a { color: inherit; }
   'use strict';
 
   var DANE = window.DANE, MAPA = window.MAPA;
-  var SVG = 'http://www.w3.org/2000/svg';
+  var $ = function (id) { return document.getElementById(id); };
 
-  /* ————————————————————————————————————————————————
-     Rzutowanie.
+  /* ═══════════════ słowniki ═══════════════ */
 
-     Dane niosą metry od północno-zachodniego rogu wycinka (x na wschód,
-     y na południe). Dzielnica jest szersza niż wyższa, więc obracamy ją
-     o 90° w prawo — dłuższa oś staje pionowo i mapa wypełnia telefon.
+  var KATEGORIE = {}, TAGI = {}, LOKALIZACJE = {}, DNI = {};
+  DANE.kategorie.forEach(function (k) { KATEGORIE[k.id] = k; });
+  (DANE.tagi || []).forEach(function (t) { TAGI[t.id] = t; });
+  DANE.lokalizacje.forEach(function (l) { LOKALIZACJE[l.id] = l; });
+  DANE.swieto.dni.forEach(function (d) { DNI[d.id] = d; });
 
-     Obrót o 90° w prawo: (x, y) -> (wysokosc - y, x).
-     ———————————————————————————————————————————————— */
-  var OBROT = true;
+  /* Biblioteka ikon. Dane mówią `ikona: 'nuta'`, rysunek siedzi w kodzie,
+     więc kolejne święto może użyć tych samych nazw. */
+  var IKONY = {
+    nuta:     'M9 3v10.6A3.5 3.5 0 1 0 11 17V8h6V3z',
+    talerz:   'M6 2v7a3 3 0 0 0 2 2.8V22h2V11.8A3 3 0 0 0 12 9V2h-1.6v6H9.6V2H8v6H6.6V2zM16 2c-1.4 1.4-2 4-2 6.5 0 1.9.8 3.1 2 3.4V22h2V2z',
+    nozyce:   'M9.6 3.4 12 9.2l2.4-5.8 1.8.8-2.9 6.7 1.3 3a3.4 3.4 0 1 1-1.8.8L12 12.9l-.8 1.8a3.4 3.4 0 1 1-1.8-.8l1.3-3-2.9-6.7zM6.9 16.2a1.5 1.5 0 1 0 1.3 2.7 1.5 1.5 0 0 0-1.3-2.7m10.2 0a1.5 1.5 0 1 0 1.3 2.7 1.5 1.5 0 0 0-1.3-2.7',
+    latawiec: 'M12 2 4 9.4 12 22l8-12.6zm0 3.1 5.4 5-5.4 8.5-5.4-8.5z',
+    dom:      'M12 3 2 11h3v10h5v-6h4v6h5V11h3z',
+    paleta:   'M12 3a9 9 0 0 0 0 18c1.3 0 2-.9 2-1.9 0-.5-.2-.9-.5-1.2-.3-.4-.5-.7-.5-1.2 0-1 .8-1.7 1.8-1.7H16a5 5 0 0 0 5-5c0-3.9-4-7-9-7m-4.7 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m3.2 3.2a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3',
+    punkt:    'M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12'
+  };
+  var IKONY_UI = {
+    program:  'M4 3h16v18H4zm3 4v2h10V7zm0 4v2h10v-2zm0 4v2h7v-2z',
+    plan:     'M9 2v2H5v18h14V4h-4V2zm-2 8h10v2H7zm0 4h7v2H7zM11 2h2v4h-2z',
+    filtry:   'M3 4h18l-7 8.2V21l-4-2.4v-6.4z',
+    luki:     'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m1 15h-2v-2h2zm.4-4.2-.4.3V14h-2v-1.6c0-.6.3-1.1.8-1.5l1-.7c.4-.3.6-.7.5-1.2-.1-.5-.5-.9-1-1-.7-.1-1.3.3-1.5.9l-1.9-.6A3.5 3.5 0 0 1 12.3 6c1.6.1 2.9 1.2 3.2 2.7.2 1.5-.5 2.9-1.7 3.6z',
+    nogi:     'M9 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4M7.6 7h2.2l3.4 4.6-2.2 2.2 3.4 4.4-1.6 1.3-4.2-5.4 1.8-1.8-1.4-1.9L7 14.4 3.6 20 2 19l3.8-6.3z',
+    kompas:   'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m3.6 6.4-2 5.2-5.2 2 2-5.2zM12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2'
+  };
 
-  function rzutuj(x, y) {
-    return OBROT ? [MAPA.wysokosc - y, x] : [x, y];
+  function ikona(sciezka, klasa) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"' + (klasa ? ' class="' + klasa + '"' : '') +
+           '><path d="' + sciezka + '"/></svg>';
   }
-  var PLOTNO = OBROT
-    ? { w: MAPA.wysokosc, h: MAPA.szerokosc }
-    : { w: MAPA.szerokosc, h: MAPA.wysokosc };
+  function bezpiecznie(t) {
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 
-  /** GPS -> te same metry co geometria. Stąd biorą się pozycje pinów. */
+  /* ═══════════════ czas i odległość ═══════════════ */
+
+  function naMinuty(hhmm) {
+    if (!hhmm) return null;
+    var c = hhmm.split(':');
+    return (+c[0]) * 60 + (+c[1]);
+  }
+  function zMinut(m) {
+    var g = Math.floor(m / 60), n = m % 60;
+    return g + ':' + (n < 10 ? '0' : '') + n;
+  }
+  function godziny(w) { return w.do ? w.od + '–' + w.do : w.od; }
+
+  /** Odległość w linii prostej po GPS, w metrach. */
+  function odleglosc(a, b) {
+    var R = 6371000, rad = Math.PI / 180;
+    var dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  /* Prosta w linii powietrznej nie oddaje chodzenia po kwartałach — stąd
+     mnożnik 1,3. Tempo 80 m/min to spokojny krok w tłumie. */
+  var KRETOSC = 1.3, TEMPO = 80;
+  function przejscie(a, b) {
+    if (!a || !b) return null;
+    var m = odleglosc(a, b) * KRETOSC;
+    return { metry: Math.round(m), minuty: Math.max(1, Math.round(m / TEMPO)) };
+  }
+
+  /* ═══════════════ rzutowanie (etap 2) ═══════════════ */
+
+  var OBROT = true;
+  function rzutuj(x, y) { return OBROT ? [MAPA.wysokosc - y, x] : [x, y]; }
+  var PLOTNO = OBROT ? { w: MAPA.wysokosc, h: MAPA.szerokosc } : { w: MAPA.szerokosc, h: MAPA.wysokosc };
+
   function zGps(lat, lng) {
     var r = MAPA.rzutowanie;
-    return rzutuj(
-      (lng - MAPA.bbox.zachod) * r.metrNaStopien * r.skalaDlugosci,
-      (MAPA.bbox.polnoc - lat) * r.metrNaStopien
-    );
+    return rzutuj((lng - MAPA.bbox.zachod) * r.metrNaStopien * r.skalaDlugosci,
+                  (MAPA.bbox.polnoc - lat) * r.metrNaStopien);
   }
 
-  /* ———————————————— rysowanie geometrii ———————————————— */
-
   function doSciezki(plaskie, zamkniety) {
-    var d = '', i;
-    for (i = 0; i < plaskie.length; i += 2) {
+    var d = '';
+    for (var i = 0; i < plaskie.length; i += 2) {
       var p = rzutuj(plaskie[i], plaskie[i + 1]);
       d += (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
     }
     return d + (zamkniety ? 'Z' : '');
   }
 
-  function warstwa(idWezla, obiekty, klasa, tylkoZamkniete) {
-    var kawalki = [];
-    for (var i = 0; i < obiekty.length; i++) {
-      var o = obiekty[i];
-      if (tylkoZamkniete === true && !o.z) continue;
-      if (tylkoZamkniete === false && o.z) continue;
-      kawalki.push('<path class="' + klasa + '" d="' + doSciezki(o.p, !!o.z) + '"/>');
+  (function rysujPodklad() {
+    var W = MAPA.warstwy;
+    function warstwa(wezel, obiekty, klasa, tylkoZamkniete) {
+      var k = [];
+      for (var i = 0; i < obiekty.length; i++) {
+        var o = obiekty[i];
+        if (tylkoZamkniete && !o.z) continue;
+        k.push('<path class="' + klasa + '" d="' + doSciezki(o.p, !!o.z) + '"/>');
+      }
+      $(wezel).innerHTML = k.join('');
     }
-    document.getElementById(idWezla).innerHTML = kawalki.join('');
-  }
+    warstwa('w-zielen',  W.zielen,        'zielen');
+    warstwa('w-woda',    W.woda,          'woda', true);
+    warstwa('w-budynki', W.budynki,       'budynek');
+    warstwa('w-pieszo',  W.ulice.pieszo,  'pieszo');
+    warstwa('w-lokalne', W.ulice.lokalne, 'lokalne');
+    warstwa('w-glowne',  W.ulice.glowne,  'glowne');
 
-  var W = MAPA.warstwy;
-  warstwa('w-zielen',   W.zielen,         'zielen');
-  warstwa('w-woda',     W.woda,           'woda',  true);
-  warstwa('w-budynki',  W.budynki,        'budynek');
-  warstwa('w-pieszo',   W.ulice.pieszo,   'pieszo');
-  warstwa('w-lokalne',  W.ulice.lokalne,  'lokalne');
-  warstwa('w-glowne',   W.ulice.glowne,   'glowne');
-
-  // Rzeki i strumienie to linie, nie obszary — dopisujemy je osobno,
-  // bo wypełnione zalałyby pół mapy.
-  (function rzeki() {
-    var kawalki = [];
-    for (var i = 0; i < W.woda.length; i++) {
-      if (!W.woda[i].z) kawalki.push('<path class="rzeka" d="' + doSciezki(W.woda[i].p, false) + '"/>');
-    }
-    document.getElementById('w-woda').insertAdjacentHTML('beforeend', kawalki.join(''));
+    // Rzeki są liniami, nie obszarami — wypełnione zalałyby pół mapy.
+    var rzeki = [];
+    W.woda.forEach(function (o) { if (!o.z) rzeki.push('<path class="rzeka" d="' + doSciezki(o.p, false) + '"/>'); });
+    $('w-woda').insertAdjacentHTML('beforeend', rzeki.join(''));
   })();
-
-  /* ———————————————— nazwy ulic ———————————————— */
-  // Jedna nazwa potrafi być rozbita na kilkanaście odcinków. Bierzemy
-  // najdłuższy z nich, żeby nie powtarzać „Mickiewicza" dwanaście razy.
 
   (function nazwyUlic() {
     var najlepsze = {};
-    var zrodla = W.ulice.glowne.concat(W.ulice.lokalne);
-
-    for (var i = 0; i < zrodla.length; i++) {
-      var o = zrodla[i];
-      if (!o.n || o.p.length < 4) continue;
+    MAPA.warstwy.ulice.glowne.concat(MAPA.warstwy.ulice.lokalne).forEach(function (o) {
+      if (!o.n || o.p.length < 4) return;
       var dl = 0;
-      for (var j = 2; j < o.p.length; j += 2) {
-        dl += Math.hypot(o.p[j] - o.p[j - 2], o.p[j + 1] - o.p[j - 1]);
-      }
+      for (var j = 2; j < o.p.length; j += 2) dl += Math.hypot(o.p[j] - o.p[j - 2], o.p[j + 1] - o.p[j - 1]);
       if (!najlepsze[o.n] || dl > najlepsze[o.n].dl) najlepsze[o.n] = { o: o, dl: dl };
-    }
-
-    var kawalki = [];
+    });
+    var k = [];
     Object.keys(najlepsze).forEach(function (nazwa) {
       var wpis = najlepsze[nazwa];
-      if (wpis.dl < 60) return;                       // za krótkie, podpis by nie wszedł
-
-      // Najdłuższy odcinek nadaje kąt — podpis siada wzdłuż ulicy.
+      if (wpis.dl < 60) return;
       var p = wpis.o.p, najD = 0, a = null, b = null;
       for (var j = 2; j < p.length; j += 2) {
         var d = Math.hypot(p[j] - p[j - 2], p[j + 1] - p[j - 1]);
         if (d > najD) { najD = d; a = rzutuj(p[j - 2], p[j - 1]); b = rzutuj(p[j], p[j + 1]); }
       }
       if (!a || najD < 40) return;
-
       var kat = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
-      if (kat > 90) kat -= 180;                        // nigdy do góry nogami
+      if (kat > 90) kat -= 180;
       if (kat < -90) kat += 180;
-
-      var sx = (a[0] + b[0]) / 2, sy = (a[1] + b[1]) / 2;
-      kawalki.push(
-        '<text transform="translate(' + sx.toFixed(1) + ' ' + sy.toFixed(1) +
-        ') rotate(' + kat.toFixed(1) + ')" dy="-3">' +
-        nazwa.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</text>'
-      );
+      k.push('<text transform="translate(' + ((a[0] + b[0]) / 2).toFixed(1) + ' ' + ((a[1] + b[1]) / 2).toFixed(1) +
+             ') rotate(' + kat.toFixed(1) + ')" dy="-3">' + bezpiecznie(nazwa) + '</text>');
     });
-    document.getElementById('nazwy').innerHTML = kawalki.join('');
+    $('nazwy').innerHTML = k.join('');
   })();
 
-  /* ———————————————— piny z GPS ———————————————— */
+  /* ═══════════════ stan ═══════════════ */
 
-  var kolory = {};
-  (DANE.kategorie || []).forEach(function (k) { kolory[k.id] = k.kolor; });
+  var KLUCZ = 'plan:' + (DANE.swieto.id || 'swieto');
+  var stan = {
+    dzien: 'wszystkie',
+    kategorie: {},          // id -> true (pusty zbiór = wszystkie)
+    tagi: {},
+    plan: {},               // id wydarzenia -> true
+    widok: null
+  };
+
+  try {
+    var zapis = JSON.parse(localStorage.getItem(KLUCZ) || '{}');
+    if (zapis && typeof zapis === 'object') {
+      DANE.wydarzenia.forEach(function (w) { if (zapis[w.id]) stan.plan[w.id] = true; });
+    }
+  } catch (e) { /* wyłączony localStorage nie może wywrócić strony */ }
+
+  function zapiszPlan() {
+    try { localStorage.setItem(KLUCZ, JSON.stringify(stan.plan)); } catch (e) {}
+  }
+  function wPlanie(id) { return !!stan.plan[id]; }
+  function ilePlanu() { return Object.keys(stan.plan).length; }
+
+  function ileWybrano(zbior) { return Object.keys(zbior).length; }
+
+  function pasuje(w) {
+    if (stan.dzien !== 'wszystkie' && w.dzien !== stan.dzien) return false;
+    if (ileWybrano(stan.kategorie) && !stan.kategorie[w.kategoria]) return false;
+    var wybraneTagi = Object.keys(stan.tagi);
+    for (var i = 0; i < wybraneTagi.length; i++) {
+      if (w.tagi.indexOf(wybraneTagi[i]) === -1) return false;   // tagi łączymy przez ORAZ
+    }
+    return true;
+  }
+
+  function wydarzeniaLokalizacji(idLok, tylkoPasujace) {
+    return DANE.wydarzenia.filter(function (w) {
+      return w.lokalizacja === idLok && (!tylkoPasujace || pasuje(w));
+    });
+  }
+
+  function posortowane(lista) {
+    var kolejnoscDni = {};
+    DANE.swieto.dni.forEach(function (d, i) { kolejnoscDni[d.id] = i; });
+    return lista.slice().sort(function (a, b) {
+      return (kolejnoscDni[a.dzien] - kolejnoscDni[b.dzien]) || (naMinuty(a.od) - naMinuty(b.od));
+    });
+  }
+
+  /* ═══════════════ piny ═══════════════ */
 
   var piny = [];
-  DANE.lokalizacje.forEach(function (l, i) {
-    if (!l.gps) return;
-    var poz = zGps(l.gps.lat, l.gps.lng);
-    var ile = DANE.wydarzenia.filter(function (w) { return w.lokalizacja === l.id; });
-    var kat = ile.length ? ile[0].kategoria : null;
+  (function zbudujPiny() {
+    var wezel = $('piny');
+    DANE.lokalizacje.forEach(function (l) {
+      if (!l.gps) return;                       // bez współrzędnych nie ma czego stawiać
+      var poz = zGps(l.gps.lat, l.gps.lng);
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pin' + (l.przyblizone ? ' przyblizony' : '');
+      b.innerHTML = '<span class="medalion"></span>';
+      b.addEventListener('click', function () { pokazLokalizacje(l.id); });
+      wezel.appendChild(b);
+      piny.push({ lok: l, wezel: b, medalion: b.firstChild, x: poz[0], y: poz[1] });
+    });
+  })();
 
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'pin';
-    b.style.setProperty('--kolor', kolory[kat] || 'var(--akcent)');
-    b.innerHTML = '<i>' + (i + 1) + '</i>';
-    b.title = l.nazwa;
-    b.setAttribute('aria-label',
-      l.nazwa + ', ' + l.adres + ', ' + ile.length + (ile.length === 1 ? ' wydarzenie' : ' wydarzenia') +
-      (l.przyblizone ? ', położenie przybliżone' : ''));
-    document.getElementById('piny').appendChild(b);
-    piny.push({ wezel: b, x: poz[0], y: poz[1] });
-  });
+  function odswiezPiny() {
+    piny.forEach(function (p) {
+      var lista = wydarzeniaLokalizacji(p.lok.id, true);
+      p.wezel.classList.toggle('przygaszony', lista.length === 0);
+      p.wezel.disabled = lista.length === 0;
 
-  /* ———————————————— przesuwanie i zoom ———————————————— */
+      var kategorie = {};
+      lista.forEach(function (w) { kategorie[w.kategoria] = true; });
+      var klucze = Object.keys(kategorie);
+      // Jedna kategoria = jej kolor i ikona. Kilka = neutralny tusz,
+      // bo wybieranie jednej z nich kłamałoby.
+      var kat = klucze.length === 1 ? KATEGORIE[klucze[0]] : null;
+      p.wezel.style.setProperty('--kolor', kat ? kat.kolor : 'var(--wiele)');
+      p.medalion.innerHTML =
+        ikona(IKONY[kat && kat.ikona] || IKONY.punkt) +
+        (lista.length > 1 ? '<span class="ile">' + lista.length + '</span>' : '');
 
-  var mapa = document.getElementById('mapa');
-  var plansza = document.getElementById('plansza');
-  var scena = document.getElementById('scena');
-  var wezelNazw = document.getElementById('nazwy');
+      var wPlan = lista.some(function (w) { return wPlanie(w.id); });
+      p.wezel.classList.toggle('wplanie', wPlan);
 
+      p.wezel.setAttribute('aria-label',
+        p.lok.nazwa + ', ' + p.lok.adres + '. ' +
+        (lista.length === 0 ? 'Brak wydarzeń przy tych filtrach'
+          : lista.length + (lista.length === 1 ? ' wydarzenie' : ' wydarzenia')) +
+        (p.lok.przyblizone ? '. Położenie przybliżone' : ''));
+    });
+  }
+
+  /* ═══════════════ trasa planu ═══════════════ */
+
+  function odswiezTrase() {
+    var wybrane = posortowane(DANE.wydarzenia.filter(function (w) {
+      return wPlanie(w.id) && (stan.dzien === 'wszystkie' || w.dzien === stan.dzien);
+    }));
+
+    var wgDni = {};
+    wybrane.forEach(function (w) { (wgDni[w.dzien] = wgDni[w.dzien] || []).push(w); });
+
+    var kawalki = [];
+    Object.keys(wgDni).forEach(function (dzien) {
+      var punkty = [];
+      wgDni[dzien].forEach(function (w) {
+        var l = LOKALIZACJE[w.lokalizacja];
+        if (!l || !l.gps) return;
+        var p = zGps(l.gps.lat, l.gps.lng);
+        // Kolejne wydarzenia w tym samym miejscu nie tworzą odcinka.
+        if (punkty.length && Math.abs(punkty[punkty.length - 1][0] - p[0]) < 1 &&
+            Math.abs(punkty[punkty.length - 1][1] - p[1]) < 1) return;
+        punkty.push(p);
+      });
+      for (var i = 1; i < punkty.length; i++) {
+        var a = punkty[i - 1], b = punkty[i];
+        var sx = (a[0] + b[0]) / 2, sy = (a[1] + b[1]) / 2;
+        var dx = b[0] - a[0], dy = b[1] - a[1];
+        var dl = Math.hypot(dx, dy) || 1;
+        // Punkt sterujący odsunięty prostopadle — stąd łagodny łuk zamiast prostej.
+        var wyg = dl * 0.16;
+        kawalki.push('<path d="M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) +
+          ' Q' + (sx - dy / dl * wyg).toFixed(1) + ' ' + (sy + dx / dl * wyg).toFixed(1) +
+          ' ' + b[0].toFixed(1) + ' ' + b[1].toFixed(1) + '"/>');
+      }
+    });
+    $('trasa').innerHTML = kawalki.join('');
+  }
+
+  /* ═══════════════ przesuwanie i zoom (etap 2) ═══════════════ */
+
+  var mapa = $('mapa'), plansza = $('plansza'), scena = $('scena'), wezelNazw = $('nazwy');
   var k = 1, tx = 0, ty = 0, kDopasowane = 1, wPx = 0, hPx = 0;
-  var PROG_NAZW = 2.2;          // ile razy bliżej niż dopasowanie, żeby pokazać nazwy
+  var PROG_NAZW = 2.2;
 
   function dopasuj() {
     var r = mapa.getBoundingClientRect();
@@ -374,19 +746,61 @@ footer a { color: inherit; }
     hPx = Math.max(1, Math.round(r.height));
     plansza.setAttribute('viewBox', '0 0 ' + wPx + ' ' + hPx);   // 1 jednostka SVG = 1 px
     kDopasowane = Math.min(wPx / PLOTNO.w, hPx / PLOTNO.h) * 0.98;
-    return kDopasowane;
   }
 
   function ogranicz() {
-    var kMin = kDopasowane * 0.85, kMaks = kDopasowane * 9;
-    k = Math.min(kMaks, Math.max(kMin, k));
-    // Nie pozwalamy odpłynąć mapie poza ekran.
-    var szer = PLOTNO.w * k, wys = PLOTNO.h * k;
-    var luz = 0.35;
+    k = Math.min(kDopasowane * 9, Math.max(kDopasowane * 0.85, k));
+    var szer = PLOTNO.w * k, wys = PLOTNO.h * k, luz = 0.35;
     tx = Math.min(wPx * luz, Math.max(wPx - szer - wPx * luz, tx));
     ty = Math.min(hPx * luz, Math.max(hPx - wys - hPx * luz, ty));
     if (szer < wPx) tx = (wPx - szer) / 2;
     if (wys < hPx) ty = (hPx - wys) / 2;
+  }
+
+  /* Bydgoska 50 i 52 to sąsiednie kamienice, Sienkiewicza 11 i 13 też —
+     przy pełnym oddaleniu ich piny leżą na sobie i dolnego nie da się
+     kliknąć. Rozpychamy je delikatnie, z ograniczeniem, żeby nie odjechały
+     od swojego miejsca. Gdy przybliżysz na tyle, że i tak się nie stykają,
+     przesunięcie samo znika. */
+  var MIN_ODSTEP = 34, MAKS_ODSUNIECIE = 20;
+  var kotwice = [];
+
+  function rozsunPiny() {
+    kotwice = [];
+    var n = piny.length, i, j, poz = [];
+    for (i = 0; i < n; i++) {
+      poz.push({ x: piny[i].x * k + tx, y: piny[i].y * k + ty, bx: piny[i].x * k + tx, by: piny[i].y * k + ty });
+    }
+    for (var przebieg = 0; przebieg < 6; przebieg++) {
+      var ruszyl = false;
+      for (i = 0; i < n; i++) {
+        if (piny[i].wezel.disabled) continue;
+        for (j = i + 1; j < n; j++) {
+          if (piny[j].wezel.disabled) continue;
+          var dx = poz[j].x - poz[i].x, dy = poz[j].y - poz[i].y;
+          var d = Math.hypot(dx, dy);
+          if (d >= MIN_ODSTEP) continue;
+          // Piny dokładnie w tym samym punkcie trzeba rozepchnąć w losowym,
+          // ale stałym kierunku — inaczej dzielimy przez zero.
+          if (d < 0.01) { dx = Math.cos(i * 2.4); dy = Math.sin(i * 2.4); d = 1; }
+          var pchniecie = (MIN_ODSTEP - d) / 2;
+          poz[i].x -= dx / d * pchniecie; poz[i].y -= dy / d * pchniecie;
+          poz[j].x += dx / d * pchniecie; poz[j].y += dy / d * pchniecie;
+          ruszyl = true;
+        }
+      }
+      if (!ruszyl) break;
+    }
+    for (i = 0; i < n; i++) {
+      var ox = poz[i].x - poz[i].bx, oy = poz[i].y - poz[i].by;
+      var dl = Math.hypot(ox, oy);
+      if (dl > MAKS_ODSUNIECIE) { ox = ox / dl * MAKS_ODSUNIECIE; oy = oy / dl * MAKS_ODSUNIECIE; }
+      piny[i].wezel.style.transform =
+        'translate(' + (poz[i].bx + ox).toFixed(1) + 'px,' + (poz[i].by + oy).toFixed(1) + 'px)';
+      // Odsunięty pin nie stoi już dokładnie na swoim miejscu, więc
+      // zaznaczamy prawdziwy punkt kropką. Mapa ma nie kłamać.
+      if (dl > 2 && !piny[i].wezel.disabled) kotwice.push([poz[i].bx, poz[i].by]);
+    }
   }
 
   var czeka = false;
@@ -397,27 +811,32 @@ footer a { color: inherit; }
       czeka = false;
       ogranicz();
       scena.setAttribute('transform', 'translate(' + tx.toFixed(2) + ' ' + ty.toFixed(2) + ') scale(' + k.toFixed(5) + ')');
-      for (var i = 0; i < piny.length; i++) {
-        piny[i].wezel.style.transform =
-          'translate(' + (piny[i].x * k + tx).toFixed(1) + 'px,' + (piny[i].y * k + ty).toFixed(1) + 'px)';
-      }
+      rozsunPiny();
       wezelNazw.classList.toggle('widoczne', k > kDopasowane * PROG_NAZW);
-      rysujSkale();
+      rysujFurniture();
     });
   }
 
-  function zoomWokol(ekranX, ekranY, mnoznik) {
+  function zoomWokol(x, y, mnoznik) {
     var poprzednie = k;
-    k *= mnoznik;
-    ogranicz();
+    k *= mnoznik; ogranicz();
     var faktyczny = k / poprzednie;
-    tx = ekranX - (ekranX - tx) * faktyczny;
-    ty = ekranY - (ekranY - ty) * faktyczny;
+    tx = x - (x - tx) * faktyczny;
+    ty = y - (y - ty) * faktyczny;
     rysuj();
   }
 
-  var wskazniki = new Map();
-  var poprzedniDystans = 0, poprzedniSrodek = null;
+  /** Ustawia widok na punkcie mapy, zostawiając miejsce na arkusz. */
+  function pokazPunkt(x, y, docelowe) {
+    if (docelowe) k = Math.max(k, kDopasowane * docelowe);
+    ogranicz();
+    var wolneY = arkuszOtwarty() ? hPx * 0.28 : hPx * 0.5;
+    tx = wPx / 2 - x * k;
+    ty = wolneY - y * k;
+    rysuj();
+  }
+
+  var wskazniki = new Map(), poprzedniDystans = 0, poprzedniSrodek = null;
 
   mapa.addEventListener('pointerdown', function (e) {
     if (e.target.closest('.pin') || e.target.closest('#zoom')) return;
@@ -431,36 +850,27 @@ footer a { color: inherit; }
     e.preventDefault();
     var stary = wskazniki.get(e.pointerId);
     wskazniki.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-    var lista = Array.from(wskazniki.values());
-    var pud = mapa.getBoundingClientRect();
+    var lista = Array.from(wskazniki.values()), pud = mapa.getBoundingClientRect();
 
     if (lista.length === 1) {
-      tx += e.clientX - stary.x;
-      ty += e.clientY - stary.y;
-      rysuj();
-      return;
+      tx += e.clientX - stary.x; ty += e.clientY - stary.y;
+      rysuj(); return;
     }
-    // Szczypanie dwoma palcami.
     var dystans = Math.hypot(lista[0].x - lista[1].x, lista[0].y - lista[1].y);
-    var srodek = {
-      x: (lista[0].x + lista[1].x) / 2 - pud.left,
-      y: (lista[0].y + lista[1].y) / 2 - pud.top
-    };
+    var srodek = { x: (lista[0].x + lista[1].x) / 2 - pud.left, y: (lista[0].y + lista[1].y) / 2 - pud.top };
     if (poprzedniDystans > 0) {
       if (poprzedniSrodek) { tx += srodek.x - poprzedniSrodek.x; ty += srodek.y - poprzedniSrodek.y; }
       zoomWokol(srodek.x, srodek.y, dystans / poprzedniDystans);
     }
-    poprzedniDystans = dystans;
-    poprzedniSrodek = srodek;
+    poprzedniDystans = dystans; poprzedniSrodek = srodek;
   });
 
-  function koniec(e) {
+  function koniecGestu(e) {
     wskazniki.delete(e.pointerId);
     if (wskazniki.size < 2) { poprzedniDystans = 0; poprzedniSrodek = null; }
   }
-  mapa.addEventListener('pointerup', koniec);
-  mapa.addEventListener('pointercancel', koniec);
+  mapa.addEventListener('pointerup', koniecGestu);
+  mapa.addEventListener('pointercancel', koniecGestu);
 
   mapa.addEventListener('wheel', function (e) {
     e.preventDefault();
@@ -468,89 +878,478 @@ footer a { color: inherit; }
     zoomWokol(e.clientX - pud.left, e.clientY - pud.top, Math.exp(-e.deltaY * 0.0016));
   }, { passive: false });
 
-  document.getElementById('blizej').addEventListener('click', function () { zoomWokol(wPx / 2, hPx / 2, 1.45); });
-  document.getElementById('dalej').addEventListener('click', function () { zoomWokol(wPx / 2, hPx / 2, 1 / 1.45); });
+  $('blizej').addEventListener('click', function () { zoomWokol(wPx / 2, hPx / 2, 1.45); });
+  $('dalej').addEventListener('click', function () { zoomWokol(wPx / 2, hPx / 2, 1 / 1.45); });
 
-  /* ———————————————— róża wiatrów i skala ———————————————— */
+  /* ═══════════════ róża wiatrów i skala ═══════════════ */
 
-  var furnitura = document.getElementById('furnitura');
-
-  function rozaWiatrow(cx, cy, r) {
-    // Ośmioramienna gwiazda w duchu secesji. Mapa jest obrócona o 90°
-    // w prawo, więc północ geograficzna wskazuje w prawo ekranu.
-    var obrot = OBROT ? 90 : 0;
-    var ramiona = '';
-    for (var i = 0; i < 8; i++) {
-      var dlugie = i % 2 === 0;
-      var dl = dlugie ? r : r * 0.52;
-      var sz = dlugie ? r * 0.16 : r * 0.11;
-      var kat = i * 45;
-      ramiona +=
-        '<g transform="rotate(' + kat + ')">' +
-          '<path class="' + (dlugie ? 'roza-ramie' : 'roza-ramie-jasne') + '" d="M0 0 L' + sz + ' ' + (-dl * 0.42) + ' L0 ' + (-dl) + ' Z"/>' +
-          '<path class="roza-ramie-jasne" d="M0 0 L' + (-sz) + ' ' + (-dl * 0.42) + ' L0 ' + (-dl) + ' Z"/>' +
-        '</g>';
-    }
-    return '<g transform="translate(' + cx + ' ' + cy + ') rotate(' + obrot + ')">' +
-      '<circle class="roza-linia" r="' + (r * 0.62) + '"/>' +
-      '<circle class="roza-linia" r="' + (r * 0.30) + '"/>' +
-      ramiona +
-      '<g transform="rotate(' + (-obrot) + ')">' +
-        '<text x="' + (OBROT ? r + 9 : 0) + '" y="' + (OBROT ? 4 : -r - 5) + '" ' +
-        'font-size="12" font-weight="700" text-anchor="middle">N</text>' +
-      '</g>' +
-    '</g>';
-  }
-
+  var furnitura = $('furnitura');
   var STOPNIE = [25, 50, 100, 200, 500, 1000, 2000];
 
-  function rysujSkale() {
-    var metry = STOPNIE[0];
-    for (var i = 0; i < STOPNIE.length; i++) {
-      if (STOPNIE[i] * k <= 130) metry = STOPNIE[i];
+  function rozaWiatrow(cx, cy, r) {
+    // Mapa jest obrócona o 90° w prawo, więc północ wskazuje w prawo ekranu.
+    var obrot = OBROT ? 90 : 0, ramiona = '';
+    for (var i = 0; i < 8; i++) {
+      var dlugie = i % 2 === 0, dl = dlugie ? r : r * 0.52, sz = dlugie ? r * 0.16 : r * 0.11;
+      ramiona += '<g transform="rotate(' + (i * 45) + ')">' +
+        '<path class="' + (dlugie ? 'roza-ramie' : 'roza-ramie-jasne') + '" d="M0 0 L' + sz + ' ' + (-dl * 0.42) + ' L0 ' + (-dl) + ' Z"/>' +
+        '<path class="roza-ramie-jasne" d="M0 0 L' + (-sz) + ' ' + (-dl * 0.42) + ' L0 ' + (-dl) + ' Z"/></g>';
     }
-    var dl = metry * k;
-    var x0 = 14, y0 = hPx - 20;
+    return '<g transform="translate(' + cx + ' ' + cy + ') rotate(' + obrot + ')">' +
+      '<circle class="roza-linia" r="' + (r * 0.62) + '"/><circle class="roza-linia" r="' + (r * 0.3) + '"/>' + ramiona +
+      '<g transform="rotate(' + (-obrot) + ')"><text x="' + (OBROT ? r + 9 : 0) + '" y="' + (OBROT ? 4 : -r - 5) +
+      '" font-size="12" font-weight="700" text-anchor="middle">N</text></g></g>';
+  }
 
+  function rysujFurniture() {
+    var metry = STOPNIE[0];
+    for (var i = 0; i < STOPNIE.length; i++) if (STOPNIE[i] * k <= 130) metry = STOPNIE[i];
+    var dl = metry * k, y0 = hPx - 44;
     furnitura.setAttribute('viewBox', '0 0 ' + wPx + ' ' + hPx);
-    furnitura.innerHTML =
-      rozaWiatrow(wPx - 42, 46, 22) +
-      '<g transform="translate(' + x0 + ' ' + y0 + ')">' +
+        var kropki = kotwice.map(function (p) {
+      return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="2.5" fill="var(--tusz)" opacity=".55"/>';
+    }).join('');
+    furnitura.innerHTML = rozaWiatrow(wPx - 42, 46, 22) + kropki +
+      '<g transform="translate(14 ' + y0 + ')">' +
         '<path class="skala-kreska" d="M0 -7 L0 0 L' + dl.toFixed(1) + ' 0 L' + dl.toFixed(1) + ' -7"/>' +
         '<path class="skala-kreska" d="M' + (dl / 2).toFixed(1) + ' -4 L' + (dl / 2).toFixed(1) + ' 0"/>' +
         '<text x="' + (dl / 2).toFixed(1) + '" y="14" font-size="11" text-anchor="middle">' +
-          (metry >= 1000 ? (metry / 1000) + ' km' : metry + ' m') +
-        '</text>' +
-      '</g>';
+        (metry >= 1000 ? (metry / 1000) + ' km' : metry + ' m') + '</text></g>';
   }
 
-  /* ———————————————— start ———————————————— */
+  /* ═══════════════ arkusz ═══════════════ */
+
+  var arkusz = $('arkusz'), tresc = $('arkusz-tresc'), tytulArkusza = $('arkusz-tytul'), wstecz = $('wstecz');
+  var powrot = null, ostatnioAktywny = null;
+
+  function arkuszOtwarty() { return arkusz.classList.contains('otwarty'); }
+
+  function otworzArkusz(tytul, html, naWstecz) {
+    if (!arkuszOtwarty()) ostatnioAktywny = document.activeElement;
+    arkusz.hidden = false;
+    tytulArkusza.textContent = tytul;
+    tresc.innerHTML = html;
+    tresc.scrollTop = 0;
+    powrot = naWstecz || null;
+    wstecz.hidden = !powrot;
+    requestAnimationFrame(function () { arkusz.classList.add('otwarty'); });
+    odswiezPasek();
+  }
+
+  function zamknijArkusz() {
+    arkusz.classList.remove('otwarty');
+    stan.widok = null;
+    powrot = null;
+    wstecz.hidden = true;
+    odswiezPasek();
+    if (ostatnioAktywny && ostatnioAktywny.isConnected) ostatnioAktywny.focus();
+    setTimeout(function () { if (!arkuszOtwarty()) arkusz.hidden = true; }, 260);
+  }
+
+  $('zamknij-arkusz').addEventListener('click', zamknijArkusz);
+  wstecz.addEventListener('click', function () { if (powrot) powrot(); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!$('lupa').hidden) { zamknijLupe(); return; }
+    if (arkuszOtwarty()) zamknijArkusz();
+  });
+
+  /* ═══════════════ widok: lokalizacja ═══════════════ */
+
+  function pokazLokalizacje(idLok) {
+    var l = LOKALIZACJE[idLok];
+    var lista = posortowane(wydarzeniaLokalizacji(idLok, true));
+    stan.widok = 'lokalizacja';
+
+    if (lista.length === 1) { pokazWydarzenie(lista[0].id, function () { pokazLokalizacje(idLok); }); return; }
+
+    var html = '<p class="meta"><b>' + bezpiecznie(l.adres) + '</b></p>' +
+      (l.przyblizone ? '<p class="brak-opisu">Położenie przybliżone — organizatorzy nie podali dokładnej pinezki.</p>' : '') +
+      (lista.length ? listaWydarzen(lista, true) : '<p class="pusto">Przy obecnych filtrach nic tu nie ma.</p>') +
+      przyciskNawigacji(l);
+
+    otworzArkusz(l.nazwa, html);
+    podepnijListe();
+    podepnijNawigacje();
+    var p = zGps(l.gps.lat, l.gps.lng);
+    pokazPunkt(p[0], p[1], 3);
+  }
+
+  function przyciskNawigacji(l) {
+    if (!l || !l.gps) return '';
+    return '<div class="dzialania"><a class="przycisk" target="_blank" rel="noopener" ' +
+      'href="https://www.google.com/maps/dir/?api=1&destination=' + l.gps.lat + ',' + l.gps.lng + '">' +
+      ikona(IKONY_UI.kompas) + 'Prowadź mnie</a></div>';
+  }
+
+  /* ═══════════════ widok: wydarzenie ═══════════════ */
+
+  function listaWydarzen(lista, bezMiejsca) {
+    var poprzedniDzien = null, html = '';
+    lista.forEach(function (w) {
+      if (!bezMiejsca && w.dzien !== poprzedniDzien) {
+        poprzedniDzien = w.dzien;
+        var d = DNI[w.dzien];
+        html += '<div class="dzien-naglowek">' + bezpiecznie(d.nazwa) + ' ' + d.data.split('-').reverse().join('.') + '</div>';
+      }
+      var kat = KATEGORIE[w.kategoria] || {};
+      html += '<button type="button" class="wydarzenie" data-wydarzenie="' + bezpiecznie(w.id) + '">' +
+        '<span class="godz">' + bezpiecznie(godziny(w)) + '</span>' +
+        '<span class="kropka" style="--kolor:' + bezpiecznie(kat.kolor || '#888') + '"></span>' +
+        '<span class="tyt">' + bezpiecznie(w.tytul) + '</span>' +
+        (bezMiejsca ? '' : '<span class="msc">' + bezpiecznie(w.miejsce) + '</span>') +
+        '</button>';
+    });
+    return html;
+  }
+
+  function podepnijListe() {
+    Array.prototype.forEach.call(tresc.querySelectorAll('[data-wydarzenie]'), function (b) {
+      b.addEventListener('click', function () {
+        var wrocDo = stan.widok, arg = stan.widokArg;
+        pokazWydarzenie(b.getAttribute('data-wydarzenie'), function () { wrocNa(wrocDo, arg); });
+      });
+    });
+  }
+
+  function wrocNa(widok, arg) {
+    if (widok === 'lokalizacja') pokazLokalizacje(arg);
+    else if (widok === 'plan') pokazPlan();
+    else pokazProgram();
+  }
+
+  function pokazWydarzenie(id, naWstecz) {
+    var w = DANE.wydarzenia.filter(function (x) { return x.id === id; })[0];
+    if (!w) return;
+    var l = LOKALIZACJE[w.lokalizacja], d = DNI[w.dzien], kat = KATEGORIE[w.kategoria] || {};
+    stan.widok = 'wydarzenie'; stan.widokArg = id;
+
+    var html = '<div class="meta">' +
+      '<span><b>' + bezpiecznie(d.nazwa) + '</b> ' + d.data.split('-').reverse().join('.') + '</span>' +
+      '<span><b>' + bezpiecznie(godziny(w)) + '</b></span></div>' +
+      // Nazwa miejsca z programu często niesie już adres — nie dopisujemy go drugi raz.
+      '<div class="meta"><span>' + bezpiecznie(w.miejsce) +
+        (l && w.miejsce.indexOf(l.adres) === -1 ? ', ' + bezpiecznie(l.adres) : '') + '</span></div>';
+
+    html += '<div class="znaczki"><span class="znaczek kat" style="--kolor:' + bezpiecznie(kat.kolor || '#888') + '">' +
+      bezpiecznie(kat.nazwa || w.kategoria) + '</span>';
+    w.tagi.forEach(function (t) {
+      if (TAGI[t]) html += '<span class="znaczek">' + bezpiecznie(TAGI[t].nazwa) + '</span>';
+    });
+    html += '</div>';
+
+    html += w.opis
+      ? '<div class="opis">' + bezpiecznie(w.opis) + '</div>'
+      : '<p class="brak-opisu">Organizatorzy nie podali jeszcze opisu tego wydarzenia. Godzina i miejsce są pewne.</p>';
+
+    if (w.zdjecia && w.zdjecia.length) {
+      html += '<div class="zdjecia">';
+      w.zdjecia.forEach(function (n) {
+        html += '<button type="button" data-zdjecie="' + bezpiecznie(n) + '">' +
+          '<img src="img/' + bezpiecznie(n) + '-mini.jpg" alt="Zdjęcie z wydarzenia: ' + bezpiecznie(w.tytul) + '" loading="lazy" decoding="async"></button>';
+      });
+      html += '</div>';
+    }
+
+    if (w.linki && w.linki.length) {
+      html += '<div class="linki">';
+      w.linki.forEach(function (a) {
+        html += '<a href="' + bezpiecznie(a.url) + '" target="_blank" rel="noopener">' + bezpiecznie(a.etykieta) + ' ↗</a>';
+      });
+      html += '</div>';
+    }
+
+    /* MIEJSCE NA PUNKT 5 z promptu — mechanika angażująca.
+       Dane niosą już `w.dodatki`; kiedy poznamy zakres, treść wchodzi tutaj,
+       między linki a przyciski. Świadomie nie projektuję pod nieznane funkcje. */
+
+    html += '<div class="dzialania">' +
+      '<button type="button" class="przycisk pusty" id="do-planu" aria-pressed="' + (wPlanie(w.id) ? 'true' : 'false') + '">' +
+        ikona(IKONY_UI.plan) + '<span>' + (wPlanie(w.id) ? 'W moim planie' : 'Dodaj do planu') + '</span></button>' +
+      '</div>' + przyciskNawigacji(l);
+
+    otworzArkusz(w.tytul, html, naWstecz);
+
+    var przycisk = $('do-planu');
+    przycisk.addEventListener('click', function () {
+      if (wPlanie(w.id)) delete stan.plan[w.id]; else stan.plan[w.id] = true;
+      zapiszPlan();
+      przycisk.setAttribute('aria-pressed', wPlanie(w.id) ? 'true' : 'false');
+      przycisk.querySelector('span').textContent = wPlanie(w.id) ? 'W moim planie' : 'Dodaj do planu';
+      odswiezPiny(); odswiezTrase(); odswiezPasek();
+    });
+
+    Array.prototype.forEach.call(tresc.querySelectorAll('[data-zdjecie]'), function (b) {
+      b.addEventListener('click', function () { otworzLupe(b.getAttribute('data-zdjecie'), w.tytul); });
+    });
+    podepnijNawigacje();
+
+    if (l && l.gps) { var p = zGps(l.gps.lat, l.gps.lng); pokazPunkt(p[0], p[1], 3); }
+  }
+
+  function podepnijNawigacje() { /* zwykłe linki — nic do podpinania, zostawione dla czytelności */ }
+
+  /* ═══════════════ widok: program ═══════════════ */
+
+  function pokazProgram() {
+    stan.widok = 'program'; stan.widokArg = null;
+    var lista = posortowane(DANE.wydarzenia.filter(pasuje));
+    var html = lista.length
+      ? listaWydarzen(lista, false)
+      : '<p class="pusto">Żadne wydarzenie nie pasuje do wybranych filtrów.<br>Spróbuj odznaczyć któryś.</p>';
+    // Kredyt organizatora — z danych, nie z kodu. Miejsce na mapie zajmuje
+    // atrybucja podkładu, wymagana licencją, więc ten idzie tutaj.
+    if (DANE.swieto.stopka) {
+      html += '<p class="pusto" style="border-top:1px solid var(--kreska);margin-top:1rem;font-size:.78rem">' +
+        bezpiecznie(DANE.swieto.stopka) + '</p>';
+    }
+    otworzArkusz('Program — ' + lista.length + zOdmiana(lista.length, ' wydarzenie', ' wydarzenia', ' wydarzeń'), html);
+    podepnijListe();
+  }
+
+  function zOdmiana(n, jeden, kilka, wiele) {
+    if (n === 1) return jeden;
+    var r10 = n % 10, r100 = n % 100;
+    if (r10 >= 2 && r10 <= 4 && (r100 < 12 || r100 > 14)) return kilka;
+    return wiele;
+  }
+
+  /* ═══════════════ widok: plan ═══════════════ */
+
+  function pokazPlan() {
+    stan.widok = 'plan'; stan.widokArg = null;
+    var wybrane = posortowane(DANE.wydarzenia.filter(function (w) { return wPlanie(w.id); }));
+
+    if (!wybrane.length) {
+      otworzArkusz('Mój plan', '<p class="pusto">Nie masz jeszcze nic w planie.<br>' +
+        'Otwórz wydarzenie i naciśnij „Dodaj do planu”, a ułożę je po godzinach ' +
+        'i policzę, ile zajmie przejście między nimi.</p>');
+      return;
+    }
+
+    var html = '', poprzedni = null, ostrzezen = 0;
+    wybrane.forEach(function (w) {
+      var l = LOKALIZACJE[w.lokalizacja];
+      var d = DNI[w.dzien];
+
+      if (!poprzedni || poprzedni.dzien !== w.dzien) {
+        html += '<div class="dzien-naglowek">' + bezpiecznie(d.nazwa) + ' ' + d.data.split('-').reverse().join('.') + '</div>';
+      } else {
+        var lp = LOKALIZACJE[poprzedni.lokalizacja];
+        if (lp && l && lp.id !== l.id && lp.gps && l.gps) {
+          var p = przejscie(lp.gps, l.gps);
+          // Ile realnie zostaje: od końca poprzedniego (albo jego startu,
+          // gdy program nie podaje końca) do startu następnego.
+          var koniecPoprzedniego = naMinuty(poprzedni.do || poprzedni.od);
+          var luz = naMinuty(w.od) - koniecPoprzedniego;
+          var zaciasno = luz < p.minuty;
+          if (zaciasno) ostrzezen++;
+          var powod = '';
+          if (zaciasno) {
+            if (luz < 0) powod = ' — a te wydarzenia i tak zachodzą na siebie o ' + (-luz) + ' min';
+            else if (luz === 0) powod = ' — a jedno zaczyna się dokładnie wtedy, gdy drugie się kończy';
+            else powod = ' — a masz na to tylko ' + luz + ' min';
+            // Bez godziny zakończenia liczymy od startu, więc luz bywa zawyżony.
+            if (!poprzedni.do) powod += '. Program nie podaje, kiedy kończy się poprzednie wydarzenie';
+          }
+          html += '<div class="przejscie' + (zaciasno ? ' zaciasno' : '') + '">' + ikona(IKONY_UI.nogi) +
+            '<span>' + p.minuty + ' min pieszo (' +
+            (p.metry >= 1000 ? (p.metry / 1000).toFixed(1) + ' km' : p.metry + ' m') + ')' + powod +
+            '</span></div>';
+        } else if (lp && l && lp.id === l.id) {
+          html += '<div class="przejscie"><span>To samo miejsce — nigdzie nie idziesz.</span></div>';
+        }
+      }
+
+      html += '<div class="plan-poz">' +
+        '<span class="godz">' + bezpiecznie(godziny(w)) + '</span>' +
+        '<span class="tyt">' + bezpiecznie(w.tytul) + '</span>' +
+        '<span class="msc">' + bezpiecznie(w.miejsce) + '</span>' +
+        '<button type="button" class="usun" data-usun="' + bezpiecznie(w.id) + '">Usuń z planu</button>' +
+        '</div>';
+      poprzedni = w;
+    });
+
+    if (ostrzezen) {
+      html = '<p class="brak-opisu" style="border-left-color:var(--ostrzezenie)">' +
+        'W ' + ostrzezen + zOdmiana(ostrzezen, ' miejscu' , ' miejscach', ' miejscach') +
+        ' przejście nie mieści się między wydarzeniami. Zaznaczone na czerwono.</p>' + html;
+    }
+
+    otworzArkusz('Mój plan — ' + wybrane.length + zOdmiana(wybrane.length, ' pozycja', ' pozycje', ' pozycji'), html);
+
+    Array.prototype.forEach.call(tresc.querySelectorAll('[data-usun]'), function (b) {
+      b.addEventListener('click', function () {
+        delete stan.plan[b.getAttribute('data-usun')];
+        zapiszPlan(); odswiezPiny(); odswiezTrase(); pokazPlan();
+      });
+    });
+  }
+
+  /* ═══════════════ widok: filtry ═══════════════ */
+
+  function pokazFiltry() {
+    stan.widok = 'filtry'; stan.widokArg = null;
+    var html = '<div class="grupa-filtrow"><h3>Kategoria</h3><div class="filtry">';
+    DANE.kategorie.forEach(function (kt) {
+      html += '<button type="button" class="filtr" data-kat="' + bezpiecznie(kt.id) + '" style="--kolor:' + bezpiecznie(kt.kolor) + '" ' +
+        'aria-pressed="' + (stan.kategorie[kt.id] ? 'true' : 'false') + '">' +
+        '<span class="plamka"></span>' + bezpiecznie(kt.nazwa) + '</button>';
+    });
+    html += '</div></div>';
+
+    if (DANE.tagi && DANE.tagi.length) {
+      html += '<div class="grupa-filtrow"><h3>Tagi — łączone przez „oraz”</h3><div class="filtry">';
+      DANE.tagi.forEach(function (t) {
+        html += '<button type="button" class="filtr" data-tag="' + bezpiecznie(t.id) + '" ' +
+          'aria-pressed="' + (stan.tagi[t.id] ? 'true' : 'false') + '"' +
+          (t.opis ? ' title="' + bezpiecznie(t.opis) + '"' : '') + '>' + bezpiecznie(t.nazwa) + '</button>';
+      });
+      html += '</div></div>';
+      html += '<p class="pusto" style="padding:.3rem 0;text-align:left">Brak tagu przy wydarzeniu znaczy „nie wiemy”, nie „nie dotyczy”.</p>';
+    }
+
+    html += '<div class="dzialania"><button type="button" class="przycisk pusty" id="wyczysc">Wyczyść filtry</button></div>';
+    otworzArkusz('Filtry', html);
+
+    Array.prototype.forEach.call(tresc.querySelectorAll('[data-kat],[data-tag]'), function (b) {
+      b.addEventListener('click', function () {
+        var kat = b.getAttribute('data-kat'), tag = b.getAttribute('data-tag');
+        var zbior = kat ? stan.kategorie : stan.tagi, klucz = kat || tag;
+        if (zbior[klucz]) delete zbior[klucz]; else zbior[klucz] = true;
+        b.setAttribute('aria-pressed', zbior[klucz] ? 'true' : 'false');
+        poFiltrach();
+      });
+    });
+    $('wyczysc').addEventListener('click', function () {
+      stan.kategorie = {}; stan.tagi = {};
+      poFiltrach(); pokazFiltry();
+    });
+  }
+
+  function poFiltrach() { odswiezPiny(); odswiezTrase(); odswiezPasek(); rysuj(); }
+
+  /* ═══════════════ widok: czego nie wiemy ═══════════════ */
+
+  function pokazLuki() {
+    stan.widok = 'luki'; stan.widokArg = null;
+    var luki = DANE.luki || [];
+    var html = '<p class="pusto" style="text-align:left;padding:0 0 .6rem">' +
+      'Program wciąż się uzupełnia. Zamiast udawać, że wiemy wszystko, wypisujemy tutaj to, ' +
+      'czego jeszcze nie wiemy.</p>';
+    html += luki.length
+      ? luki.map(function (l) {
+          return '<div class="luka"><h3>' + bezpiecznie(l.tytul) + '</h3><p>' + bezpiecznie(l.tresc) + '</p></div>';
+        }).join('')
+      : '<p class="pusto">Na dziś nie mamy żadnych luk w programie.</p>';
+    otworzArkusz('Czego jeszcze nie wiemy', html);
+  }
+
+  /* ═══════════════ podgląd zdjęcia ═══════════════ */
+
+  var lupa = $('lupa');
+  function otworzLupe(nazwa, podpis) {
+    $('lupa-obraz').src = 'img/' + nazwa + '.jpg';
+    $('lupa-obraz').alt = 'Zdjęcie z wydarzenia: ' + podpis;
+    $('lupa-podpis').textContent = podpis;
+    lupa.hidden = false;
+    $('zamknij-lupe').focus();
+  }
+  function zamknijLupe() { lupa.hidden = true; $('lupa-obraz').src = ''; }
+  $('zamknij-lupe').addEventListener('click', zamknijLupe);
+  lupa.addEventListener('click', function (e) { if (e.target === lupa) zamknijLupe(); });
+
+  /* ═══════════════ dolny pasek ═══════════════ */
+
+  var SEKCJE = [
+    { id: 'program', nazwa: 'Program',  ikona: IKONY_UI.program, otworz: pokazProgram },
+    { id: 'plan',    nazwa: 'Mój plan', ikona: IKONY_UI.plan,    otworz: pokazPlan, licznik: ilePlanu },
+    { id: 'filtry',  nazwa: 'Filtry',   ikona: IKONY_UI.filtry,  otworz: pokazFiltry, licznik: function () { return ileWybrano(stan.kategorie) + ileWybrano(stan.tagi); } },
+    { id: 'luki',    nazwa: 'Nie wiemy',ikona: IKONY_UI.luki,    otworz: pokazLuki }
+  ];
+
+  (function zbudujPasek() {
+    var pasek = $('pasek');
+    SEKCJE.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.id = 'sekcja-' + s.id;
+      b.setAttribute('aria-expanded', 'false');
+      b.innerHTML = ikona(s.ikona) + '<span>' + s.nazwa + '</span>';
+      b.addEventListener('click', function () {
+        if (stan.widok === s.id) { zamknijArkusz(); return; }   // drugie naciśnięcie zamyka
+        s.otworz();
+      });
+      pasek.appendChild(b);
+    });
+  })();
+
+  function odswiezPasek() {
+    SEKCJE.forEach(function (s) {
+      var b = $('sekcja-' + s.id);
+      b.setAttribute('aria-expanded', stan.widok === s.id ? 'true' : 'false');
+      var stary = b.querySelector('.licznik');
+      if (stary) stary.remove();
+      var n = s.licznik ? s.licznik() : 0;
+      if (n > 0) {
+        var z = document.createElement('span');
+        z.className = 'licznik'; z.textContent = n;
+        b.appendChild(z);
+      }
+    });
+  }
+
+  /* ═══════════════ przełącznik dni ═══════════════ */
+
+  (function zbudujDni() {
+    var pojemnik = $('dni');
+    var opcje = DANE.swieto.dni.map(function (d) {
+      return { id: d.id, etykieta: d.nazwa + ' ' + (+d.data.split('-')[2]) + '.' + d.data.split('-')[1] };
+    });
+    opcje.push({ id: 'wszystkie', etykieta: 'Oba dni' });
+
+    opcje.forEach(function (o) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = o.etykieta;
+      b.setAttribute('aria-pressed', stan.dzien === o.id ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        stan.dzien = o.id;
+        Array.prototype.forEach.call(pojemnik.children, function (x) {
+          x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+        });
+        poFiltrach();
+        if (stan.widok === 'program') pokazProgram();
+        else if (stan.widok === 'plan') pokazPlan();
+      });
+      pojemnik.appendChild(b);
+    });
+  })();
+
+  /* ═══════════════ start ═══════════════ */
+
+  var s = DANE.swieto;
+  $('tytul').textContent = s.nazwa;
+  document.title = s.nazwa;
+  $('podtytul').textContent = s.dzielnica + ', ' + s.miasto;
 
   function przelicz(pierwszy) {
-    var poprzednieDopasowanie = kDopasowane;
+    var poprzednie = kDopasowane;
     dopasuj();
     if (pierwszy) {
       k = kDopasowane;
       tx = (wPx - PLOTNO.w * k) / 2;
       ty = (hPx - PLOTNO.h * k) / 2;
-    } else if (poprzednieDopasowanie > 0) {
-      k *= kDopasowane / poprzednieDopasowanie;      // zachowaj krotność przybliżenia
+    } else if (poprzednie > 0) {
+      k *= kDopasowane / poprzednie;
     }
     rysuj();
   }
 
-  // Nagłówek i stopka z danych — w kodzie nie ma nazwy święta.
-  var s = DANE.swieto;
-  document.getElementById('tytul').textContent = s.nazwa;
-  document.title = s.nazwa;
-  var dni = s.dni.map(function (d) {
-    var cz = d.data.split('-');
-    return d.nazwa.toLowerCase() + ' ' + (+cz[2]) + '.' + cz[1];
-  });
-  document.getElementById('podtytul').textContent =
-    s.dzielnica + ', ' + s.miasto + ' — ' + dni.join(' i ') + ' ' + s.dni[0].data.slice(0, 4);
-  document.getElementById('stopka-swieto').textContent = (s.stopka ? s.stopka + '. ' : '');
-
+  odswiezPiny();
+  odswiezTrase();
+  odswiezPasek();
   przelicz(true);
   addEventListener('resize', function () { przelicz(false); });
 })();

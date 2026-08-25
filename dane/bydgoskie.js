@@ -12,6 +12,7 @@
 window.DANE = {
 
   swieto: {
+    id: 'bydgoskie',                 // klucz zapisu planu w localStorage
     nazwa: 'XVII Święto Bydgoskiego Przedmieścia',
     skrot: 'Święto Bydgoskiego',
     miasto: 'Toruń',
@@ -25,14 +26,15 @@ window.DANE = {
     mapa: { plik: null, szerokosc: null, wysokosc: null }
   },
 
-  // Kolor kategorii steruje kolorem pinu. Paleta wstępna — do domknięcia w ETAPIE 3.
+  /* Kolor kategorii steruje kolorem pinu, `ikona` wybiera rysunek z biblioteki
+     w index.html. Nowe święto może użyć tych samych nazw ikon. */
   kategorie: [
-    { id: 'muzyka',     nazwa: 'Muzyka',           kolor: '#B03A2E' },
-    { id: 'jedzenie',   nazwa: 'Jedzenie',         kolor: '#D4772A' },
-    { id: 'warsztaty',  nazwa: 'Warsztaty',        kolor: '#C9A227' },
-    { id: 'dzieci',     nazwa: 'Dzieci i rodziny', kolor: '#4F9D5D' },
-    { id: 'sasiedzkie', nazwa: 'Sąsiedzkie',       kolor: '#3A7CA5' },
-    { id: 'sztuka',     nazwa: 'Sztuka',           kolor: '#7A4E9B' }
+    { id: 'muzyka',     nazwa: 'Muzyka',           kolor: '#A8382C', ikona: 'nuta' },
+    { id: 'jedzenie',   nazwa: 'Jedzenie',         kolor: '#C2691F', ikona: 'talerz' },
+    { id: 'warsztaty',  nazwa: 'Warsztaty',        kolor: '#B08A1E', ikona: 'nozyce' },
+    { id: 'dzieci',     nazwa: 'Dzieci i rodziny', kolor: '#3F8A4F', ikona: 'latawiec' },
+    { id: 'sasiedzkie', nazwa: 'Sąsiedzkie',       kolor: '#2F6B92', ikona: 'dom' },
+    { id: 'sztuka',     nazwa: 'Sztuka',           kolor: '#6B4489', ikona: 'paleta' }
   ],
 
   /* Tagi sterują filtrami. Każdy jest oparty na tym, co realnie stoi w programie —
