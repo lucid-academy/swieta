@@ -401,6 +401,109 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 #zoom button svg { width: 20px; height: 20px; fill: var(--tusz); display: block; margin: auto; }
 #obroc.recznie { border-color: var(--akcent); }
 
+/* ─────────── intro ───────────
+   Trzy sceny: film (nieme najście na księgę) -> księga -> brama z animowaną
+   ulicą i przyciskiem wejścia. Mapa ładuje się pod spodem od pierwszej chwili,
+   więc pominięcie intra daje ją natychmiast. */
+#intro {
+  position: fixed; inset: 0; z-index: 60;
+  background: #120C08;
+  display: grid; place-items: center;
+  overflow: hidden;
+  opacity: 1; transition: opacity .5s ease;
+}
+#intro[hidden] { display: none; }
+#intro.znika { opacity: 0; pointer-events: none; }
+
+#intro-film {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: opacity .6s ease;
+}
+#intro.scena-ksiega #intro-film,
+#intro.scena-brama #intro-film { opacity: 0; }
+
+/* tło dzielnicy — trzy warstwy paralaksy, jak w oryginale */
+#intro-tlo { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; }
+#intro.scena-brama #intro-tlo { opacity: 1; }
+#intro-tlo .warstwa {
+  position: absolute; inset: -4%;
+  background-position: 50%; background-size: cover; background-repeat: no-repeat;
+}
+#intro-tlo .daleko { filter: saturate(.9) brightness(.85); animation: dryf 26s ease-in-out infinite alternate; }
+#intro-tlo .srodek { animation: dryf 18s ease-in-out infinite alternate-reverse; }
+#intro-tlo .blisko { mix-blend-mode: multiply; opacity: .42; animation: dryf 12s ease-in-out infinite alternate; }
+#intro-tlo video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: .55; mix-blend-mode: screen;
+}
+#intro-tlo .zaslona {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, rgba(18,12,8,.12), rgba(18,12,8,.82) 78%);
+}
+@keyframes dryf { from { transform: scale(1.04) translate3d(-1%, 0, 0); } to { transform: scale(1.08) translate3d(1%, -1%, 0); } }
+
+/* księga */
+#intro-ksiega {
+  position: relative; z-index: 2;
+  width: min(58vw, 42vh); aspect-ratio: 3 / 4;
+  padding: 0; border: 0; background: none; cursor: pointer;
+  opacity: 0; transform: scale(.86);
+  transition: opacity .8s ease, transform .8s cubic-bezier(.22,.9,.3,1);
+}
+#intro.scena-ksiega #intro-ksiega, #intro.scena-brama #intro-ksiega { opacity: 1; transform: none; }
+#intro.scena-brama #intro-ksiega { transform: translateY(-9vh) scale(.72); cursor: default; }
+#intro-ksiega img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  border-radius: 3px 8px 8px 3px;
+  box-shadow: -6px 0 0 rgba(0,0,0,.35), 0 18px 46px rgba(0,0,0,.66);
+}
+#intro-ksiega:focus-visible { outline: 3px solid #E7D8BC; outline-offset: 6px; }
+
+#intro-podpowiedz {
+  position: absolute; left: 50%; bottom: 16vh; transform: translateX(-50%);
+  z-index: 3; margin: 0; color: #E7D8BC; opacity: 0;
+  font-family: var(--szeryf); font-size: .92rem; letter-spacing: .03em;
+  text-shadow: 0 1px 8px rgba(0,0,0,.8);
+  transition: opacity .6s ease .5s;
+}
+#intro.scena-ksiega #intro-podpowiedz,
+#intro.czeka.scena-film #intro-podpowiedz { opacity: .85; animation: tetno 2.6s ease-in-out infinite; }
+#intro.czeka.scena-film { cursor: pointer; }
+@keyframes tetno { 0%, 100% { opacity: .55; } 50% { opacity: .95; } }
+
+/* brama */
+#intro-brama {
+  position: absolute; left: 50%; top: 65%; transform: translate(-50%, -50%) scale(.9);
+  z-index: 3; display: grid; justify-items: center; gap: .7rem;
+  opacity: 0; pointer-events: none; transition: opacity .7s ease .35s, transform .7s ease .35s;
+}
+#intro.scena-brama #intro-brama { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+#intro-brama .cel {
+  min-height: 52px; padding: .8rem 2.1rem;
+  font-family: var(--szeryf); font-size: 1.06rem; letter-spacing: .06em;
+  color: #21170E; background: #E7D8BC;
+  border: 1px solid #C9B99C; border-radius: 4px; cursor: pointer;
+  box-shadow: 0 6px 22px rgba(0,0,0,.5);
+}
+#intro-brama .cel:hover { background: #F5EAD4; }
+#intro-brama .podpis { margin: 0; font-size: .74rem; color: rgba(231,216,188,.66); }
+
+#intro-pomin {
+  position: absolute; right: .8rem; top: .8rem; z-index: 4;
+  min-height: 44px; padding: .5rem 1rem;
+  color: #E7D8BC; background: rgba(231,216,188,.14);
+  border: 1px solid rgba(231,216,188,.34); border-radius: 6px;
+  font-size: .84rem; cursor: pointer;
+}
+#intro-pomin:hover { background: rgba(231,216,188,.24); }
+
+@media (prefers-reduced-motion: reduce) {
+  #intro-tlo .warstwa { animation: none; }
+  #intro.scena-ksiega #intro-podpowiedz { animation: none; }
+  #intro, #intro-film, #intro-ksiega, #intro-brama, #intro-tlo { transition: none; }
+}
+
 /* ─────────── podgląd zdjęcia ─────────── */
 #lupa {
   position: fixed; inset: 0; z-index: 40;
@@ -478,6 +581,24 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   <div id="arkusz-tresc"></div>
 </section>
 
+<div id="intro" hidden>
+  <video id="intro-film" muted playsinline preload="auto" aria-hidden="true"></video>
+  <div id="intro-tlo" aria-hidden="true">
+    <div class="warstwa daleko"></div>
+    <div class="warstwa srodek"></div>
+    <video id="intro-animacja" muted playsinline loop preload="none"></video>
+    <div class="warstwa blisko"></div>
+    <div class="zaslona"></div>
+  </div>
+  <button type="button" id="intro-ksiega" aria-label="Otwórz księgę"><img id="intro-okladka" alt=""></button>
+  <p id="intro-podpowiedz">Dotknij księgi</p>
+  <div id="intro-brama">
+    <button type="button" class="cel" id="intro-wejdz">Rozpocznij</button>
+    <p class="podpis" id="intro-autor" hidden></p>
+  </div>
+  <button type="button" id="intro-pomin">Pomiń intro</button>
+</div>
+
 <div id="lupa" hidden>
   <img id="lupa-obraz" alt="">
   <p class="podpis" id="lupa-podpis"></p>
@@ -494,6 +615,103 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 
   var DANE = window.DANE, MAPA = window.MAPA;
   var $ = function (id) { return document.getElementById(id); };
+
+  /* ═══════════════ intro ═══════════════
+
+     Trzy sceny: nieme najście na księgę, księga do kliknięcia, brama
+     z animowaną ulicą i przyciskiem wejścia. Uruchamiamy je tutaj,
+     przed budową mapy, żeby nie mignął widok spod spodu — sama mapa
+     powstaje pod zasłoną i jest gotowa w chwili pominięcia intra.
+
+     Bez pola `intro` w danych strona otwiera się wprost na mapie. */
+  (function intro() {
+    var cfg = DANE.swieto.intro;
+    var wezel = $('intro');
+    if (!cfg || !cfg.film || !wezel) return;
+
+    var KLUCZ = 'intro:' + (DANE.swieto.id || 'swieto');
+    try { if (localStorage.getItem(KLUCZ) === 'tak') return; } catch (e) {}
+
+    var film = $('intro-film'), animacja = $('intro-animacja');
+    var bezRuchu = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var tloWczytane = false;
+
+    $('intro-okladka').src = cfg.okladka;
+    if (cfg.zapros) $('intro-wejdz').textContent = cfg.zapros;
+    if (cfg.autor) { $('intro-autor').textContent = cfg.autor; $('intro-autor').hidden = false; }
+    wezel.hidden = false;
+
+    function scena(nazwa) { wezel.className = 'scena-' + nazwa; }
+
+    function doKsiegi() {
+      scena('ksiega');
+      try { film.pause(); } catch (e) {}
+      $('intro-ksiega').focus();
+    }
+
+    function doBramy() {
+      // Tło dociągamy dopiero tutaj — kto pominie intro, nie płaci za nie.
+      if (!tloWczytane) {
+        tloWczytane = true;
+        wezel.querySelector('.daleko').style.backgroundImage = 'url("' + cfg.tlo.daleko + '")';
+        wezel.querySelector('.srodek').style.backgroundImage = 'url("' + cfg.tlo.srodek + '")';
+        wezel.querySelector('.blisko').style.backgroundImage = 'url("' + cfg.tlo.blisko + '")';
+        if (!bezRuchu && cfg.tlo.animacja) {
+          animacja.src = cfg.tlo.animacja;
+          var p = animacja.play();
+          if (p && p.catch) p.catch(function () {});
+        }
+      }
+      scena('brama');
+      $('intro-wejdz').focus();
+    }
+
+    function zamknij() {
+      try { localStorage.setItem(KLUCZ, 'tak'); } catch (e) {}
+      wezel.classList.add('znika');
+      try { film.pause(); animacja.pause(); } catch (e) {}
+      setTimeout(function () {
+        wezel.hidden = true;
+        film.removeAttribute('src'); animacja.removeAttribute('src');
+        try { film.load(); animacja.load(); } catch (e) {}      // zwolnij pamięć
+      }, 520);
+    }
+
+    $('intro-ksiega').addEventListener('click', function () {
+      if (wezel.classList.contains('scena-ksiega')) doBramy();
+    });
+    $('intro-wejdz').addEventListener('click', zamknij);
+    $('intro-pomin').addEventListener('click', zamknij);
+    document.addEventListener('keydown', function (e) {
+      if (!wezel.hidden && e.key === 'Escape') zamknij();
+    });
+
+    if (bezRuchu) { doKsiegi(); return; }        // bez najazdu — od razu księga
+
+    scena('film');
+    film.addEventListener('ended', doKsiegi);
+    film.addEventListener('error', doKsiegi);    // brak pliku nie może zablokować wejścia
+    film.src = cfg.film;
+
+    /* Część przeglądarek blokuje autoodtwarzanie nawet niemych filmów
+       (tryb oszczędzania danych, ustawienia prywatności). Zamiast tracić
+       intro, zatrzymujemy się na pierwszej klatce i czekamy na dotknięcie. */
+    function naDotyk() {
+      wezel.removeEventListener('click', naDotyk);
+      wezel.classList.remove('czeka');
+      $('intro-podpowiedz').textContent = 'Dotknij księgi';
+      var p = film.play();
+      if (p && p.catch) p.catch(doKsiegi);
+    }
+    var start = film.play();
+    if (start && start.catch) start.catch(function () {
+      if (wezel.classList.contains('scena-film')) {
+        $('intro-podpowiedz').textContent = 'Dotknij, aby odtworzyć';
+        wezel.classList.add('czeka');
+        wezel.addEventListener('click', naDotyk);
+      }
+    });
+  })();
 
   /* ═══════════════ słowniki ═══════════════ */
 

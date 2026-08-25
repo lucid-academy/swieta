@@ -17,6 +17,7 @@ STRUKTURA
   Świadomie .js zamiast .json, żeby działało przez file://.
 - dane/mapa-bydgoskie.js — geometria z OSM.
 - img/ — przetworzone zdjęcia i ozdobna grafika nagłówka.
+- img/intro/ — materiały intra (dwa nieme filmy i cztery obrazy).
 - zrodla/ — materiały wejściowe, w .gitignore, nie ruszaj zawartości.
 - tools/ — narzędzia pomocnicze.
 
@@ -94,7 +95,8 @@ ETAP 3 — INTERFEJS
 2. Panel wydarzenia: tytuł, godziny, miejsce, opis, zdjęcia
    (miniatura → pełna po kliknięciu), linki zewnętrzne, przycisk
    "prowadź mnie" otwierający nawigację po GPS.
-   Filmy tylko jako linki zewnętrzne, żadnego wideo w repo.
+   Nagrania z wydarzeń tylko jako linki zewnętrzne — nie wrzucamy ich
+   do repo. Zakaz dotyczy materiałów wydarzeń, nie intra (patrz INTRO).
 3. Planer: zaznaczasz wydarzenia, dostajesz plan ułożony po
    godzinach, zapis w localStorage. Licz czas przejścia między
    kolejnymi punktami: odległość po GPS w linii prostej × 1,3,
@@ -108,6 +110,19 @@ ETAP 3 — INTERFEJS
    pod komplet funkcji, którego nie znasz.]
 6. Sekcja "czego jeszcze nie wiemy" — uczciwie wypisane luki
    w programie. To ma być widoczna funkcja, nie wstyd.
+
+INTRO
+Wstęp przed mapą, złożony z materiałów przygotowanych w fundacji
+(zgoda autora mamy). Trzy sceny: nieme najście na księgę, księga
+do kliknięcia, brama z animowanym tłem dzielnicy i przyciskiem wejścia.
+
+Intro leci przy pierwszej wizycie, potem localStorage wpuszcza wprost
+na mapę. Zawsze widoczne "Pomiń". Mapa buduje się pod zasłoną, więc
+pominięcie daje ją natychmiast, a materiały intra pobierają się leniwie
+— kto pomija, nie płaci za nie transferem.
+
+Materiały siedzą w danych (swieto.intro), nie w kodzie. Usunięcie tego
+pola wyłącza intro — drugie święto nie musi mieć własnego wstępu.
 
 ZASADY
 - Mobile first. Ludzie otwierają to jedną ręką, w tłumie, na słabym

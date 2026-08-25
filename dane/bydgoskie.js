@@ -23,7 +23,23 @@ window.DANE = {
       { id: 'niedziela', nazwa: 'Niedziela', data: '2026-08-30' }
     ],
     // ETAP 2 — grafika mapy i jej proporcje.
-    mapa: { plik: null, szerokosc: null, wysokosc: null }
+    mapa: { plik: null, szerokosc: null, wysokosc: null },
+
+    /* Intro przed mapą. Usuń całe pole `intro`, a strona otworzy się
+       wprost na mapie — drugie święto nie musi mieć własnego wstępu.
+       Filmy są nieme (nie mają nawet ścieżki audio). */
+    intro: {
+      film: 'img/intro/intro.mp4',
+      okladka: 'img/intro/cover.jpg',
+      tlo: {
+        daleko:   'img/intro/street-far.jpg',
+        srodek:   'img/intro/street.jpg',
+        blisko:   'img/intro/street-near.jpg',
+        animacja: 'img/intro/street-loop.mp4'
+      },
+      zapros: 'Rozpocznij',
+      autor: null            // podpis autora intra — pokaże się, gdy uzupełnisz
+    }
   },
 
   /* Kolor kategorii steruje kolorem pinu, `ikona` wybiera rysunek z biblioteki
