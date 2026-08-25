@@ -350,6 +350,35 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 
 .pusto { padding: 1.6rem .5rem; text-align: center; color: var(--tusz-mgla); font-size: .9rem; line-height: 1.55; }
 
+/* ─────────── treść: kreator planu ─────────── */
+.pole { margin-bottom: 1.1rem; }
+.pole > label, .pole > h3 {
+  display: block; margin: 0 0 .4rem;
+  font-size: .78rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--tusz-mgla); font-weight: 600;
+}
+.godziny { display: flex; align-items: center; gap: .5rem; }
+.godziny input {
+  flex: 1; min-height: 44px; padding: .4rem .6rem;
+  background: var(--papier-cien); border: 1px solid var(--kreska-mocna); border-radius: 6px;
+  font: inherit; font-variant-numeric: tabular-nums; color: var(--tusz);
+}
+.pobyt { display: flex; align-items: center; gap: .5rem; }
+.pobyt input {
+  width: 84px; min-height: 44px; padding: .4rem .6rem;
+  background: var(--papier-cien); border: 1px solid var(--kreska-mocna); border-radius: 6px;
+  font: inherit; color: var(--tusz);
+}
+.pobyt span { font-size: .86rem; color: var(--tusz-jasny); }
+.przypis { margin: .35rem 0 0; font-size: .76rem; line-height: 1.45; color: var(--tusz-mgla); }
+.filtr .licznik-opcji { font-size: .72rem; opacity: .75; }
+.filtr:disabled { opacity: .4; cursor: not-allowed; }
+
+.propozycja { display: grid; grid-template-columns: auto 1fr; gap: .1rem .7rem; padding: .6rem 0; }
+.propozycja .godz { font-variant-numeric: tabular-nums; font-weight: 600; font-size: .84rem; white-space: nowrap; }
+.propozycja .tyt { font-size: .93rem; line-height: 1.3; }
+.propozycja .msc { grid-column: 2; font-size: .76rem; color: var(--tusz-mgla); margin-top: .15rem; }
+
 /* ─────────── atrybucja podkładu (wymagana licencją ODbL) ─────────── */
 #atrybucja {
   position: absolute; left: 0; right: 0; bottom: 0;
@@ -369,6 +398,8 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   border-radius: 7px; cursor: pointer;
 }
 #zoom button:active { background: var(--papier-cien); }
+#zoom button svg { width: 20px; height: 20px; fill: var(--tusz); display: block; margin: auto; }
+#obroc.recznie { border-color: var(--akcent); }
 
 /* ─────────── podgląd zdjęcia ─────────── */
 #lupa {
@@ -422,6 +453,9 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   <div id="piny"></div>
   <svg id="furnitura" aria-hidden="true"></svg>
   <div id="zoom">
+    <button type="button" id="obroc" aria-label="Obróć mapę">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8"/></svg>
+    </button>
     <button type="button" id="blizej" aria-label="Przybliż mapę">+</button>
     <button type="button" id="dalej" aria-label="Oddal mapę">−</button>
   </div>
@@ -531,9 +565,22 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 
   /* ═══════════════ rzutowanie (etap 2) ═══════════════ */
 
+  /* Dzielnica ma 2549 x 1516 m, czyli jest z natury pozioma. Na telefonie
+     obrót o 90° w prawo wypełnia ekran, na szerokim monitorze przeciwnie —
+     zostawia pionowy pasek pośrodku. Dlatego orientacja jest zmienna,
+     a domyślnie wybiera ją arytmetyka: wygrywa ta, przy której mapa
+     wychodzi większa. Obrót siedzi w rzutowaniu, nie w transformacji SVG,
+     dzięki czemu podpisy ulic zostają poziome w obu ustawieniach. */
   var OBROT = true;
   function rzutuj(x, y) { return OBROT ? [MAPA.wysokosc - y, x] : [x, y]; }
-  var PLOTNO = OBROT ? { w: MAPA.wysokosc, h: MAPA.szerokosc } : { w: MAPA.szerokosc, h: MAPA.wysokosc };
+  /** Odwrotność rzutowania — potrzebna, żeby przy obrocie utrzymać środek kadru. */
+  function odrzutuj(rx, ry) { return OBROT ? [ry, MAPA.wysokosc - rx] : [rx, ry]; }
+  var PLOTNO = { w: 0, h: 0 };
+  function ustawPlotno() {
+    PLOTNO.w = OBROT ? MAPA.wysokosc : MAPA.szerokosc;
+    PLOTNO.h = OBROT ? MAPA.szerokosc : MAPA.wysokosc;
+  }
+  ustawPlotno();
 
   function zGps(lat, lng) {
     var r = MAPA.rzutowanie;
@@ -550,7 +597,7 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     return d + (zamkniety ? 'Z' : '');
   }
 
-  (function rysujPodklad() {
+  function rysujPodklad() {
     var W = MAPA.warstwy;
     function warstwa(wezel, obiekty, klasa, tylkoZamkniete) {
       var k = [];
@@ -572,9 +619,9 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     var rzeki = [];
     W.woda.forEach(function (o) { if (!o.z) rzeki.push('<path class="rzeka" d="' + doSciezki(o.p, false) + '"/>'); });
     $('w-woda').insertAdjacentHTML('beforeend', rzeki.join(''));
-  })();
+  }
 
-  (function nazwyUlic() {
+  function nazwyUlic() {
     var najlepsze = {};
     MAPA.warstwy.ulice.glowne.concat(MAPA.warstwy.ulice.lokalne).forEach(function (o) {
       if (!o.n || o.p.length < 4) return;
@@ -599,7 +646,7 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
              ') rotate(' + kat.toFixed(1) + ')" dy="-3">' + bezpiecznie(nazwa) + '</text>');
     });
     $('nazwy').innerHTML = k.join('');
-  })();
+  }
 
   /* ═══════════════ stan ═══════════════ */
 
@@ -654,7 +701,7 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   /* ═══════════════ piny ═══════════════ */
 
   var piny = [];
-  (function zbudujPiny() {
+  function zbudujPiny() {
     var wezel = $('piny');
     DANE.lokalizacje.forEach(function (l) {
       if (!l.gps) return;                       // bez współrzędnych nie ma czego stawiać
@@ -667,7 +714,15 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
       wezel.appendChild(b);
       piny.push({ lok: l, wezel: b, medalion: b.firstChild, x: poz[0], y: poz[1] });
     });
-  })();
+  }
+
+  /** Po zmianie orientacji piny stoją w innym miejscu płótna. */
+  function przeliczPozycjePinow() {
+    piny.forEach(function (p) {
+      var poz = zGps(p.lok.gps.lat, p.lok.gps.lng);
+      p.x = poz[0]; p.y = poz[1];
+    });
+  }
 
   function odswiezPiny() {
     piny.forEach(function (p) {
@@ -747,6 +802,69 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     plansza.setAttribute('viewBox', '0 0 ' + wPx + ' ' + hPx);   // 1 jednostka SVG = 1 px
     kDopasowane = Math.min(wPx / PLOTNO.w, hPx / PLOTNO.h) * 0.98;
   }
+
+  /* ── orientacja: automat plus możliwość nadpisania ── */
+
+  var KLUCZ_ORIENTACJI = 'orientacja:' + (DANE.swieto.id || 'swieto');
+  var wyborOrientacji = 'auto';                       // 'auto' | 'pion' | 'poziom'
+  try {
+    var zapisana = localStorage.getItem(KLUCZ_ORIENTACJI);
+    if (zapisana === 'pion' || zapisana === 'poziom') wyborOrientacji = zapisana;
+  } catch (e) {}
+
+  /** Skala dopasowania przy zadanej orientacji — tym rozstrzygamy, która wygrywa. */
+  function skalaPrzy(obrot) {
+    return Math.min(wPx / (obrot ? MAPA.wysokosc : MAPA.szerokosc),
+                    hPx / (obrot ? MAPA.szerokosc : MAPA.wysokosc));
+  }
+  function najlepszaOrientacja() {
+    if (wyborOrientacji === 'pion') return true;
+    if (wyborOrientacji === 'poziom') return false;
+    return skalaPrzy(true) >= skalaPrzy(false);
+  }
+
+  function zastosujOrientacje(nowy, zachowajSrodek) {
+    if (nowy === OBROT) return false;
+    var krotnosc = kDopasowane > 0 ? k / kDopasowane : 1;
+    var srodek = (zachowajSrodek && kDopasowane > 0)
+      ? odrzutuj((wPx / 2 - tx) / k, (hPx / 2 - ty) / k)   // zapamiętaj punkt pod środkiem ekranu
+      : null;
+
+    OBROT = nowy;
+    ustawPlotno();
+    rysujPodklad();
+    nazwyUlic();
+    przeliczPozycjePinow();
+    odswiezTrase();
+    dopasuj();
+
+    k = kDopasowane * krotnosc;
+    if (srodek) {
+      var p = rzutuj(srodek[0], srodek[1]);
+      tx = wPx / 2 - p[0] * k;
+      ty = hPx / 2 - p[1] * k;
+    } else {
+      tx = (wPx - PLOTNO.w * k) / 2;
+      ty = (hPx - PLOTNO.h * k) / 2;
+    }
+    rysuj();
+    odswiezPrzyciskObrotu();
+    return true;
+  }
+
+  function odswiezPrzyciskObrotu() {
+    var b = $('obroc');
+    b.classList.toggle('recznie', wyborOrientacji !== 'auto');
+    b.setAttribute('aria-label', OBROT ? 'Przełącz mapę na widok poziomy' : 'Przełącz mapę na widok pionowy');
+    b.title = (OBROT ? 'Widok pionowy' : 'Widok poziomy') +
+      (wyborOrientacji === 'auto' ? ' (dobrany automatycznie)' : ' (ustawiony ręcznie)');
+  }
+
+  $('obroc').addEventListener('click', function () {
+    wyborOrientacji = OBROT ? 'poziom' : 'pion';
+    try { localStorage.setItem(KLUCZ_ORIENTACJI, wyborOrientacji); } catch (e) {}
+    zastosujOrientacje(!OBROT, true);
+  });
 
   function ogranicz() {
     k = Math.min(kDopasowane * 9, Math.max(kDopasowane * 0.85, k));
@@ -1122,9 +1240,15 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     var wybrane = posortowane(DANE.wydarzenia.filter(function (w) { return wPlanie(w.id); }));
 
     if (!wybrane.length) {
-      otworzArkusz('Mój plan', '<p class="pusto">Nie masz jeszcze nic w planie.<br>' +
+      otworzArkusz('Mój plan',
+        '<p class="pusto">Nie masz jeszcze nic w planie.<br>' +
         'Otwórz wydarzenie i naciśnij „Dodaj do planu”, a ułożę je po godzinach ' +
-        'i policzę, ile zajmie przejście między nimi.</p>');
+        'i policzę, ile zajmie przejście między nimi.</p>' +
+        '<div class="dzialania"><button type="button" class="przycisk" id="do-kreatora">' +
+        ikona(IKONY_UI.plan) + 'Zaplanuj za mnie</button></div>' +
+        '<p class="przypis" style="text-align:center">Powiesz, którego dnia masz czas i czego szukasz — ' +
+        'ułożę propozycję, która mieści się w Twoim oknie razem z przejściami.</p>');
+      $('do-kreatora').addEventListener('click', pokazKreator);
       return;
     }
 
@@ -1141,17 +1265,37 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
           var p = przejscie(lp.gps, l.gps);
           // Ile realnie zostaje: od końca poprzedniego (albo jego startu,
           // gdy program nie podaje końca) do startu następnego.
+          /* Dwa różne kłopoty, które łatwo pomylić:
+             — wydarzenie trwa długo i po prostu trzeba z niego wyjść wcześniej
+               (to normalne przy imprezach, na które się „wpada"),
+             — nie da się zdążyć, nawet wychodząc od razu (to dopiero alarm).
+             Mierzenie tylko od godziny zakończenia dawałoby czerwone
+             ostrzeżenie przy każdym całodniowym punkcie programu. */
+          var startPoprzedniego = naMinuty(poprzedni.od);
           var koniecPoprzedniego = naMinuty(poprzedni.do || poprzedni.od);
-          var luz = naMinuty(w.od) - koniecPoprzedniego;
-          var zaciasno = luz < p.minuty;
+          var start = naMinuty(w.od);
+          var koniecNastepnego = w.do ? naMinuty(w.do) : start;
+          var przybycieNajwczesniej = startPoprzedniego + p.minuty;   // gdybyś wyszedł od razu
+          var najpozniejWyjsc = start - p.minuty;                     // żeby zdążyć na początek
+
+          var zaciasno = przybycieNajwczesniej > koniecNastepnego;    // nie da się w ogóle
+          var spoznisz = !zaciasno && przybycieNajwczesniej > start;  // złapiesz, ale nie od początku
+          var trzebaWczesniej = !zaciasno && !spoznisz && najpozniejWyjsc < koniecPoprzedniego;
           if (zaciasno) ostrzezen++;
+
           var powod = '';
           if (zaciasno) {
-            if (luz < 0) powod = ' — a te wydarzenia i tak zachodzą na siebie o ' + (-luz) + ' min';
-            else if (luz === 0) powod = ' — a jedno zaczyna się dokładnie wtedy, gdy drugie się kończy';
-            else powod = ' — a masz na to tylko ' + luz + ' min';
-            // Bez godziny zakończenia liczymy od startu, więc luz bywa zawyżony.
-            if (!poprzedni.do) powod += '. Program nie podaje, kiedy kończy się poprzednie wydarzenie';
+            powod = ' — nie zdążysz; wydarzenie kończy się o ' + zMinut(koniecNastepnego) +
+              ', a najwcześniej byłbyś o ' + zMinut(przybycieNajwczesniej);
+          } else if (spoznisz) {
+            powod = ' — na początek nie zdążysz, najwcześniej o ' + zMinut(przybycieNajwczesniej) +
+              (w.do ? ' (trwa do ' + w.do + ')' : '');
+          } else if (trzebaWczesniej) {
+            powod = ' — wyjdź najpóźniej o ' + zMinut(najpozniejWyjsc) +
+              (poprzedni.do ? ', przed końcem poprzedniego wydarzenia' : '');
+          }
+          if (!poprzedni.do && powod) {
+            powod += '. Program nie podaje, kiedy kończy się poprzednie wydarzenie';
           }
           html += '<div class="przejscie' + (zaciasno ? ' zaciasno' : '') + '">' + ikona(IKONY_UI.nogi) +
             '<span>' + p.minuty + ' min pieszo (' +
@@ -1174,16 +1318,216 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     if (ostrzezen) {
       html = '<p class="brak-opisu" style="border-left-color:var(--ostrzezenie)">' +
         'W ' + ostrzezen + zOdmiana(ostrzezen, ' miejscu' , ' miejscach', ' miejscach') +
-        ' przejście nie mieści się między wydarzeniami. Zaznaczone na czerwono.</p>' + html;
+        ' nie zdążysz między wydarzeniami, nawet wychodząc od razu. Zaznaczone na czerwono.</p>' + html;
     }
+
+    html += '<div class="dzialania"><button type="button" class="przycisk pusty" id="do-kreatora">' +
+      ikona(IKONY_UI.plan) + 'Ułóż plan od nowa</button></div>';
 
     otworzArkusz('Mój plan — ' + wybrane.length + zOdmiana(wybrane.length, ' pozycja', ' pozycje', ' pozycji'), html);
 
+    $('do-kreatora').addEventListener('click', pokazKreator);
     Array.prototype.forEach.call(tresc.querySelectorAll('[data-usun]'), function (b) {
       b.addEventListener('click', function () {
         delete stan.plan[b.getAttribute('data-usun')];
         zapiszPlan(); odswiezPiny(); odswiezTrase(); pokazPlan();
       });
+    });
+  }
+
+  /* ═══════════════ widok: zaplanuj święto ═══════════════ */
+
+  /* Kreator układa propozycję, nie wyrocznię: dobiera wydarzenia, które
+     mieszczą się w oknie godzinowym RAZEM z czasem przejścia między nimi.
+     Wynik trafia do „Mojego planu" dopiero po zatwierdzeniu i dalej daje
+     się edytować ręcznie. */
+
+  var kreator = null;   // zapamiętane ustawienia, żeby powrót nie kasował formularza
+
+  function domyslneKreatora() {
+    var dzien = stan.dzien !== 'wszystkie' ? stan.dzien : DANE.swieto.dni[0].id;
+    return { dzien: dzien, od: null, do: null, tagi: {}, kategorie: {}, pobyt: 45 };
+  }
+
+  /** Widełki godzin całego dnia — stąd biorą się wartości początkowe. */
+  function zakresDnia(dzien) {
+    var lista = DANE.wydarzenia.filter(function (w) { return w.dzien === dzien; });
+    if (!lista.length) return { od: 600, do: 1200 };
+    var od = Math.min.apply(null, lista.map(function (w) { return naMinuty(w.od); }));
+    var doo = Math.max.apply(null, lista.map(function (w) { return naMinuty(w.do || w.od); }));
+    return { od: od, do: doo };
+  }
+
+  function pokazKreator() {
+    stan.widok = 'kreator'; stan.widokArg = null;
+    if (!kreator) kreator = domyslneKreatora();
+    var zakres = zakresDnia(kreator.dzien);
+    if (kreator.od === null) kreator.od = zakres.od;
+    if (kreator.do === null) kreator.do = zakres.do;
+
+    // Ile wydarzeń tego dnia niesie dany tag/kategorię — pokazujemy wprost,
+    // żeby nikt nie szukał w ciemno tam, gdzie program milczy.
+    var tegoDnia = DANE.wydarzenia.filter(function (w) { return w.dzien === kreator.dzien; });
+    function ile(pred) { return tegoDnia.filter(pred).length; }
+
+    var html = '<div class="pole"><h3>Dzień</h3><div class="filtry">';
+    DANE.swieto.dni.forEach(function (d) {
+      html += '<button type="button" class="filtr" data-kdzien="' + bezpiecznie(d.id) + '" aria-pressed="' +
+        (kreator.dzien === d.id ? 'true' : 'false') + '">' + bezpiecznie(d.nazwa) + ' ' +
+        (+d.data.split('-')[2]) + '.' + d.data.split('-')[1] + '</button>';
+    });
+    html += '</div></div>';
+
+    html += '<div class="pole"><h3>Mam czas</h3><div class="godziny">' +
+      '<input type="time" id="k-od" value="' + zMinut2(kreator.od) + '" aria-label="Od godziny">' +
+      '<span>–</span>' +
+      '<input type="time" id="k-do" value="' + zMinut2(kreator.do) + '" aria-label="Do godziny">' +
+      '</div></div>';
+
+    html += '<div class="pole"><h3>Szukam czegoś</h3><div class="filtry">';
+    DANE.kategorie.forEach(function (kt) {
+      var n = ile(function (w) { return w.kategoria === kt.id; });
+      html += '<button type="button" class="filtr" data-kkat="' + bezpiecznie(kt.id) + '" style="--kolor:' +
+        bezpiecznie(kt.kolor) + '" aria-pressed="' + (kreator.kategorie[kt.id] ? 'true' : 'false') + '"' +
+        (n ? '' : ' disabled') + '><span class="plamka"></span>' + bezpiecznie(kt.nazwa) +
+        ' <span class="licznik-opcji">' + n + '</span></button>';
+    });
+    html += '</div></div>';
+
+    html += '<div class="pole"><h3>Warunki</h3><div class="filtry">';
+    DANE.tagi.forEach(function (t) {
+      var n = ile(function (w) { return w.tagi.indexOf(t.id) !== -1; });
+      html += '<button type="button" class="filtr" data-ktag="' + bezpiecznie(t.id) + '" aria-pressed="' +
+        (kreator.tagi[t.id] ? 'true' : 'false') + '"' + (n ? '' : ' disabled') +
+        (t.opis ? ' title="' + bezpiecznie(t.opis) + '"' : '') + '>' + bezpiecznie(t.nazwa) +
+        ' <span class="licznik-opcji">' + n + '</span></button>';
+    });
+    html += '</div><p class="przypis">Liczby mówią, ile wydarzeń tego dnia ma dany znacznik. ' +
+      'Tam, gdzie program milczy, znacznika nie ma — to nie znaczy, że wydarzenie nie pasuje.</p></div>';
+
+    html += '<div class="pole"><h3>Ile chcę zostać w jednym miejscu</h3><div class="pobyt">' +
+      '<input type="number" id="k-pobyt" min="10" max="180" step="5" value="' + kreator.pobyt + '" aria-label="Minut w jednym miejscu">' +
+      '<span>minut</span></div>' +
+      '<p class="przypis">To Twoje założenie, nie dane organizatorów. Dziesięć wydarzeń nie ma podanej ' +
+      'godziny zakończenia — dla nich liczymy tyle właśnie minut.</p></div>';
+
+    html += '<div class="dzialania"><button type="button" class="przycisk" id="k-uloz">Ułóż propozycję</button></div>';
+
+    otworzArkusz('Zaplanuj święto', html, function () { pokazPlan(); });
+
+    Array.prototype.forEach.call(tresc.querySelectorAll('[data-kdzien]'), function (b) {
+      b.addEventListener('click', function () {
+        kreator.dzien = b.getAttribute('data-kdzien');
+        var z = zakresDnia(kreator.dzien);
+        kreator.od = z.od; kreator.do = z.do;      // nowy dzień, nowe widełki
+        pokazKreator();
+      });
+    });
+    Array.prototype.forEach.call(tresc.querySelectorAll('[data-kkat],[data-ktag]'), function (b) {
+      b.addEventListener('click', function () {
+        var kat = b.getAttribute('data-kkat'), tag = b.getAttribute('data-ktag');
+        var zbior = kat ? kreator.kategorie : kreator.tagi, klucz = kat || tag;
+        if (zbior[klucz]) delete zbior[klucz]; else zbior[klucz] = true;
+        b.setAttribute('aria-pressed', zbior[klucz] ? 'true' : 'false');
+      });
+    });
+    $('k-uloz').addEventListener('click', function () {
+      var podaneOd = naMinuty($('k-od').value), podaneDo = naMinuty($('k-do').value);
+      if (podaneOd !== null) kreator.od = podaneOd;
+      if (podaneDo !== null && podaneDo > kreator.od) kreator.do = podaneDo;
+      kreator.pobyt = Math.max(10, Math.min(180, +$('k-pobyt').value || 45));
+      pokazPropozycje();
+    });
+  }
+
+  function zMinut2(m) {
+    var g = Math.floor(m / 60), n = m % 60;
+    return (g < 10 ? '0' : '') + g + ':' + (n < 10 ? '0' : '') + n;
+  }
+
+  /** Dobiera wydarzenia mieszczące się w oknie razem z czasem przejścia. */
+  function ulozPropozycje(o) {
+    var kandydaci = DANE.wydarzenia.filter(function (w) {
+      if (w.dzien !== o.dzien) return false;
+      var wybraneKat = Object.keys(o.kategorie);
+      if (wybraneKat.length && wybraneKat.indexOf(w.kategoria) === -1) return false;
+      var wybraneTagi = Object.keys(o.tagi);
+      for (var i = 0; i < wybraneTagi.length; i++) if (w.tagi.indexOf(wybraneTagi[i]) === -1) return false;
+      var start = naMinuty(w.od);
+      var koniec = w.do ? naMinuty(w.do) : start + o.pobyt;
+      return koniec > o.od && start < o.do;                 // zahacza o okno
+    }).sort(function (a, b) { return naMinuty(a.od) - naMinuty(b.od); });
+
+    var wybrane = [], czas = o.od, gdzie = null, skadId = null;
+    kandydaci.forEach(function (w) {
+      var l = LOKALIZACJE[w.lokalizacja];
+      if (!l || !l.gps) return;
+      // Kolejne wydarzenie w tym samym miejscu nie wymaga marszu.
+      var dojscie = (gdzie && skadId !== l.id) ? przejscie(gdzie, l.gps).minuty : 0;
+      var start = Math.max(czas + dojscie, naMinuty(w.od));
+      var koniecW = w.do ? naMinuty(w.do) : naMinuty(w.od) + o.pobyt;
+      var koniec = Math.min(koniecW, o.do);
+      // Chcemy `pobyt` minut, ale wydarzenie krótsze wystarczy w całości.
+      var potrzeba = Math.min(o.pobyt, koniecW - naMinuty(w.od));
+      if (koniec - start < potrzeba) return;
+      // Zostajemy tyle, ile chcieliśmy — nie tyle, ile wydarzenie trwa.
+      var zostaje = Math.min(o.pobyt, koniec - start);
+      wybrane.push({ w: w, start: start, pobyt: zostaje, dojscie: dojscie });
+      czas = start + zostaje;
+      gdzie = l.gps; skadId = l.id;
+    });
+    return { wybrane: wybrane, kandydatow: kandydaci.length };
+  }
+
+  function pokazPropozycje() {
+    stan.widok = 'propozycja'; stan.widokArg = null;
+    var wynik = ulozPropozycje(kreator);
+    var d = DNI[kreator.dzien];
+
+    if (!wynik.wybrane.length) {
+      otworzArkusz('Propozycja planu',
+        '<p class="pusto">W oknie ' + zMinut2(kreator.od) + '–' + zMinut2(kreator.do) + ' nic się nie mieści.<br>' +
+        (wynik.kandydatow
+          ? 'Pasujących wydarzeń jest ' + wynik.kandydatow + ', ale nie da się do nich zdążyć pieszo. Spróbuj poszerzyć okno albo skrócić czas pobytu.'
+          : 'Żadne wydarzenie tego dnia nie ma wybranych znaczników. Spróbuj odznaczyć któryś.') + '</p>',
+        function () { pokazKreator(); });
+      return;
+    }
+
+    var html = '<p class="przypis" style="margin-bottom:.8rem">' + bezpiecznie(d.nazwa) + ', ' +
+      zMinut2(kreator.od) + '–' + zMinut2(kreator.do) + '. Zmieściło się ' + wynik.wybrane.length +
+      ' z ' + wynik.kandydatow + zOdmiana(wynik.kandydatow, ' pasującego wydarzenia', ' pasujących wydarzeń', ' pasujących wydarzeń') +
+      '. To propozycja — po wpisaniu do planu możesz ją dowolnie zmieniać.</p>';
+
+    wynik.wybrane.forEach(function (poz, i) {
+      if (i > 0 && poz.dojscie > 0) {
+        html += '<div class="przejscie">' + ikona(IKONY_UI.nogi) + '<span>' + poz.dojscie + ' min pieszo</span></div>';
+      }
+      html += '<div class="propozycja">' +
+        '<span class="godz">' + zMinut2(poz.start) + '</span>' +
+        '<span class="tyt">' + bezpiecznie(poz.w.tytul) + '</span>' +
+        '<span class="msc">' + bezpiecznie(poz.w.miejsce) + ' · zostajesz ' + poz.pobyt + ' min</span>' +
+        '</div>';
+    });
+
+    html += '<div class="dzialania">' +
+      '<button type="button" class="przycisk" id="k-wpisz">Wpisz do mojego planu</button>' +
+      '<button type="button" class="przycisk pusty" id="k-wroc">Zmień ustawienia</button></div>';
+
+    otworzArkusz('Propozycja planu', html, function () { pokazKreator(); });
+
+    $('k-wroc').addEventListener('click', pokazKreator);
+    $('k-wpisz').addEventListener('click', function () {
+      // Podmieniamy tylko ten dzień — ręczne wybory z drugiego dnia zostają.
+      DANE.wydarzenia.forEach(function (w) { if (w.dzien === kreator.dzien) delete stan.plan[w.id]; });
+      wynik.wybrane.forEach(function (poz) { stan.plan[poz.w.id] = true; });
+      zapiszPlan();
+      stan.dzien = kreator.dzien;
+      Array.prototype.forEach.call($('dni').children, function (x, i) {
+        x.setAttribute('aria-pressed', DANE.swieto.dni[i] && DANE.swieto.dni[i].id === kreator.dzien ? 'true' : 'false');
+      });
+      poFiltrach();
+      pokazPlan();
     });
   }
 
@@ -1337,6 +1681,11 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   function przelicz(pierwszy) {
     var poprzednie = kDopasowane;
     dopasuj();
+    // Przy 'auto' zmiana rozmiaru okna może przechylić szalę na drugą orientację.
+    if (wyborOrientacji === 'auto') {
+      var chciana = skalaPrzy(true) >= skalaPrzy(false);
+      if (chciana !== OBROT) { zastosujOrientacje(chciana, !pierwszy); return; }
+    }
     if (pierwszy) {
       k = kDopasowane;
       tx = (wPx - PLOTNO.w * k) / 2;
@@ -1346,6 +1695,16 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     }
     rysuj();
   }
+
+  // Orientacja musi być znana przed pierwszym rysowaniem geometrii,
+  // bo obrót jest wliczony w rzutowanie.
+  dopasuj();
+  OBROT = najlepszaOrientacja();
+  ustawPlotno();
+  rysujPodklad();
+  nazwyUlic();
+  zbudujPiny();
+  odswiezPrzyciskObrotu();
 
   odswiezPiny();
   odswiezTrase();
