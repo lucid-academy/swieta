@@ -67,11 +67,21 @@ a { color: var(--akcent); }
 /* ─────────── nagłówek ─────────── */
 header {
   flex: none;
-  padding: .55rem .9rem .5rem;
+  padding: .5rem .5rem .45rem .9rem;
   background: var(--papier-cien);
   border-bottom: 1px solid var(--kreska);
-  display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+  display: flex; align-items: center; gap: .5rem;
 }
+header .tytuly { flex: 1; min-width: 0; }
+#do-intra {
+  flex: none; width: 44px; height: 44px;
+  display: grid; place-items: center;
+  background: none; border: 1px solid var(--kreska-mocna); border-radius: 7px;
+  cursor: pointer;
+}
+#do-intra[hidden] { display: none; }   /* selektor elementu bije samo [hidden] */
+#do-intra svg { width: 21px; height: 21px; fill: var(--tusz-jasny); }
+#do-intra:hover { background: rgba(75,64,47,.08); }
 header h1 {
   margin: 0;
   font-family: var(--szeryf);
@@ -592,8 +602,13 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 <body>
 
 <header>
-  <h1 id="tytul">Święto dzielnicy</h1>
-  <p id="podtytul"></p>
+  <div class="tytuly">
+    <h1 id="tytul">Święto dzielnicy</h1>
+    <p id="podtytul"></p>
+  </div>
+  <button type="button" id="do-intra" hidden aria-label="Obejrzyj intro od początku" title="Obejrzyj intro od początku">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c2.5-.7 5.5-.5 8 1 2.5-1.5 5.5-1.7 8-1v13c-2.5-.7-5.5-.5-8 1-2.5-1.5-5.5-1.7-8-1zm8 3.4C10.2 7.3 8 6.9 6 7.1v9.5c2-.2 4.2.2 6 1.2 1.8-1 4-1.4 6-1.2V7.1c-2-.2-4.2.2-6 1.3z"/></svg>
+  </button>
 </header>
 
 <div id="dni" role="group" aria-label="Wybór dnia"></div>
@@ -716,22 +731,17 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
      powstaje pod zasłoną i jest gotowa w chwili pominięcia intra.
 
      Bez pola `intro` w danych strona otwiera się wprost na mapie. */
+  var pokazIntro = null;              // ustawiane tylko, gdy święto ma intro
+
   (function intro() {
     var cfg = DANE.swieto.intro;
     var wezel = $('intro');
     if (!cfg || !cfg.film || !wezel) return;
 
     var KLUCZ = 'intro:' + (DANE.swieto.id || 'swieto');
-    try { if (localStorage.getItem(KLUCZ) === 'tak') return; } catch (e) {}
-
     var film = $('intro-film'), animacja = $('intro-animacja');
     var bezRuchu = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     var tloWczytane = false;
-
-    $('intro-okladka').src = cfg.okladka;
-    if (cfg.zapros) $('intro-wejdz').textContent = cfg.zapros;
-    if (cfg.autor) { $('intro-autor').textContent = cfg.autor; $('intro-autor').hidden = false; }
-    wezel.hidden = false;
 
     function scena(nazwa) { wezel.className = 'scena-' + nazwa; }
 
@@ -778,13 +788,6 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
       if (!wezel.hidden && e.key === 'Escape') zamknij();
     });
 
-    if (bezRuchu) { doKsiegi(); return; }        // bez najazdu — od razu księga
-
-    scena('film');
-    film.addEventListener('ended', doKsiegi);
-    film.addEventListener('error', doKsiegi);    // brak pliku nie może zablokować wejścia
-    film.src = cfg.film;
-
     /* Część przeglądarek blokuje autoodtwarzanie nawet niemych filmów
        (tryb oszczędzania danych, ustawienia prywatności). Zamiast tracić
        intro, zatrzymujemy się na pierwszej klatce i czekamy na dotknięcie. */
@@ -795,15 +798,46 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
       var p = film.play();
       if (p && p.catch) p.catch(doKsiegi);
     }
-    var start = film.play();
-    if (start && start.catch) start.catch(function () {
-      if (wezel.classList.contains('scena-film')) {
-        $('intro-podpowiedz').textContent = 'Dotknij, aby odtworzyć';
-        wezel.classList.add('czeka');
-        wezel.addEventListener('click', naDotyk);
-      }
-    });
+
+    film.addEventListener('ended', doKsiegi);
+    film.addEventListener('error', doKsiegi);    // brak pliku nie może zablokować wejścia
+
+    /* Odpalane przy pierwszej wizycie i ponownie z przycisku w nagłówku.
+       Wszystko poza tym wywołaniem dzieje się raz. */
+    pokazIntro = function () {
+      $('intro-okladka').src = cfg.okladka;
+      if (cfg.zapros) $('intro-wejdz').textContent = cfg.zapros;
+      if (cfg.autor) { $('intro-autor').textContent = cfg.autor; $('intro-autor').hidden = false; }
+      wezel.hidden = false;
+      wezel.classList.remove('znika');
+      $('intro-podpowiedz').textContent = 'Dotknij księgi';
+
+      if (bezRuchu) { doKsiegi(); return; }      // bez najazdu — od razu księga
+
+      scena('film');
+      if (film.getAttribute('src') !== cfg.film) film.src = cfg.film;
+      try { film.currentTime = 0; } catch (e) {}
+      var start = film.play();
+      if (start && start.catch) start.catch(function () {
+        if (wezel.classList.contains('scena-film')) {
+          $('intro-podpowiedz').textContent = 'Dotknij, aby odtworzyć';
+          wezel.classList.add('czeka');
+          wezel.addEventListener('click', naDotyk);
+        }
+      });
+    };
+
+    // ?intro w adresie wymusza wstęp mimo zapisanej wizyty — wygodne przy pokazach.
+    var wymuszone = /(^|[?&#])intro(=|&|$)/.test(location.search + location.hash);
+    var widziane = false;
+    try { widziane = localStorage.getItem(KLUCZ) === 'tak'; } catch (e) {}
+    if (wymuszone || !widziane) pokazIntro();
   })();
+
+  if (pokazIntro) {
+    $('do-intra').hidden = false;
+    $('do-intra').addEventListener('click', function () { pokazIntro(); });
+  }
 
   /* ═══════════════ słowniki ═══════════════ */
 
