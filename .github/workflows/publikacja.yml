@@ -1,0 +1,45 @@
+# Publikacja strony na GitHub Pages.
+#
+# Zastępuje stary, Jekyllowy mechanizm budowania, który potrafił wywalić
+# się bez podania powodu ("Page build failed"). Tutaj nic się nie buduje —
+# repozytorium jest stroną statyczną, więc jego zawartość idzie wprost
+# na serwer, a każde uruchomienie zostawia log.
+
+name: Publikacja strony
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # pozwala wypchnąć ręcznie, bez nowego commita
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Jedno wdrożenie naraz; trwającego nie przerywamy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publikuj:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.wdrozenie.outputs.page_url }}
+    steps:
+      - name: Pobierz repozytorium
+        uses: actions/checkout@v4
+
+      - name: Przygotuj Pages
+        uses: actions/configure-pages@v5
+
+      - name: Spakuj zawartość
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Wdróż
+        id: wdrozenie
+        uses: actions/deploy-pages@v4
