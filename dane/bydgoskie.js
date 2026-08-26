@@ -377,7 +377,7 @@ window.DANE = {
         { etykieta: 'Wydarzenie na Facebooku', url: 'https://www.facebook.com/events/1570900604513593/' },
         { etykieta: 'Posłuchaj: „Señora de hermosura” (Juan del Encina)', url: 'https://www.youtube.com/watch?v=-NGY3PSKyaA' }
       ],
-      zdjecia: [],
+      zdjecia: ['ribaldi-music-1', 'ribaldi-music-2'],
       kategoria: 'muzyka',
       tagi: ['na-dworze'],
       /* Wydarzenie promowane — pasek z odliczaniem na górze strony.

@@ -29,6 +29,7 @@ import sharp from 'sharp';
 const KORZEN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OBRAZY = new Set(['.jpg', '.jpeg', '.png', '.webp', '.tif', '.tiff', '.avif', '.heic']);
 const MAKS = 1200, MINI = 400, JAKOSC = 80;
+const ZNACZNIK = '_wciagniete.txt';
 
 let swieto = 'bydgoskie', naSucho = false;
 const argv = process.argv.slice(2);
@@ -129,7 +130,8 @@ async function glowna() {
   const znane = new Set(okno.DANE.wydarzenia.map(w => w.id));
 
   const wpisy = (await readdir(SKRZYNKA, { withFileTypes: true }))
-    .filter(w => w.isDirectory() && !w.name.startsWith('_'));
+    .filter(w => w.isDirectory() && !w.name.startsWith('_'))
+    .filter(w => !existsSync(path.join(SKRZYNKA, w.name, ZNACZNIK)));
 
   if (!wpisy.length) { console.log('\nSkrzynka zrodla/nowe/ jest pusta.\n'); return; }
 
@@ -224,15 +226,36 @@ async function glowna() {
   }
 
   await writeFile(PLIK, tekst);
+
+  /* Sprzątanie po wciągnięciu. Windows potrafi trzymać folder zablokowany
+     (otwarty podgląd, indeksowanie), a wtedy przeniesienie rzuca EBUSY.
+     Gdyby to miało zatrzymać cały skrypt, użytkownik zostałby z zapisanymi
+     danymi i nieoznaczonym folderem — czyli ponowne uruchomienie dokleiłoby
+     te same zdjęcia drugi raz. Dlatego jest plan B: znacznik w środku. */
   const zrobione = path.join(SKRZYNKA, '_zrobione');
   await mkdir(zrobione, { recursive: true });
   const stempel = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+  const zostaly = [];
+
   for (const { id, folder } of doPrzeniesienia) {
-    await rename(folder, path.join(zrobione, `${id}_${stempel}`));
+    try {
+      await rename(folder, path.join(zrobione, `${id}_${stempel}`));
+    } catch (e) {
+      await writeFile(path.join(folder, ZNACZNIK),
+        `Wciągnięte ${stempel}. Ten plik chroni przed powtórnym dodaniem tej samej treści.\n` +
+        `Folder można skasować.\n`);
+      zostaly.push(id);
+    }
   }
 
   console.log(`\nZapisane: dane/${swieto}.js — wydarzeń zmienionych: ${zmian}`);
-  console.log(`Przetworzone foldery przeniesione do zrodla/nowe/_zrobione/`);
+  if (zostaly.length) {
+    console.log(`\nNie udało się przenieść ${zostaly.length === 1 ? 'folderu' : 'folderów'}: ${zostaly.join(', ')}`);
+    console.log(`(system trzymał je zablokowane). Oznaczyłem je plikiem ${ZNACZNIK},`);
+    console.log(`więc kolejne uruchomienie ich nie ruszy. Można je skasować ręcznie.`);
+  } else {
+    console.log(`Przetworzone foldery przeniesione do zrodla/nowe/_zrobione/`);
+  }
   console.log(`\nTeraz uruchom:  node tools/sprawdz.js\n`);
 }
 
