@@ -268,10 +268,10 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   flex: 1; min-height: var(--pasek-wys);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   background: none; border: 0; cursor: pointer;
-  font-size: .68rem; color: var(--tusz-jasny);
-  position: relative;
+  font-size: .63rem; color: var(--tusz-jasny);
+  position: relative; padding: 0 2px;
 }
-#pasek button svg { width: 21px; height: 21px; fill: currentColor; }
+#pasek button svg { width: 20px; height: 20px; fill: currentColor; }
 #pasek button[aria-expanded="true"] { color: var(--tusz); background: rgba(74,59,38,.07); }
 #pasek .licznik {
   position: absolute; top: 6px; left: 50%; margin-left: 6px;
@@ -962,6 +962,7 @@ header p  { color: var(--pasek-tekst-mgla); }
     program:  'M4 3h16v18H4zm3 4v2h10V7zm0 4v2h10v-2zm0 4v2h7v-2z',
     plan:     'M9 2v2H5v18h14V4h-4V2zm-2 8h10v2H7zm0 4h7v2H7zM11 2h2v4h-2z',
     filtry:   'M3 4h18l-7 8.2V21l-4-2.4v-6.4z',
+    koperta:  'M3 5h18v14H3zm2.4 2 6.6 5 6.6-5z',
     serce:    'M12 20.6 4.6 13.2a4.7 4.7 0 0 1 6.6-6.7L12 7.3l.8-.8a4.7 4.7 0 0 1 6.6 6.7z',
     luki:     'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m1 15h-2v-2h2zm.4-4.2-.4.3V14h-2v-1.6c0-.6.3-1.1.8-1.5l1-.7c.4-.3.6-.7.5-1.2-.1-.5-.5-.9-1-1-.7-.1-1.3.3-1.5.9l-1.9-.6A3.5 3.5 0 0 1 12.3 6c1.6.1 2.9 1.2 3.2 2.7.2 1.5-.5 2.9-1.7 3.6z',
     nogi:     'M9 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4M7.6 7h2.2l3.4 4.6-2.2 2.2 3.4 4.4-1.6 1.3-4.2-5.4 1.8-1.8-1.4-1.9L7 14.4 3.6 20 2 19l3.8-6.3z',
@@ -2112,6 +2113,32 @@ header p  { color: var(--pasek-tekst-mgla); }
     });
   }
 
+  /* ═══════════════ widok: o nas ═══════════════ */
+
+  function pokazONas() {
+    stan.widok = 'onas'; stan.widokArg = null;
+    var o = DANE.onas || {};
+    var html = '';
+
+    if (o.tresc) html += '<div class="opis">' + bezpiecznie(o.tresc) + '</div>';
+
+    var k = o.kontakt;
+    if (k && k.email) {
+      if (k.wstep) html += '<p class="pomoc" style="margin-top:1rem">' + bezpiecznie(k.wstep) + '</p>';
+      var adres = 'mailto:' + encodeURIComponent(k.email).replace(/%40/, '@') +
+        (k.temat ? '?subject=' + encodeURIComponent(k.temat) : '');
+      html += '<div class="dzialania">' +
+        '<a class="przycisk" href="' + bezpiecznie(adres) + '">' + ikona(IKONY_UI.koperta) +
+        bezpiecznie(k.etykieta || 'Napisz do nas') + '</a>' +
+        (o.formularz ? '<a class="przycisk pusty" href="' + bezpiecznie(o.formularz) +
+          '" target="_blank" rel="noopener">Formularz ↗</a>' : '') +
+        '</div>';
+      html += '<p class="msc" style="text-align:center">' + bezpiecznie(k.email) + '</p>';
+    }
+
+    otworzArkusz(o.naglowek || 'O nas', html);
+  }
+
   /* Znaczniki przyjaciół — osobna warstwa, mniejsze i obrysowane,
      widoczne tylko przy otwartej sekcji. */
   var znacznikiP = [];
@@ -2198,7 +2225,8 @@ header p  { color: var(--pasek-tekst-mgla); }
     { id: 'program', nazwa: 'Program',  ikona: IKONY_UI.program, otworz: pokazProgram },
     { id: 'plan',    nazwa: 'Mój plan', ikona: IKONY_UI.plan,    otworz: pokazPlan, licznik: ilePlanu },
     { id: 'filtry',  nazwa: 'Filtry',   ikona: IKONY_UI.filtry,  otworz: pokazFiltry, licznik: function () { return ileWybrano(stan.kategorie) + ileWybrano(stan.tagi); } },
-    { id: 'przyjaciele', nazwa: 'Przyjaciele', ikona: IKONY_UI.serce, otworz: pokazPrzyjaciol }
+    { id: 'przyjaciele', nazwa: 'Przyjaciele', ikona: IKONY_UI.serce, otworz: pokazPrzyjaciol },
+    { id: 'onas',        nazwa: 'O nas',       ikona: IKONY_UI.koperta, otworz: pokazONas }
   ];
 
   (function zbudujPasek() {

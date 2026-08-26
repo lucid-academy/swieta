@@ -670,6 +670,20 @@ window.DANE = {
 
   ],
 
+  /* O NAS — tekst fundacji, jej własnymi słowami. Usunięcie tego pola
+     zdejmuje sekcję z dolnego paska. */
+  onas: {
+    naglowek: 'Lucid Academy',
+    tresc: 'Lucid Academy — toruńska fundacja łącząca edukację AI z kulturą i lokalną wspólnotą. Uczymy rozumieć sztuczną inteligencję i zamieniamy te umiejętności w narzędzia i wydarzenia dla wspólnoty — tę mapę też zrobiliśmy my :)\n\nKoncert Ribaldi Music w amfiteatrze (sobota, 19:00) to również inicjatywa fundacji — wspieramy artystki, a dodatkowe honoraria zbieramy wśród przedsiębiorców z Bydgoskiego i regionu.',
+    kontakt: {
+      wstep: 'Coś nie działa, czegoś brakuje, coś da się zrobić lepiej? Napisz.',
+      etykieta: 'Napisz do nas',
+      email: 'piotr.jarczyk.ai@gmail.com',
+      temat: 'Mapa Święta Bydgoskiego Przedmieścia — uwagi'
+    },
+    formularz: null      // link do formularza, gdyby powstał — pokaże się obok e-maila
+  },
+
   /* PRZYJACIELE ŚWIĘTA — instytucje z dzielnicy, które wsparły fundację.
      To NIE są wydarzenia: mają własną sekcję i własne, dyskretne znaczniki
      na mapie, żeby nikt nie wziął ich za punkty programu i nie poszedł
@@ -678,7 +692,7 @@ window.DANE = {
      `pomoc` i `otwarte` zostają puste, dopóki nie wiemy — brak informacji
      jest lepszy niż zmyślona. */
   przyjaciele: {
-    wstep: 'Instytucje i miejsca z Bydgoskiego Przedmieścia, które nas wsparły.',
+    wstep: 'Miejsca i instytucje z Bydgoskiego Przedmieścia, dzięki którym w sobotni wieczór zabrzmi w amfiteatrze Ribaldi Music. Na co dzień trzymają stronę artystów i dzielnicowej tradycji.',
     lista: [
       {
         nazwa: 'Trafo Cafe',
@@ -707,6 +721,15 @@ window.DANE = {
         pomoc: null,
         otwarte: null,
         url: 'https://www.mikstura-architekci.pl/'
+      },
+      {
+        nazwa: 'Kwiaciarnia Kwiatostany',
+        adres: 'ul. Sienkiewicza 2',
+        gps: { lat: 53.010177, lng: 18.580274 },
+        zrodloGps: 'adres potwierdzony w kilku niezależnych spisach firm; reverse geocoding OSM: Henryka Sienkiewicza 2, Bydgoskie Przedmieście',
+        pomoc: null,
+        otwarte: null,   // spisy firm podają sob. 10–14, ale nie potwierdziłem tego u źródła
+        url: 'https://www.instagram.com/kwiatostany.warsztat/'
       },
       {
         nazwa: 'Centrum Stomatologii Familydent',
