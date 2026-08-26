@@ -372,8 +372,9 @@ window.DANE = {
       tytul: 'Ribaldi Music — koncert',
       lokalizacja: 'amfiteatr',
       miejsce: 'Amfiteatr w Parku Miejskim',
-      opis: '',
+      opis: 'Zespół Ribaldi to cztery artystki zakochane w muzyce dawnych epok. Wykonują repertuar od średniowiecza do baroku. Piszą o sobie tak:\n\n„Cztery energiczne dziewczyny, które spotkały się po to, aby zbudować nowe, jasne, żeńskie brzmienie oparte na muzyce z wieków renesansu i baroku. Nazwa zespołu wywodzi się od włoskiego słowa Ribaldo (po polsku – rybałt), które oznacza śpiewaka wędrownego, zarabiającego na życie koncertując w karczmach i podróżując z miasta do miasta.\n\nUwielbiamy, każda na swój sposób, ekspresję muzyki dawnej. Pasjonuje nas wzbudzanie nowego życia z «martwych» manuskryptów, czyli nierzadko ręcznie zapisanych nut, w starych kluczach lub w kompletnie innym systemie dźwiękowym. Dzieła te opisują historie, które z powodu licznych metafor, odczytujemy dopiero po wielu burzliwych analizach. Bardzo często ukazuje nam się obraz człowieczeństwa, który przez stulecia pozostał taki sam.\n\nJesteśmy specjalistkami w zakresie muzyki dawnej, a także absolwentkami wokalistyki oraz instrumentalistyki takich uczelni jak Uniwersytet Muzyczny F. Chopina, Akademia Muzyczna w Krakowie, Akademia Muzyczna w Bydgoszczy czy Akademia Muzyczna w Katowicach. Indywidualnie miałyśmy przyjemność współpracować m.in. z Warszawską Operą Kameralną, Polską Operą Królewską, Capellą Cracoviensis, Ensemble Mare Nostrum / Stradella Young Project, JSB Ensemble Stuttgart, Oh!Orkiestrą Historyczną, Operą Podlaską, Il Giardino D\'amore itd.”',
       linki: [
+        { etykieta: 'Wydarzenie na Facebooku', url: 'https://www.facebook.com/events/1570900604513593/' },
         { etykieta: 'Posłuchaj: „Señora de hermosura” (Juan del Encina)', url: 'https://www.youtube.com/watch?v=-NGY3PSKyaA' }
       ],
       zdjecia: [],
