@@ -699,22 +699,23 @@ window.DANE = {
         url: null
       },
       {
-        nazwa: 'Mikstura Architekci',
-        adres: null,
-        gps: null,
-        zrodloGps: 'BRAK — nie ma w OpenStreetMap, adres do uzupełnienia',
+        // Piszą się z kropką — MIKS.TURA — sprawdzone na ich stronie.
+        nazwa: 'MIKS.TURA Architekci',
+        adres: 'ul. Mickiewicza 112/1U',
+        gps: { lat: 53.012051, lng: 18.577295 },
+        zrodloGps: 'zgeokodowany adres podany przez organizatora; reverse geocoding OSM: Adama Mickiewicza 112, Bydgoskie Przedmieście. Ta sama kamienica co Nasz Butik.',
         pomoc: null,
         otwarte: null,
-        url: null
+        url: 'https://www.mikstura-architekci.pl/'
       },
       {
         nazwa: 'Centrum Stomatologii Familydent',
-        adres: null,
-        gps: null,
-        zrodloGps: 'BRAK — nie ma w OpenStreetMap, adres do uzupełnienia',
+        adres: 'ul. Bydgoska 35',
+        gps: { lat: 53.009605, lng: 18.58733 },
+        zrodloGps: 'zgeokodowany adres podany przez organizatora; reverse geocoding OSM: Bydgoska 35, Rybaki',
         pomoc: null,
-        otwarte: null,
-        url: null
+        otwarte: 'W dni święta nieczynne — gabinet pracuje od poniedziałku do piątku.',
+        url: 'https://familydent.eu/'
       }
     ]
   },
