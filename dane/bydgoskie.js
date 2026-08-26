@@ -674,9 +674,9 @@ window.DANE = {
      zdejmuje sekcję z dolnego paska. */
   onas: {
     naglowek: 'Lucid Academy',
-    tresc: 'Lucid Academy — toruńska fundacja łącząca edukację AI z kulturą i lokalną wspólnotą. Uczymy rozumieć sztuczną inteligencję i zamieniamy te umiejętności w narzędzia i wydarzenia dla wspólnoty — tę mapę też zrobiliśmy my :)\n\nKoncert Ribaldi Music w amfiteatrze (sobota, 19:00) to również inicjatywa fundacji — wspieramy artystki, a dodatkowe honoraria zbieramy wśród przedsiębiorców z Bydgoskiego i regionu.',
+    tresc: 'Lucid Academy — toruńska fundacja łącząca edukację AI z kulturą i lokalną wspólnotą. Uczymy rozumieć sztuczną inteligencję i zamieniamy te umiejętności w narzędzia i wydarzenia dla wspólnoty — tę mapę też zrobiliśmy my :)\n\nKoncert Ribaldi Music w amfiteatrze w Parku Miejskim (sobota, 19:00) to również inicjatywa fundacji — wspieramy artystki, a dodatkowe honoraria zbieramy wśród przedsiębiorców z Bydgoskiego i regionu.',
     kontakt: {
-      wstep: 'Coś nie działa, czegoś brakuje, coś da się zrobić lepiej? Napisz.',
+      wstep: 'Chcesz z nami współpracować albo wesprzeć to, co robimy? A może coś na mapie nie działa, czegoś brakuje lub da się zrobić lepiej? Napisz — czytamy wszystko.',
       etykieta: 'Napisz do nas',
       email: 'piotr.jarczyk.ai@gmail.com',
       temat: 'Mapa Święta Bydgoskiego Przedmieścia — uwagi'
