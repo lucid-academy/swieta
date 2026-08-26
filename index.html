@@ -430,17 +430,27 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 }
 .pokaz-na-mapie:hover { background: var(--papier-cien); }
 
-/* Znacznik na mapie — mniejszy i obrysowany, celowo inny niż pin wydarzenia. */
+/* Znacznik na mapie — mniejszy i obrysowany, celowo inny niż pin wydarzenia.
+   Odsunięty w prawo i w górę, bo cztery z pięciu przyjaciół siedzą pod
+   pinami wydarzeń (Trafo Cafe wręcz dokładnie na swoim własnym).
+   Dzięki temu czyta się jak plakietka przy pinie, a nie jak przykrywka. */
 .znacznik-przyjaciela {
   position: absolute; left: 0; top: 0;
-  width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  /* Środek serduszka na tej samej wysokości co medalion pinu (18 px nad
+     punktem, bo pin ma szpic) — dzięki temu rozpychanie liczy to, co widać. */
+  width: 24px; height: 24px; margin: -30px 0 0 -12px;
+  padding: 0; border: 0;
   display: grid; place-items: center; border-radius: 50%;
   background: var(--papier-jasny); border: 1.5px dashed var(--akcent);
   box-shadow: 0 1px 4px rgba(75,64,47,.35);
-  pointer-events: none;
+  cursor: pointer;
 }
 .znacznik-przyjaciela[hidden] { display: none; }
-.znacznik-przyjaciela svg { width: 13px; height: 13px; fill: var(--akcent); }
+.znacznik-przyjaciela svg { width: 12px; height: 12px; fill: var(--akcent); }
+.znacznik-przyjaciela:focus-visible { outline: 3px solid var(--tusz); outline-offset: 2px; }
+
+/* Podświetlenie wpisu, gdy przyjdzie się do niego z mapy. */
+.przyjaciel.wskazany { background: var(--papier-cien); border-radius: 6px; }
 
 .luka { padding: .75rem 0; border-bottom: 1px solid var(--kreska); }
 .luka:last-child { border-bottom: 0; }
@@ -1336,16 +1346,24 @@ header p  { color: var(--pasek-tekst-mgla); }
 
   function rozsunPiny() {
     kotwice = [];
-    var n = piny.length, i, j, poz = [];
+    /* Rozpychamy piny i widoczne serduszka razem — cztery z pięciu
+       przyjaciół siedzi pod pinami wydarzeń, a Trafo Cafe wręcz dokładnie
+       na swoim własnym. Wspólne rozpychanie rozwiązuje oba przypadki:
+       przy pinie serduszko odsunie się samo, samotne zostanie na miejscu. */
+    // Wszystkie obiekty dostają pozycję; z rozpychania wypadają tylko te,
+    // których i tak nie widać — przygaszone piny i schowane serduszka.
+    var obiekty = piny.concat(znacznikiP);
+    var n = obiekty.length, i, j, poz = [];
+    var liczySie = function (o) { return !o.wezel.disabled && !o.wezel.hidden; };
     for (i = 0; i < n; i++) {
-      poz.push({ x: piny[i].x * k + tx, y: piny[i].y * k + ty, bx: piny[i].x * k + tx, by: piny[i].y * k + ty });
+      poz.push({ x: obiekty[i].x * k + tx, y: obiekty[i].y * k + ty, bx: obiekty[i].x * k + tx, by: obiekty[i].y * k + ty });
     }
     for (var przebieg = 0; przebieg < 6; przebieg++) {
       var ruszyl = false;
       for (i = 0; i < n; i++) {
-        if (piny[i].wezel.disabled) continue;
+        if (!liczySie(obiekty[i])) continue;
         for (j = i + 1; j < n; j++) {
-          if (piny[j].wezel.disabled) continue;
+          if (!liczySie(obiekty[j])) continue;
           var dx = poz[j].x - poz[i].x, dy = poz[j].y - poz[i].y;
           var d = Math.hypot(dx, dy);
           if (d >= MIN_ODSTEP) continue;
@@ -1364,11 +1382,11 @@ header p  { color: var(--pasek-tekst-mgla); }
       var ox = poz[i].x - poz[i].bx, oy = poz[i].y - poz[i].by;
       var dl = Math.hypot(ox, oy);
       if (dl > MAKS_ODSUNIECIE) { ox = ox / dl * MAKS_ODSUNIECIE; oy = oy / dl * MAKS_ODSUNIECIE; }
-      piny[i].wezel.style.transform =
+      obiekty[i].wezel.style.transform =
         'translate(' + (poz[i].bx + ox).toFixed(1) + 'px,' + (poz[i].by + oy).toFixed(1) + 'px)';
-      // Odsunięty pin nie stoi już dokładnie na swoim miejscu, więc
+      // Odsunięty znak nie stoi już dokładnie na swoim miejscu, więc
       // zaznaczamy prawdziwy punkt kropką. Mapa ma nie kłamać.
-      if (dl > 2 && !piny[i].wezel.disabled) kotwice.push([poz[i].bx, poz[i].by]);
+      if (dl > 2 && liczySie(obiekty[i])) kotwice.push([poz[i].bx, poz[i].by]);
     }
   }
 
@@ -2145,16 +2163,21 @@ header p  { color: var(--pasek-tekst-mgla); }
   function zbudujZnaczniki() {
     var lista = (DANE.przyjaciele && DANE.przyjaciele.lista) || [];
     var wezel = $('piny');
-    lista.forEach(function (x) {
+    lista.forEach(function (x, i) {
       if (!x.gps) return;
       var poz = zGps(x.gps.lat, x.gps.lng);
-      var e = document.createElement('span');
+      /* Klikalne, nie ozdobne: znacznik, który ignoruje dotknięcie, drażni
+         bardziej niż pomaga. Prowadzi do swojego wpisu na otwartej liście. */
+      var e = document.createElement('button');
+      e.type = 'button';
       e.className = 'znacznik-przyjaciela';
       e.title = x.nazwa;
+      e.setAttribute('aria-label', 'Przyjaciel Święta: ' + x.nazwa);
       e.innerHTML = ikona(IKONY_UI.serce);
       e.hidden = true;
+      e.addEventListener('click', function () { wskazPrzyjaciela(i); });
       wezel.appendChild(e);
-      znacznikiP.push({ wezel: e, dane: x, x: poz[0], y: poz[1] });
+      znacznikiP.push({ wezel: e, dane: x, indeks: i, x: poz[0], y: poz[1] });
     });
   }
 
@@ -2168,6 +2191,17 @@ header p  { color: var(--pasek-tekst-mgla); }
   function znacznikiPrzyjaciol(widoczne) {
     znacznikiP.forEach(function (z) { z.wezel.hidden = !widoczne; });
     if (widoczne) rysuj();
+  }
+
+  /** Z mapy do wpisu na liście — przewija i na chwilę podświetla. */
+  function wskazPrzyjaciela(indeks) {
+    var wpisy = tresc.querySelectorAll('.przyjaciel');
+    var cel = wpisy[indeks];
+    if (!cel) return;
+    Array.prototype.forEach.call(wpisy, function (w) { w.classList.remove('wskazany'); });
+    cel.classList.add('wskazany');
+    cel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    setTimeout(function () { cel.classList.remove('wskazany'); }, 2200);
   }
 
   /* ═══════════════ podgląd zdjęcia ═══════════════ */
