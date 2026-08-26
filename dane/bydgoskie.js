@@ -670,8 +670,58 @@ window.DANE = {
 
   ],
 
-  /* CZEGO JESZCZE NIE WIEMY — sekcja widoczna w interfejsie (punkt 6 z promptu).
-     Uczciwa lista luk w programie, nie lista błędów. */
+  /* PRZYJACIELE ŚWIĘTA — instytucje z dzielnicy, które wsparły fundację.
+     To NIE są wydarzenia: mają własną sekcję i własne, dyskretne znaczniki
+     na mapie, żeby nikt nie wziął ich za punkty programu i nie poszedł
+     pod zamknięte drzwi.
+
+     `pomoc` i `otwarte` zostają puste, dopóki nie wiemy — brak informacji
+     jest lepszy niż zmyślona. */
+  przyjaciele: {
+    wstep: 'Instytucje i miejsca z Bydgoskiego Przedmieścia, które nas wsparły.',
+    lista: [
+      {
+        nazwa: 'Trafo Cafe',
+        adres: 'ul. Konopnickiej 9a',
+        gps: { lat: 53.0096558, lng: 18.5851306 },
+        zrodloGps: 'ta sama pinezka co lokalizacja wydarzeń; OSM potwierdza miejsce „Trafo Cafe” przy ul. Konopnickiej',
+        pomoc: null,
+        otwarte: 'W oba dni święta gości „Kofeinę dla starszaków”.',
+        url: 'https://www.instagram.com/trafo.cafe/'
+      },
+      {
+        nazwa: 'Rada Okręgu nr 13 Bydgoskie Przedmieście',
+        adres: 'ul. Krasińskiego 45/47',
+        gps: { lat: 53.010807, lng: 18.586444 },
+        zrodloGps: 'OpenStreetMap, wyszukane po nazwie; reverse geocoding: Zygmunta Krasińskiego 45/47, Bydgoskie Przedmieście',
+        pomoc: null,
+        otwarte: null,
+        url: null
+      },
+      {
+        nazwa: 'Mikstura Architekci',
+        adres: null,
+        gps: null,
+        zrodloGps: 'BRAK — nie ma w OpenStreetMap, adres do uzupełnienia',
+        pomoc: null,
+        otwarte: null,
+        url: null
+      },
+      {
+        nazwa: 'Centrum Stomatologii Familydent',
+        adres: null,
+        gps: null,
+        zrodloGps: 'BRAK — nie ma w OpenStreetMap, adres do uzupełnienia',
+        pomoc: null,
+        otwarte: null,
+        url: null
+      }
+    ]
+  },
+
+  /* Spis luk w programie. Sekcja „czego jeszcze nie wiemy” została zdjęta
+     z interfejsu przy publikacji — dane zostają, bo opisują stan faktyczny
+     i wystarczy jedna linijka, żeby ją przywrócić. */
   luki: [
     {
       id: 'brak-opisow',

@@ -407,6 +407,41 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 .przejscie.zaciasno svg { fill: var(--ostrzezenie); }
 
 /* ─────────── treść: luki i filtry ─────────── */
+/* ─────────── przyjaciele święta ─────────── */
+.przyjaciel {
+  display: grid; grid-template-columns: auto 1fr auto; gap: .2rem .7rem; align-items: start;
+  padding: .8rem 0; border-bottom: 1px solid var(--kreska);
+}
+.przyjaciel:last-child { border-bottom: 0; }
+.przyjaciel h3 { margin: 0 0 .2rem; font-family: var(--szeryf); font-size: .98rem; font-weight: 600; }
+.przyjaciel .msc { margin: 0; font-size: .8rem; color: var(--tusz-mgla); }
+.przyjaciel .pomoc { margin: .25rem 0 0; font-size: .84rem; line-height: 1.45; color: var(--tusz-jasny); }
+.przyjaciel p { margin: .25rem 0 0; }
+.znaczek-serca {
+  width: 26px; height: 26px; margin-top: .1rem; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--papier-cien); border: 1px solid var(--kreska-mocna);
+}
+.znaczek-serca svg { width: 14px; height: 14px; fill: var(--akcent); }
+.pokaz-na-mapie {
+  align-self: center; min-height: 38px; padding: .35rem .7rem;
+  background: none; border: 1px solid var(--kreska-mocna); border-radius: 6px;
+  font-size: .8rem; cursor: pointer; white-space: nowrap;
+}
+.pokaz-na-mapie:hover { background: var(--papier-cien); }
+
+/* Znacznik na mapie — mniejszy i obrysowany, celowo inny niż pin wydarzenia. */
+.znacznik-przyjaciela {
+  position: absolute; left: 0; top: 0;
+  width: 26px; height: 26px; margin: -13px 0 0 -13px;
+  display: grid; place-items: center; border-radius: 50%;
+  background: var(--papier-jasny); border: 1.5px dashed var(--akcent);
+  box-shadow: 0 1px 4px rgba(75,64,47,.35);
+  pointer-events: none;
+}
+.znacznik-przyjaciela[hidden] { display: none; }
+.znacznik-przyjaciela svg { width: 13px; height: 13px; fill: var(--akcent); }
+
 .luka { padding: .75rem 0; border-bottom: 1px solid var(--kreska); }
 .luka:last-child { border-bottom: 0; }
 .luka h3 { margin: 0 0 .25rem; font-family: var(--szeryf); font-size: .95rem; font-weight: 600; }
@@ -927,6 +962,7 @@ header p  { color: var(--pasek-tekst-mgla); }
     program:  'M4 3h16v18H4zm3 4v2h10V7zm0 4v2h10v-2zm0 4v2h7v-2z',
     plan:     'M9 2v2H5v18h14V4h-4V2zm-2 8h10v2H7zm0 4h7v2H7zM11 2h2v4h-2z',
     filtry:   'M3 4h18l-7 8.2V21l-4-2.4v-6.4z',
+    serce:    'M12 20.6 4.6 13.2a4.7 4.7 0 0 1 6.6-6.7L12 7.3l.8-.8a4.7 4.7 0 0 1 6.6 6.7z',
     luki:     'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m1 15h-2v-2h2zm.4-4.2-.4.3V14h-2v-1.6c0-.6.3-1.1.8-1.5l1-.7c.4-.3.6-.7.5-1.2-.1-.5-.5-.9-1-1-.7-.1-1.3.3-1.5.9l-1.9-.6A3.5 3.5 0 0 1 12.3 6c1.6.1 2.9 1.2 3.2 2.7.2 1.5-.5 2.9-1.7 3.6z',
     nogi:     'M9 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4M7.6 7h2.2l3.4 4.6-2.2 2.2 3.4 4.4-1.6 1.3-4.2-5.4 1.8-1.8-1.4-1.9L7 14.4 3.6 20 2 19l3.8-6.3z',
     kompas:   'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20m3.6 6.4-2 5.2-5.2 2 2-5.2zM12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2'
@@ -1248,6 +1284,7 @@ header p  { color: var(--pasek-tekst-mgla); }
     rysujPodklad();
     nazwyUlic();
     przeliczPozycjePinow();
+    przeliczZnaczniki();
     odswiezTrase();
     dopasuj();
 
@@ -1357,6 +1394,10 @@ header p  { color: var(--pasek-tekst-mgla); }
       scena.setAttribute('transform', 'translate(' + tx.toFixed(2) + ' ' + ty.toFixed(2) + ') scale(' + k.toFixed(5) + ')');
       skalujWzory();
       rozsunPiny();
+      for (var z = 0; z < znacznikiP.length; z++) {
+        znacznikiP[z].wezel.style.transform =
+          'translate(' + (znacznikiP[z].x * k + tx).toFixed(1) + 'px,' + (znacznikiP[z].y * k + ty).toFixed(1) + 'px)';
+      }
       wezelNazw.classList.toggle('widoczne', k > kDopasowane * PROG_NAZW);
       rysujFurniture();
     });
@@ -1490,6 +1531,7 @@ header p  { color: var(--pasek-tekst-mgla); }
   function arkuszOtwarty() { return arkusz.classList.contains('otwarty'); }
 
   function otworzArkusz(tytul, html, naWstecz) {
+    znacznikiPrzyjaciol(false);       // pokaże je z powrotem tylko widok przyjaciół
     if (!arkuszOtwarty()) ostatnioAktywny = document.activeElement;
     arkusz.hidden = false;
     tytulArkusza.textContent = tytul;
@@ -1502,6 +1544,7 @@ header p  { color: var(--pasek-tekst-mgla); }
   }
 
   function zamknijArkusz() {
+    znacznikiPrzyjaciol(false);
     arkusz.classList.remove('otwarty');
     stan.widok = null;
     powrot = null;
@@ -1596,6 +1639,13 @@ header p  { color: var(--pasek-tekst-mgla); }
       // Nazwa miejsca z programu często niesie już adres — nie dopisujemy go drugi raz.
       '<div class="meta"><span>' + bezpiecznie(w.miejsce) +
         (l && w.miejsce.indexOf(l.adres) === -1 ? ', ' + bezpiecznie(l.adres) : '') + '</span></div>';
+
+    /* Ostrzeżenie o przybliżonym pinie musi stać przy wydarzeniu, a nie tylko
+       w widoku lokalizacji — punkt z jednym wydarzeniem otwiera się od razu tutaj. */
+    if (l && l.przyblizone) {
+      html += '<p class="brak-opisu">Pin jest przybliżony — organizatorzy nie podali dokładnego miejsca. ' +
+        'Szukaj w okolicy wskazanego punktu.</p>';
+    }
 
     html += '<div class="znaczki"><span class="znaczek kat" style="--kolor:' + bezpiecznie(kat.kolor || '#888') + '">' +
       bezpiecznie(kat.nazwa || w.kategoria) + '</span>';
@@ -2023,20 +2073,74 @@ header p  { color: var(--pasek-tekst-mgla); }
 
   function poFiltrach() { odswiezPiny(); odswiezTrase(); odswiezPasek(); rysuj(); }
 
-  /* ═══════════════ widok: czego nie wiemy ═══════════════ */
+  /* ═══════════════ widok: przyjaciele święta ═══════════════
 
-  function pokazLuki() {
-    stan.widok = 'luki'; stan.widokArg = null;
-    var luki = DANE.luki || [];
-    var html = '<p class="pusto" style="text-align:left;padding:0 0 .6rem">' +
-      'Program wciąż się uzupełnia. Zamiast udawać, że wiemy wszystko, wypisujemy tutaj to, ' +
-      'czego jeszcze nie wiemy.</p>';
-    html += luki.length
-      ? luki.map(function (l) {
-          return '<div class="luka"><h3>' + bezpiecznie(l.tytul) + '</h3><p>' + bezpiecznie(l.tresc) + '</p></div>';
-        }).join('')
-      : '<p class="pusto">Na dziś nie mamy żadnych luk w programie.</p>';
-    otworzArkusz('Czego jeszcze nie wiemy', html);
+     Osobno od programu, bo to nie są wydarzenia. Znaczniki na mapie
+     pojawiają się tylko przy otwartej sekcji i wyglądają inaczej niż piny,
+     żeby nikt nie wziął ich za punkt programu. */
+
+  function pokazPrzyjaciol() {
+    stan.widok = 'przyjaciele'; stan.widokArg = null;
+    var p = DANE.przyjaciele || {};
+    var lista = p.lista || [];
+
+    var html = p.wstep ? '<p class="pusto" style="text-align:left;padding:0 0 .7rem">' + bezpiecznie(p.wstep) + '</p>' : '';
+
+    html += lista.length ? lista.map(function (x, i) {
+      var wiersze = '';
+      if (x.adres) wiersze += '<p class="msc">' + bezpiecznie(x.adres) + '</p>';
+      if (x.pomoc) wiersze += '<p class="pomoc">' + bezpiecznie(x.pomoc) + '</p>';
+      if (x.otwarte) wiersze += '<p class="pomoc">' + bezpiecznie(x.otwarte) + '</p>';
+      if (x.url) wiersze += '<p><a href="' + bezpiecznie(x.url) + '" target="_blank" rel="noopener">strona ↗</a></p>';
+      return '<div class="przyjaciel">' +
+        '<span class="znaczek-serca" aria-hidden="true">' + ikona(IKONY_UI.serce) + '</span>' +
+        '<div><h3>' + bezpiecznie(x.nazwa) + '</h3>' + wiersze + '</div>' +
+        (x.gps ? '<button type="button" class="pokaz-na-mapie" data-przyjaciel="' + i + '">Pokaż</button>' : '') +
+        '</div>';
+    }).join('') : '<p class="pusto">Lista jeszcze pusta.</p>';
+
+    otworzArkusz('Przyjaciele Święta', html);
+    znacznikiPrzyjaciol(true);
+
+    Array.prototype.forEach.call(tresc.querySelectorAll('[data-przyjaciel]'), function (b) {
+      b.addEventListener('click', function () {
+        var x = lista[+b.getAttribute('data-przyjaciel')];
+        if (!x || !x.gps) return;
+        var poz = zGps(x.gps.lat, x.gps.lng);
+        pokazPunkt(poz[0], poz[1], 3.5);
+      });
+    });
+  }
+
+  /* Znaczniki przyjaciół — osobna warstwa, mniejsze i obrysowane,
+     widoczne tylko przy otwartej sekcji. */
+  var znacznikiP = [];
+  function zbudujZnaczniki() {
+    var lista = (DANE.przyjaciele && DANE.przyjaciele.lista) || [];
+    var wezel = $('piny');
+    lista.forEach(function (x) {
+      if (!x.gps) return;
+      var poz = zGps(x.gps.lat, x.gps.lng);
+      var e = document.createElement('span');
+      e.className = 'znacznik-przyjaciela';
+      e.title = x.nazwa;
+      e.innerHTML = ikona(IKONY_UI.serce);
+      e.hidden = true;
+      wezel.appendChild(e);
+      znacznikiP.push({ wezel: e, dane: x, x: poz[0], y: poz[1] });
+    });
+  }
+
+  function przeliczZnaczniki() {
+    znacznikiP.forEach(function (z) {
+      var poz = zGps(z.dane.gps.lat, z.dane.gps.lng);
+      z.x = poz[0]; z.y = poz[1];
+    });
+  }
+
+  function znacznikiPrzyjaciol(widoczne) {
+    znacznikiP.forEach(function (z) { z.wezel.hidden = !widoczne; });
+    if (widoczne) rysuj();
   }
 
   /* ═══════════════ podgląd zdjęcia ═══════════════ */
@@ -2094,7 +2198,7 @@ header p  { color: var(--pasek-tekst-mgla); }
     { id: 'program', nazwa: 'Program',  ikona: IKONY_UI.program, otworz: pokazProgram },
     { id: 'plan',    nazwa: 'Mój plan', ikona: IKONY_UI.plan,    otworz: pokazPlan, licznik: ilePlanu },
     { id: 'filtry',  nazwa: 'Filtry',   ikona: IKONY_UI.filtry,  otworz: pokazFiltry, licznik: function () { return ileWybrano(stan.kategorie) + ileWybrano(stan.tagi); } },
-    { id: 'luki',    nazwa: 'Nie wiemy',ikona: IKONY_UI.luki,    otworz: pokazLuki }
+    { id: 'przyjaciele', nazwa: 'Przyjaciele', ikona: IKONY_UI.serce, otworz: pokazPrzyjaciol }
   ];
 
   (function zbudujPasek() {
@@ -2318,6 +2422,7 @@ header p  { color: var(--pasek-tekst-mgla); }
   rysujPodklad();
   nazwyUlic();
   zbudujPiny();
+  zbudujZnaczniki();
   odswiezPrzyciskObrotu();
 
   odswiezPiny();
