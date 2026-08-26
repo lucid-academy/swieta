@@ -39,6 +39,21 @@ window.DANE = {
       },
       zapros: 'Rozpocznij',
       autor: null            // podpis autora intra — pokaże się, gdy uzupełnisz
+    },
+
+    /* Zliczanie odsłon. Dopóki `kod` jest pusty, nie ładuje się nic —
+       strona nie odpytuje wtedy żadnego obcego serwera.
+
+       GoatCounter nie stawia ciasteczek i nie przechowuje adresów IP.
+       Licznik działa TYLKO na wskazanej domenie: z dysku i z localhosta
+       milczy, więc wymóg „działa otwarta z dysku" zostaje nietknięty.
+
+       Jak uruchomić: załóż witrynę na goatcounter.com, wklej tutaj adres
+       postaci https://twojkod.goatcounter.com/count i wpisz domenę. */
+    licznik: {
+      kod: null,
+      domena: 'lucid-academy.github.io',
+      nota: 'Zliczamy anonimowe odsłony — bez ciasteczek i bez danych osobowych.'
     }
   },
 
@@ -256,6 +271,7 @@ window.DANE = {
 
     {
       id: 'fantastyczny-hub',
+      ikona: 'kostka',          // gry, warsztaty i koncert naraz
       dzien: 'sobota',
       od: '13:00', do: '19:00',
       tytul: 'Fantastyczny Hub (w programie: gry, warsztaty, koncert)',
@@ -519,6 +535,7 @@ window.DANE = {
 
     {
       id: 'moja-okolica-w-sztuce',
+      ikona: 'pedzel',
       dzien: 'niedziela',
       od: '13:30', do: '16:00',
       tytul: 'Moja okolica w sztuce — warsztaty w ramach projektu Sztuka w kieszeni',
@@ -534,6 +551,7 @@ window.DANE = {
 
     {
       id: 'ale-cyrk',
+      ikona: 'kula',            // cyrk to nie nożyczki
       dzien: 'niedziela',
       od: '14:00', do: '16:00',
       tytul: 'Ale cyrk! — warsztaty cyrkowe',
@@ -566,6 +584,7 @@ window.DANE = {
 
     {
       id: 'lekcja-tanga',
+      ikona: 'taniec',
       dzien: 'niedziela',
       od: '16:00', do: null,
       tytul: 'Otwarta lekcja tanga argentyńskiego',

@@ -11,8 +11,10 @@ Na starcie przeczytaj zrodla/ i przedstaw plan, zanim napiszesz
 pierwszą linijkę kodu.
 
 STRUKTURA
-- index.html — jeden plik, zero bibliotek, zero CDN-ów. Ma działać
-  otwarty z dysku i na GitHub Pages.
+- index.html — jeden plik, zero bibliotek potrzebnych do działania
+  strony. Ma działać otwarty z dysku i na GitHub Pages. Jedyny
+  dopuszczony skrypt obcy to licznik odsłon: ładuje się wyłącznie
+  na domenie produkcyjnej, a bez niego wszystko działa tak samo.
 - dane/bydgoskie.js — wszystkie treści jako window.DANE = {...}.
   Świadomie .js zamiast .json, żeby działało przez file://.
 - dane/mapa-bydgoskie.js — geometria z OSM.

@@ -39,7 +39,16 @@
   --budynek:       #D9C39B;
   --budynek-obrys: #7A6749;
 
+  /* Paski nad i pod mapą — ciemne, żeby odciąć interfejs od papieru mapy
+     i odbić skórzaną okładkę księgi z intra. Panel z treścią zostaje
+     jasny, bo to się czyta. */
+  --pasek-tlo:        #3E3427;
+  --pasek-tekst:      #F0E4CA;
+  --pasek-tekst-mgla: #BCA986;
+  --pasek-kreska:     rgba(240, 228, 202, .18);
+
   --akcent:        #9C3B2E;
+  --akcent-jasny:  #E0705C;   /* akcent czytelny na ciemnym pasku */
   --ostrzezenie:   #B4471F;
   --wiele:         #5E4B33;   /* pin z wydarzeniami z różnych kategorii */
 
@@ -572,6 +581,35 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   #intro, #intro-film, #intro-ksiega, #intro-brama, #intro-tlo { transition: none; }
 }
 
+/* ─────────── ciemne paski interfejsu ───────────
+   Nadpisania zebrane w jednym miejscu, żeby dało się je zdjąć jednym cięciem. */
+header, #dni, #promo, #pasek { background: var(--pasek-tlo); border-color: var(--pasek-kreska); }
+header, #pasek { color: var(--pasek-tekst); }
+header h1 { color: var(--pasek-tekst); }
+header p  { color: var(--pasek-tekst-mgla); }
+
+#do-intra { border-color: var(--pasek-kreska); }
+#do-intra svg { fill: var(--pasek-tekst-mgla); }
+#do-intra:hover { background: rgba(240,228,202,.12); }
+
+#dni button { color: var(--pasek-tekst); border-color: rgba(240,228,202,.32); }
+#dni button[aria-pressed="true"] {
+  background: var(--pasek-tekst); color: var(--pasek-tlo); border-color: var(--pasek-tekst);
+}
+
+#promo .haslo { color: var(--pasek-tekst-mgla); }
+#promo .co    { color: var(--pasek-tekst); }
+#promo .zegar { color: var(--pasek-tekst-mgla); }
+#promo .zegar.trwa { color: var(--akcent-jasny); }
+#promo .sluchaj { background: var(--pasek-tekst); color: var(--pasek-tlo); }
+#promo .zwin { color: var(--pasek-tekst-mgla); }
+#promo .znak { border-color: rgba(240,228,202,.6); }
+
+#pasek button { color: var(--pasek-tekst-mgla); }
+#pasek button[aria-expanded="true"] { color: var(--pasek-tekst); background: rgba(240,228,202,.12); }
+
+/* Atrybucja siedzi na mapie, więc zostaje w barwach papieru. */
+
 /* ─────────── podgląd zdjęcia ─────────── */
 #lupa {
   position: fixed; inset: 0; z-index: 40;
@@ -588,6 +626,21 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 }
 #lupa .zamknij svg { width: 22px; height: 22px; fill: #FAF3E4; }
 #lupa .podpis { color: #E7D8BC; font-size: .8rem; padding-top: .7rem; text-align: center; }
+#lupa .krok {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 52px; height: 72px;
+  background: rgba(250,243,228,.13); border: 0; border-radius: 8px; cursor: pointer;
+  display: grid; place-items: center;
+}
+#lupa .krok[hidden] { display: none; }
+#lupa .krok:hover { background: rgba(250,243,228,.24); }
+#lupa .krok svg { width: 26px; height: 26px; fill: #FAF3E4; }
+#lupa .wstecz { left: .5rem; }
+#lupa .dalej  { right: .5rem; }
+#lupa .licznik-zdjec { color: rgba(231,216,188,.7); font-size: .72rem; }
+@media (max-width: 520px) {
+  #lupa .krok { width: 44px; height: 60px; }
+}
 
 /* ─────────── większe ekrany ─────────── */
 @media (min-width: 720px) {
@@ -711,6 +764,12 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   <p class="podpis" id="lupa-podpis"></p>
   <button type="button" class="zamknij" id="zamknij-lupe" aria-label="Zamknij zdjęcie">
     <svg viewBox="0 0 24 24"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg>
+  </button>
+  <button type="button" class="krok wstecz" id="lupa-wstecz" aria-label="Poprzednie zdjęcie">
+    <svg viewBox="0 0 24 24"><path d="M15.5 3.6 7 12l8.5 8.4 1.6-1.6L10.2 12l6.9-6.8z"/></svg>
+  </button>
+  <button type="button" class="krok dalej" id="lupa-dalej" aria-label="Następne zdjęcie">
+    <svg viewBox="0 0 24 24"><path d="M8.5 3.6 17 12l-8.5 8.4-1.6-1.6L13.8 12 6.9 5.2z"/></svg>
   </button>
 </div>
 
@@ -856,6 +915,12 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     latawiec: 'M12 2 4 9.4 12 22l8-12.6zm0 3.1 5.4 5-5.4 8.5-5.4-8.5z',
     dom:      'M12 3 2 11h3v10h5v-6h4v6h5V11h3z',
     paleta:   'M12 3a9 9 0 0 0 0 18c1.3 0 2-.9 2-1.9 0-.5-.2-.9-.5-1.2-.3-.4-.5-.7-.5-1.2 0-1 .8-1.7 1.8-1.7H16a5 5 0 0 0 5-5c0-3.9-4-7-9-7m-4.7 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m3.2 3.2a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3',
+    // „Warsztaty" to worek na ziny, cyrk, plastykę, gry i tango — te cztery
+    // pozwalają rozróżnić je na pinach, mimo wspólnej kategorii i koloru.
+    kula:     'M12 2.5a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2M5 13a2.6 2.6 0 1 1 0 5.2A2.6 2.6 0 0 1 5 13m14 0a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2',
+    taniec:   'M13.6 2.3a2 2 0 1 1 0 4 2 2 0 0 1 0-4M11 7.6h3.1L18 12l-1.6 1.5-2.6-2.8v2.6l3 7.6h-2.4l-2.6-6.3-3.4 6.3H6l4.3-8v-2.5l-2 2.5L7 11.6z',
+    pedzel:   'M18.4 2.4a2.2 2.2 0 0 1 3.2 3.1L14 13.2l-3.2-3.2zM9.4 11.6l3 3-1.7 1.7c-.6.6-1.2.9-2 1.1-1 .3-1.5.8-1.9 1.7-.5 1-1.7 1.9-3.1 1.9-.9 0-1.8-.3-2.3-.8 1-.3 1.5-1 1.7-1.9.3-1.2.9-2 2-2.4.8-.3 1.4-.7 1.9-1.3z',
+    kostka:   'M4.4 4.4h15.2v15.2H4.4zm3.7 2.9a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4m7.8 0a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4m-7.8 6.4a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4m7.8 0a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4m-3.9-3.2a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4',
     punkt:    'M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12'
   };
   var IKONY_UI = {
@@ -1081,8 +1146,12 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
       // bo wybieranie jednej z nich kłamałoby.
       var kat = klucze.length === 1 ? KATEGORIE[klucze[0]] : null;
       p.wezel.style.setProperty('--kolor', kat ? kat.kolor : 'var(--wiele)');
+      /* Przy jednym wydarzeniu pod pinem jego własna ikona bije ikonę
+         kategorii — inaczej cyrk i warsztaty plastyczne dostają te same
+         nożyczki, bo obie rzeczy siedzą w kategorii „warsztaty". */
+      var nazwaIkony = (lista.length === 1 && lista[0].ikona) || (kat && kat.ikona);
       p.medalion.innerHTML =
-        ikona(IKONY[kat && kat.ikona] || IKONY.punkt) +
+        ikona(IKONY[nazwaIkony] || IKONY.punkt) +
         (lista.length > 1 ? '<span class="ile">' + lista.length + '</span>' : '');
 
       var wPlan = lista.some(function (w) { return wPlanie(w.id); });
@@ -1577,7 +1646,9 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
     });
 
     Array.prototype.forEach.call(tresc.querySelectorAll('[data-zdjecie]'), function (b) {
-      b.addEventListener('click', function () { otworzLupe(b.getAttribute('data-zdjecie'), w.tytul); });
+      b.addEventListener('click', function () {
+        otworzLupe(b.getAttribute('data-zdjecie'), w.tytul, w.zdjecia);
+      });
     });
     podepnijNawigacje();
 
@@ -1970,17 +2041,52 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 
   /* ═══════════════ podgląd zdjęcia ═══════════════ */
 
-  var lupa = $('lupa');
-  function otworzLupe(nazwa, podpis) {
-    $('lupa-obraz').src = 'img/' + nazwa + '.jpg';
-    $('lupa-obraz').alt = 'Zdjęcie z wydarzenia: ' + podpis;
-    $('lupa-podpis').textContent = podpis;
+  /* Galeria: raz otwarte zdjęcie przewija się w obrębie wydarzenia —
+     strzałkami, klawiszami i przesunięciem palca — bez wracania do panelu. */
+  var lupa = $('lupa'), galeria = [], wGalerii = 0, podpisGalerii = '';
+
+  function pokazZdjecie(i) {
+    if (!galeria.length) return;
+    wGalerii = (i + galeria.length) % galeria.length;      // zawija się w kółko
+    $('lupa-obraz').src = 'img/' + galeria[wGalerii] + '.jpg';
+    $('lupa-obraz').alt = 'Zdjęcie ' + (wGalerii + 1) + ' z ' + galeria.length + ': ' + podpisGalerii;
+    $('lupa-podpis').innerHTML = bezpiecznie(podpisGalerii) +
+      (galeria.length > 1 ? '<br><span class="licznik-zdjec">' + (wGalerii + 1) + ' z ' + galeria.length + '</span>' : '');
+    var jedno = galeria.length < 2;
+    $('lupa-wstecz').hidden = jedno;
+    $('lupa-dalej').hidden = jedno;
+  }
+
+  function otworzLupe(nazwa, podpis, wszystkie) {
+    galeria = (wszystkie && wszystkie.length) ? wszystkie.slice() : [nazwa];
+    podpisGalerii = podpis;
+    pokazZdjecie(Math.max(0, galeria.indexOf(nazwa)));
     lupa.hidden = false;
     $('zamknij-lupe').focus();
   }
-  function zamknijLupe() { lupa.hidden = true; $('lupa-obraz').src = ''; }
+
+  function zamknijLupe() { lupa.hidden = true; $('lupa-obraz').src = ''; galeria = []; }
+
   $('zamknij-lupe').addEventListener('click', zamknijLupe);
+  $('lupa-wstecz').addEventListener('click', function () { pokazZdjecie(wGalerii - 1); });
+  $('lupa-dalej').addEventListener('click', function () { pokazZdjecie(wGalerii + 1); });
   lupa.addEventListener('click', function (e) { if (e.target === lupa) zamknijLupe(); });
+
+  document.addEventListener('keydown', function (e) {
+    if (lupa.hidden) return;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); pokazZdjecie(wGalerii - 1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); pokazZdjecie(wGalerii + 1); }
+  });
+
+  // Przesunięcie palcem — na telefonie naturalniejsze niż celowanie w strzałkę.
+  var dotykX = null;
+  lupa.addEventListener('pointerdown', function (e) { dotykX = e.clientX; });
+  lupa.addEventListener('pointerup', function (e) {
+    if (dotykX === null) return;
+    var przesuw = e.clientX - dotykX;
+    dotykX = null;
+    if (Math.abs(przesuw) > 45) pokazZdjecie(wGalerii + (przesuw < 0 ? 1 : -1));
+  });
 
   /* ═══════════════ dolny pasek ═══════════════ */
 
@@ -2153,6 +2259,30 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
       });
       pojemnik.appendChild(b);
     });
+  })();
+
+  /* ═══════════════ licznik odsłon ═══════════════
+
+     Jedyny obcy skrypt na tej stronie i jedyny, bez którego wszystko
+     działa tak samo. Ładuje się wyłącznie na domenie produkcyjnej,
+     odroczony, a jego awaria jest bez znaczenia — nie ma tu żadnego
+     `await` ani niczego, co by na niego czekało. */
+  (function licznik() {
+    var l = DANE.swieto.licznik;
+    if (!l || !l.kod) return;
+    if (location.protocol !== 'https:' || location.hostname !== l.domena) return;
+
+    var s = document.createElement('script');
+    s.async = true;
+    s.setAttribute('data-goatcounter', l.kod);
+    s.src = 'https://gc.zgo.at/count.js';
+    s.onerror = function () { /* brak licznika nikomu nie szkodzi */ };
+    document.body.appendChild(s);
+
+    if (l.nota) {
+      var p = $('atrybucja');
+      if (p) p.insertAdjacentHTML('beforeend', ' · ' + bezpiecznie(l.nota));
+    }
   })();
 
   /* ═══════════════ start ═══════════════ */
