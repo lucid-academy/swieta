@@ -388,6 +388,19 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   font-size: .74rem; color: var(--tusz-jasny);
 }
 .znaczek.kat { background: var(--kolor); color: #FBF4E4; border-color: transparent; }
+/* Plakietka nurtu — obrys zamiast wypełnienia, żeby nie konkurowała
+   z kolorem kategorii, ale była widoczna od pierwszego spojrzenia. */
+.znaczek.nurt-znaczek { border: 1.5px solid var(--akcent); color: var(--akcent); background: none; font-weight: 600; }
+.wydarzenie .nurt {
+  display: inline-block; margin-right: .35rem; padding: .05rem .38rem;
+  border: 1px solid var(--akcent); border-radius: 9px;
+  font-size: .66rem; font-weight: 600; color: var(--akcent);
+  vertical-align: 1px; white-space: nowrap;
+}
+.opis.o-nurcie {
+  padding: .6rem .75rem; background: var(--papier-cien);
+  border-left: 3px solid var(--akcent); font-size: .88rem;
+}
 
 .zdjecia { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: .4rem; margin: .8rem 0; }
 .zdjecia button { padding: 0; border: 1px solid var(--kreska); background: none; cursor: pointer; border-radius: 3px; overflow: hidden; }
@@ -998,6 +1011,16 @@ header p  { color: var(--pasek-tekst-mgla); }
   DANE.lokalizacje.forEach(function (l) { LOKALIZACJE[l.id] = l; });
   DANE.swieto.dni.forEach(function (d) { DNI[d.id] = d; });
 
+  /* Nurty: mapa niesie dwa święta tego samego weekendu, robione przez tych
+     samych ludzi. Wydarzenie bez pola `nurt` należy do nurtu domyślnego. */
+  var NURTY = {}, NURT_DOMYSLNY = null;
+  (DANE.nurty || []).forEach(function (n) {
+    NURTY[n.id] = n;
+    if (n.domyslny && !NURT_DOMYSLNY) NURT_DOMYSLNY = n.id;
+  });
+  function nurtem(w) { return w.nurt || NURT_DOMYSLNY; }
+  function nurtObcy(w) { return NURT_DOMYSLNY && nurtem(w) !== NURT_DOMYSLNY; }
+
   /* Biblioteka ikon. Dane mówią `ikona: 'nuta'`, rysunek siedzi w kodzie,
      więc kolejne święto może użyć tych samych nazw. */
   var IKONY = {
@@ -1158,6 +1181,7 @@ header p  { color: var(--pasek-tekst-mgla); }
     dzien: 'wszystkie',
     kategorie: {},          // id -> true (pusty zbiór = wszystkie)
     tagi: {},
+    nurty: {},
     plan: {},               // id wydarzenia -> true
     widok: null
   };
@@ -1179,6 +1203,7 @@ header p  { color: var(--pasek-tekst-mgla); }
 
   function pasuje(w) {
     if (stan.dzien !== 'wszystkie' && w.dzien !== stan.dzien) return false;
+    if (ileWybrano(stan.nurty) && !stan.nurty[nurtem(w)]) return false;
     if (ileWybrano(stan.kategorie) && !stan.kategorie[w.kategoria]) return false;
     var wybraneTagi = Object.keys(stan.tagi);
     for (var i = 0; i < wybraneTagi.length; i++) {
@@ -1668,10 +1693,14 @@ header p  { color: var(--pasek-tekst-mgla); }
         html += '<div class="dzien-naglowek">' + bezpiecznie(d.nazwa) + ' ' + d.data.split('-').reverse().join('.') + '</div>';
       }
       var kat = KATEGORIE[w.kategoria] || {};
+      // Wydarzenia spoza głównego nurtu dostają plakietkę, żeby nikt nie wziął
+      // SUPERfestynu za punkt programu Święta.
+      var znak = nurtObcy(w) && NURTY[nurtem(w)]
+        ? '<span class="nurt">' + bezpiecznie(NURTY[nurtem(w)].nazwa) + '</span> ' : '';
       html += '<button type="button" class="wydarzenie" data-wydarzenie="' + bezpiecznie(w.id) + '">' +
         '<span class="godz">' + bezpiecznie(godziny(w)) + '</span>' +
         '<span class="kropka" style="--kolor:' + bezpiecznie(kat.kolor || '#888') + '"></span>' +
-        '<span class="tyt">' + bezpiecznie(w.tytul) + '</span>' +
+        '<span class="tyt">' + znak + bezpiecznie(w.tytul) + '</span>' +
         (bezMiejsca ? '' : '<span class="msc">' + bezpiecznie(w.miejsce) + '</span>') +
         '</button>';
     });
@@ -1713,16 +1742,23 @@ header p  { color: var(--pasek-tekst-mgla); }
         'Szukaj w okolicy wskazanego punktu.</p>';
     }
 
-    html += '<div class="znaczki"><span class="znaczek kat" style="--kolor:' + bezpiecznie(kat.kolor || '#888') + '">' +
+    html += '<div class="znaczki">';
+    if (nurtObcy(w) && NURTY[nurtem(w)]) {
+      html += '<span class="znaczek nurt-znaczek">' + bezpiecznie(NURTY[nurtem(w)].nazwa) + '</span>';
+    }
+    html += '<span class="znaczek kat" style="--kolor:' + bezpiecznie(kat.kolor || '#888') + '">' +
       bezpiecznie(kat.nazwa || w.kategoria) + '</span>';
     w.tagi.forEach(function (t) {
       if (TAGI[t]) html += '<span class="znaczek">' + bezpiecznie(TAGI[t].nazwa) + '</span>';
     });
     html += '</div>';
 
-    html += w.opis
-      ? '<div class="opis">' + bezpiecznie(w.opis) + '</div>'
-      : '<p class="brak-opisu">Organizatorzy nie podali jeszcze opisu tego wydarzenia. Godzina i miejsce są pewne.</p>';
+    /* Wydarzenia SUPERfestynu nie mają własnych opisów, ale mają wspólny opis
+       nurtu — lepiej pokazać go raz porządnie niż powtarzać przy 28 pozycjach. */
+    var opisNurtu = nurtObcy(w) && NURTY[nurtem(w)] ? NURTY[nurtem(w)].opis : null;
+    if (w.opis) html += '<div class="opis">' + bezpiecznie(w.opis) + '</div>';
+    else if (opisNurtu) html += '<div class="opis o-nurcie">' + bezpiecznie(opisNurtu) + '</div>';
+    else html += '<p class="brak-opisu">Organizatorzy nie podali jeszcze opisu tego wydarzenia. Godzina i miejsce są pewne.</p>';
 
     if (w.zdjecia && w.zdjecia.length) {
       html += '<div class="zdjecia">';
@@ -2100,7 +2136,19 @@ header p  { color: var(--pasek-tekst-mgla); }
 
   function pokazFiltry() {
     stan.widok = 'filtry'; stan.widokArg = null;
-    var html = '<div class="grupa-filtrow"><h3>Kategoria</h3><div class="filtry">';
+    var html = '';
+
+    // Filtr nurtu tylko wtedy, gdy jest z czego wybierać.
+    if ((DANE.nurty || []).length > 1) {
+      html += '<div class="grupa-filtrow"><h3>Które święto</h3><div class="filtry">';
+      DANE.nurty.forEach(function (n) {
+        html += '<button type="button" class="filtr" data-nurt="' + bezpiecznie(n.id) + '" ' +
+          'aria-pressed="' + (stan.nurty[n.id] ? 'true' : 'false') + '">' + bezpiecznie(n.nazwa) + '</button>';
+      });
+      html += '</div></div>';
+    }
+
+    html += '<div class="grupa-filtrow"><h3>Kategoria</h3><div class="filtry">';
     DANE.kategorie.forEach(function (kt) {
       html += '<button type="button" class="filtr" data-kat="' + bezpiecznie(kt.id) + '" style="--kolor:' + bezpiecznie(kt.kolor) + '" ' +
         'aria-pressed="' + (stan.kategorie[kt.id] ? 'true' : 'false') + '">' +
@@ -2122,17 +2170,17 @@ header p  { color: var(--pasek-tekst-mgla); }
     html += '<div class="dzialania"><button type="button" class="przycisk pusty" id="wyczysc">Wyczyść filtry</button></div>';
     otworzArkusz('Filtry', html);
 
-    Array.prototype.forEach.call(tresc.querySelectorAll('[data-kat],[data-tag]'), function (b) {
+    Array.prototype.forEach.call(tresc.querySelectorAll('[data-kat],[data-tag],[data-nurt]'), function (b) {
       b.addEventListener('click', function () {
-        var kat = b.getAttribute('data-kat'), tag = b.getAttribute('data-tag');
-        var zbior = kat ? stan.kategorie : stan.tagi, klucz = kat || tag;
+        var kat = b.getAttribute('data-kat'), tag = b.getAttribute('data-tag'), nurt = b.getAttribute('data-nurt');
+        var zbior = kat ? stan.kategorie : (tag ? stan.tagi : stan.nurty), klucz = kat || tag || nurt;
         if (zbior[klucz]) delete zbior[klucz]; else zbior[klucz] = true;
         b.setAttribute('aria-pressed', zbior[klucz] ? 'true' : 'false');
         poFiltrach();
       });
     });
     $('wyczysc').addEventListener('click', function () {
-      stan.kategorie = {}; stan.tagi = {};
+      stan.kategorie = {}; stan.tagi = {}; stan.nurty = {};
       poFiltrach(); pokazFiltry();
     });
   }
@@ -2306,7 +2354,7 @@ header p  { color: var(--pasek-tekst-mgla); }
   var SEKCJE = [
     { id: 'program', nazwa: 'Program',  ikona: IKONY_UI.program, otworz: pokazProgram },
     { id: 'plan',    nazwa: 'Mój plan', ikona: IKONY_UI.plan,    otworz: pokazPlan, licznik: ilePlanu },
-    { id: 'filtry',  nazwa: 'Filtry',   ikona: IKONY_UI.filtry,  otworz: pokazFiltry, licznik: function () { return ileWybrano(stan.kategorie) + ileWybrano(stan.tagi); } },
+    { id: 'filtry',  nazwa: 'Filtry',   ikona: IKONY_UI.filtry,  otworz: pokazFiltry, licznik: function () { return ileWybrano(stan.kategorie) + ileWybrano(stan.tagi) + ileWybrano(stan.nurty); } },
     { id: 'przyjaciele', nazwa: 'Przyjaciele', ikona: IKONY_UI.serce, otworz: pokazPrzyjaciol },
     { id: 'onas',        nazwa: 'O nas',       ikona: IKONY_UI.koperta, otworz: pokazONas }
   ];

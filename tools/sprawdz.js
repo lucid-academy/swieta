@@ -61,6 +61,7 @@ if (!D.swieto.id) uwaga('swieto.id jest pusty — plan i intro zapiszą się pod
 if (!Array.isArray(D.swieto.dni) || !D.swieto.dni.length) blad('swieto.dni jest puste');
 
 const kategorie = new Set(D.kategorie.map(k => k.id));
+const nurty = new Set((D.nurty || []).map(n => n.id));
 const tagi = new Set(D.tagi.map(t => t.id));
 const dni = new Set((D.swieto.dni || []).map(d => d.id));
 const lokalizacje = new Map(D.lokalizacje.map(l => [l.id, l]));
@@ -121,6 +122,7 @@ for (const w of D.wydarzenia) {
   if (!dni.has(w.dzien)) blad(`${gdzie}: dzień "${w.dzien}" nie istnieje w swieto.dni`);
   if (!lokalizacje.has(w.lokalizacja)) blad(`${gdzie}: lokalizacja "${w.lokalizacja}" nie istnieje`);
   if (!kategorie.has(w.kategoria)) blad(`${gdzie}: kategoria "${w.kategoria}" nie istnieje`);
+  if (w.nurt && !nurty.has(w.nurt)) blad(`${gdzie}: nurt "${w.nurt}" nie istnieje`);
 
   if (!godzina.test(w.od || '')) blad(`${gdzie}: godzina rozpoczęcia "${w.od}" nie jest w formacie GG:MM`);
   if (w.do) {
