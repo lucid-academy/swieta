@@ -675,6 +675,10 @@ window.DANE = {
      zdejmuje sekcję z dolnego paska. */
   onas: {
     naglowek: 'Lucid Academy',
+    /* Tło logo (#EED5B3) jest dobrane pod papier mapy (#EBD9B7), więc wtapia
+       się bez obwódki. `logoMale` pokazuje się także w nagłówku strony. */
+    logo: 'img/logo.jpg',
+    logoMale: 'img/logo-mini.jpg',
     tresc: 'Lucid Academy — toruńska fundacja łącząca edukację AI z kulturą i lokalną wspólnotą. Uczymy rozumieć sztuczną inteligencję i zamieniamy te umiejętności w narzędzia i wydarzenia dla wspólnoty — tę mapę też zrobiliśmy my :)\n\nKoncert Ribaldi Music w amfiteatrze w Parku Miejskim (sobota, 19:00) to również inicjatywa fundacji — wspieramy artystki, a dodatkowe honoraria zbieramy wśród przedsiębiorców z Bydgoskiego i regionu.',
     kontakt: {
       wstep: 'Chcesz z nami współpracować albo wesprzeć to, co robimy? A może coś na mapie nie działa, czegoś brakuje lub da się zrobić lepiej? Napisz — czytamy wszystko.',

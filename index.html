@@ -89,6 +89,25 @@ header .tytuly { flex: 1; min-width: 0; }
   cursor: pointer;
 }
 #do-intra[hidden] { display: none; }   /* selektor elementu bije samo [hidden] */
+
+/* Logo w nagłówku — klikalne, prowadzi do „O nas". Tło grafiki jest
+   dobrane pod papier, więc obywa się bez ramki i nie wygląda jak naklejka. */
+#do-logo {
+  flex: none; width: 44px; height: 44px; padding: 0;
+  background: none; border: 0; border-radius: 6px; cursor: pointer;
+  display: grid; place-items: center; overflow: hidden;
+}
+#do-logo[hidden] { display: none; }
+#do-logo img { width: 40px; height: 40px; object-fit: cover; border-radius: 5px; display: block; }
+#do-logo:hover { background: rgba(75,64,47,.08); }
+#do-logo:focus-visible { outline: 3px solid var(--tusz); outline-offset: 2px; }
+
+/* Logo w panelu „O nas" — duże, nad tekstem. */
+#onas-logo {
+  display: block; width: 100%; max-width: 260px; height: auto;
+  margin: 0 auto .9rem; border-radius: 8px;
+  border: 1px solid var(--kreska);
+}
 #do-intra svg { width: 21px; height: 21px; fill: var(--tusz-jasny); }
 #do-intra:hover { background: rgba(75,64,47,.08); }
 header h1 {
@@ -704,6 +723,9 @@ header p  { color: var(--pasek-tekst-mgla); }
     <h1 id="tytul">Święto dzielnicy</h1>
     <p id="podtytul"></p>
   </div>
+  <button type="button" id="do-logo" hidden aria-label="O nas — Lucid Academy" title="O nas">
+    <img id="logo-naglowek" alt="">
+  </button>
   <button type="button" id="do-intra" hidden aria-label="Obejrzyj intro od początku" title="Obejrzyj intro od początku">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c2.5-.7 5.5-.5 8 1 2.5-1.5 5.5-1.7 8-1v13c-2.5-.7-5.5-.5-8 1-2.5-1.5-5.5-1.7-8-1zm8 3.4C10.2 7.3 8 6.9 6 7.1v9.5c2-.2 4.2.2 6 1.2 1.8-1 4-1.4 6-1.2V7.1c-2-.2-4.2.2-6 1.3z"/></svg>
   </button>
@@ -937,6 +959,13 @@ header p  { color: var(--pasek-tekst-mgla); }
     try { widziane = localStorage.getItem(KLUCZ) === 'tak'; } catch (e) {}
     if (wymuszone || !widziane) pokazIntro();
   })();
+
+  if (DANE.onas && DANE.onas.logoMale) {
+    $('logo-naglowek').src = DANE.onas.logoMale;
+    $('logo-naglowek').alt = DANE.onas.naglowek || '';
+    $('do-logo').hidden = false;
+    $('do-logo').addEventListener('click', pokazONas);
+  }
 
   if (pokazIntro) {
     $('do-intra').hidden = false;
@@ -2138,6 +2167,7 @@ header p  { color: var(--pasek-tekst-mgla); }
     var o = DANE.onas || {};
     var html = '';
 
+    if (o.logo) html += '<img id="onas-logo" src="' + bezpiecznie(o.logo) + '" alt="Logo " loading="lazy">';
     if (o.tresc) html += '<div class="opis">' + bezpiecznie(o.tresc) + '</div>';
 
     var k = o.kontakt;
