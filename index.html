@@ -565,7 +565,9 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 #intro.scena-brama #intro-film { opacity: 0; }
 
 /* tło dzielnicy — trzy warstwy paralaksy, jak w oryginale */
-#intro-tlo { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; }
+/* overflow: warstwy mają inset -4% na potrzeby dryfu; bez przycięcia
+   wylewałyby się poza pas kadru i robiły szew nad obrazem. */
+#intro-tlo { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity 1s ease; }
 #intro.scena-brama #intro-tlo { opacity: 1; }
 #intro-tlo .warstwa {
   position: absolute; inset: -4%;
@@ -638,6 +640,22 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   font-size: .84rem; cursor: pointer;
 }
 #intro-pomin:hover { background: rgba(231,216,188,.24); }
+
+/* Film i tło są w proporcji 16:9. Rozciągnięte na cały portret telefonu
+   pokazują ledwie 26% szerokości kadru — reszta idzie pod nóż. Zamykamy je
+   w pasie o proporcji bliższej źródłu: widać wtedy ponad 45%, a ciemne pole
+   nad i pod czyta się jak kadr kinowy, nie jak błąd. */
+@media (max-aspect-ratio: 3/4) {
+  #intro-film,
+  #intro-tlo {
+    inset: 50% 0 auto 0;
+    height: 58vh;
+    transform: translateY(-50%);
+  }
+  #intro-ksiega { width: min(52vw, 34vh); }
+  #intro-podpowiedz { bottom: 12vh; }
+  #intro-brama { top: 72%; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   #intro-tlo .warstwa { animation: none; }

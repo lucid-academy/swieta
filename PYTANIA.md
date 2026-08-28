@@ -42,6 +42,13 @@ Mickiewicza czy od Matejki?
 Które dostaną, a które zostają z samym tytułem? (Wiadomo, że nie każde
 będzie miało — chodzi o to, żeby wiedzieć, na co jeszcze czekamy.)
 
+**6a. GODZINY W DOKUMENCIE BYWAJĄ NIEAKTUALNE — do przejrzenia w całości.**
+Festyn Rodzinny / Garażówka z Hubem miał w dokumencie 12:00-19:00,
+a w rzeczywistości kończy się o 17:00. Porównanie wszystkich 27 wydarzeń
+wykazało, że dane wiernie odwzorowują dokument (27/27 zgodnych), więc
+błąd powstał po stronie dokumentu, nie przepisania. Skoro jeden się
+znalazł, warto żeby organizatorzy przejrzeli godziny wszystkich pozycji.
+
 **7. Dziesięć wydarzeń nie ma godziny zakończenia.**
 Da się uzupełnić? Planer liczy wtedy czas przejścia od godziny startu,
 co przy koncertach i spacerze potrafi wprowadzić w błąd.

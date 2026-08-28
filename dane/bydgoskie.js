@@ -520,7 +520,10 @@ window.DANE = {
     {
       id: 'festyn-garazowka',
       dzien: 'niedziela',
-      od: '12:00', do: '19:00',
+      /* Dokument organizatorów podaje 12:00-19:00, ale organizator potwierdził,
+         że festyn kończy się o 17:00. Zapisujemy stan faktyczny, nie zapis
+         z pliku — to jedyne miejsce, gdzie dane rozjeżdżają się ze źródłem. */
+      od: '12:00', do: '17:00',
       tytul: 'Festyn Rodzinny — Garażówka z Hubem',
       lokalizacja: 'bydgoska-50',
       miejsce: 'Kulturalny Hub Bydgoskiego Przedmieścia, ul. Bydgoska 50',
@@ -726,6 +729,15 @@ window.DANE = {
         pomoc: null,
         otwarte: null,
         url: 'https://www.mikstura-architekci.pl/'
+      },
+      {
+        nazwa: 'Kulturalny Hub Bydgoskiego Przedmieścia',
+        adres: 'ul. Bydgoska 50',
+        gps: { lat: 53.0099895, lng: 18.5838485 },
+        zrodloGps: 'ta sama pinezka co lokalizacja wydarzeń bydgoska-50; reverse geocoding OSM: Bydgoska 50',
+        pomoc: null,
+        otwarte: 'W oba dni święta gospodarz wydarzeń przy Bydgoskiej 50.',
+        url: null
       },
       {
         nazwa: 'Kwiaciarnia Kwiatostany',
