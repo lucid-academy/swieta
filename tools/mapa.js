@@ -18,7 +18,11 @@
  * Opcje:
  *   --swieto NAZWA     które dane wczytać (domyślnie bydgoskie)
  *   --epsilon METRY    próg Douglasa-Peuckera (domyślnie 1.5, 0 = bez upraszczania)
- *   --margines METRY   zapas wokół lokalizacji (domyślnie 400)
+ *   --margines METRY   zapas wokół lokalizacji, wyznacza KADR (domyślnie 400)
+ *   --zapas METRY      ile POBRAĆ poza kadrem (domyślnie 0). Kadr i pobranie to
+ *                      dwie różne rzeczy: park nie kończy się na krawędzi mapy,
+ *                      więc jego obrys ma dojechać do brzegu i tam zostać obcięty,
+ *                      zamiast urywać się w powietrzu w środku kadru.
  *   --z-pliku PLIK     użyj zapisanej odpowiedzi Overpass zamiast pobierać
  *   --zapisz-surowe P  zapisz surową odpowiedź do pliku
  *   --wyjscie PLIK     gdzie zapisać wynik (domyślnie dane/mapa-<swieto>.js)
@@ -30,7 +34,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const KORZEN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OVERPASS = 'https://overpass-api.de/api/interpreter';
+/* Overpass bywa przeciążony i odpowiada 504 albo 429 — nie dlatego, że zapytanie
+   jest złe, tylko dlatego, że akurat ma ruch. Pobieramy raz na święto, więc nie
+   ma sensu poddawać się przy pierwszym odbiciu: lecimy po kolei po lustrach. */
+const OVERPASS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.osm.jp/api/interpreter',
+];
 const METR_NA_STOPIEN = 111320;
 
 /* ---------- klasyfikacja ---------- */
@@ -44,10 +55,34 @@ const PIESZO  = ['pedestrian', 'footway', 'path'];
 const BUDYNKI_PUBLICZNE = ['public', 'civic', 'school', 'university', 'church',
                            'chapel', 'cathedral', 'hospital', 'train_station', 'museum'];
 
+// Obiekty będące punktem orientacyjnym w każdej skali, nawet bez nazwy.
+// Wieża ciśnień na Chełmińskim ma tylko building=yes + man_made=water_tower —
+// bez tej listy wypadłaby z mapy, a jest najważniejszym punktem tamtego terenu.
+const ZNAKI_TERENU = ['water_tower', 'water_works', 'chimney', 'lighthouse', 'windmill', 'tower'];
+
+/* Progi filtrowania zależą od tego, jak duży wycinek rysujemy.
+   Na dzielnicy (Bydgoskie, ~2 km) trawnik między kamienicami i bezimienna
+   komórka to szum: 80% wagi pliku i 100% bałaganu. Na placu (Chełmińskie,
+   ~150 m) jest odwrotnie — trawnik to jest to, po czym ludzie chodzą,
+   a każdy budynek w parku jest punktem orientacyjnym. Ta sama reguła
+   zastosowana w obu skalach dałaby raz zaśmieconą, raz pustą mapę. */
+function progi(najdluzszyBok) {
+  const plac = najdluzszyBok < 400;
+  return {
+    plac,
+    park:     plac ? 400 : 5000,   // m² — minimalny obszar zieleni traktowany jak park
+    zielen:   plac ? 150 : 2000,   // m² — minimalny skrawek zieleni na mapie
+    budynek:  plac ?  25 : 150,    // m² — minimalny obrys budynku
+    bezNazwy: plac,                // czy budynki bez nazwy i funkcji też wchodzą
+    ogrodzenia: plac,              // płot ma sens tylko wtedy, gdy tłumaczy, którędy się wchodzi
+    wszystkieSciezki: plac,        // na placu nie ma czego dublować — ścieżka to jedyna droga
+  };
+}
+
 /* ---------- argumenty ---------- */
 
 function czytajArgumenty(argv) {
-  const o = { swieto: 'bydgoskie', epsilon: 1.5, margines: 400, zPliku: null, zapiszSurowe: null, wyjscie: null, cicho: false };
+  const o = { swieto: 'bydgoskie', epsilon: 1.5, margines: 400, zapas: 0, zPliku: null, zapiszSurowe: null, wyjscie: null, cicho: false };
   const liczba = (w, n) => {
     const x = Number(w);
     if (!Number.isFinite(x) || x < 0) throw new Error(`--${n} oczekuje liczby nieujemnej, dostało: ${w}`);
@@ -58,6 +93,7 @@ function czytajArgumenty(argv) {
       case '--swieto':        o.swieto = argv[++i]; break;
       case '--epsilon':       o.epsilon = liczba(argv[++i], 'epsilon'); break;
       case '--margines':      o.margines = liczba(argv[++i], 'margines'); break;
+      case '--zapas':         o.zapas = liczba(argv[++i], 'zapas'); break;
       case '--z-pliku':       o.zPliku = argv[++i]; break;
       case '--zapisz-surowe': o.zapiszSurowe = argv[++i]; break;
       case '--wyjscie':       o.wyjscie = argv[++i]; break;
@@ -131,25 +167,43 @@ function zapytanie(b) {
 (
   way["highway"~"^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|residential|unclassified|living_street|pedestrian|footway|path)$"](${w});
   way["leisure"~"^(park|garden)$"](${w});
-  way["landuse"~"^(forest|allotments|cemetery|meadow)$"](${w});
-  way["natural"~"^(water|wood)$"](${w});
+  way["landuse"~"^(forest|allotments|cemetery|meadow|grass)$"](${w});
+  way["natural"~"^(water|wood|scrub|grassland|tree_row)$"](${w});
   way["waterway"="river"](${w});
   way["building"](${w});
+  way["man_made"~"^(water_tower|water_works)$"](${w});
+  way["amenity"="fountain"](${w});
+  way["barrier"~"^(fence|wall|hedge)$"](${w});
 );
 out geom;`;
 }
 
-async function pobierz(b) {
-  const r = await fetch(OVERPASS, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'swieta-mapa/1.0 (mapa swieta dzielnicowego, jednorazowe pobranie)'
-    },
-    body: 'data=' + encodeURIComponent(zapytanie(b))
-  });
-  if (!r.ok) throw new Error(`Overpass odpowiedział ${r.status}: ${(await r.text()).slice(0, 200)}`);
-  return r.json();
+const spij = ms => new Promise(r => setTimeout(r, ms));
+
+async function pobierz(b, gadaj = () => {}) {
+  const body = 'data=' + encodeURIComponent(zapytanie(b));
+  let ostatni = null;
+  for (let proba = 0; proba < 2; proba++) {
+    for (const url of OVERPASS) {
+      try {
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'swieta-mapa/1.0 (mapa swieta dzielnicowego, jednorazowe pobranie)'
+          },
+          body
+        });
+        if (r.ok) return r.json();
+        ostatni = `${new URL(url).host} odpowiedział ${r.status}`;
+      } catch (e) {
+        ostatni = `${new URL(url).host}: ${e.message}`;
+      }
+      gadaj(`          ${ostatni} — próbuję dalej`);
+      await spij(2000);
+    }
+  }
+  throw new Error(`żadne lustro Overpass nie odpowiedziało. Ostatnio: ${ostatni}`);
 }
 
 /* ---------- główna ---------- */
@@ -161,8 +215,16 @@ async function glowna() {
   // 1. Wycinek liczony z lokalizacji święta.
   const window = {};
   new Function('window', readFileSync(path.join(KORZEN, 'dane', `${o.swieto}.js`), 'utf8'))(window);
-  const lokalizacje = window.DANE.lokalizacje.filter(l => l.gps);
-  if (!lokalizacje.length) throw new Error('Żadna lokalizacja nie ma współrzędnych.');
+  const zGps = window.DANE.lokalizacje.filter(l => l.gps);
+  if (!zGps.length) throw new Error('Żadna lokalizacja nie ma współrzędnych.');
+
+  /* Lokalizacje z `pozaKadrem: true` nie rozciągają wycinka. Na Chełmińskim
+     wieża ciśnień stoi 57 m za ostatnim namiotem i sama podniosłaby kadr
+     z 73 do 130 m wysokości — namioty zrobiłyby się o jedną trzecią drobniejsze.
+     Dostaje zamiast tego strzałkę z odległością i własną kartę. */
+  const pozaKadrem = zGps.filter(l => l.pozaKadrem);
+  const lokalizacje = zGps.filter(l => !l.pozaKadrem);
+  if (!lokalizacje.length) throw new Error('Wszystkie lokalizacje mają pozaKadrem — nie ma z czego policzyć wycinka.');
 
   const laty = lokalizacje.map(l => l.gps.lat), lngi = lokalizacje.map(l => l.gps.lng);
   const lat0 = (Math.min(...laty) + Math.max(...laty)) / 2;
@@ -185,14 +247,31 @@ async function glowna() {
   const szerokosc = Math.round((bbox.wschod - bbox.zachod) * METR_NA_STOPIEN * skalaDlugosci);
   const wysokosc  = Math.round((bbox.polnoc - bbox.poludnie) * METR_NA_STOPIEN);
 
-  gadaj(`Święto:   ${o.swieto} (${lokalizacje.length} lokalizacji)`);
-  gadaj(`Wycinek:  ${szerokosc} x ${wysokosc} m, margines ${o.margines} m`);
+  /* Kadr to `bbox`. Pobieramy z zapasem, bo geometria urwana na krawędzi kadru
+     wygląda jak dziura, a obcięta przez viewBox wygląda jak mapa. */
+  const dLatP = (o.margines + o.zapas) / METR_NA_STOPIEN;
+  const dLngP = (o.margines + o.zapas) / (METR_NA_STOPIEN * skalaDlugosci);
+  const bboxPobrania = o.zapas ? {
+    poludnie: +(Math.min(...laty) - dLatP).toFixed(5),
+    zachod:   +(Math.min(...lngi) - dLngP).toFixed(5),
+    polnoc:   +(Math.max(...laty) + dLatP).toFixed(5),
+    wschod:   +(Math.max(...lngi) + dLngP).toFixed(5)
+  } : bbox;
+
+  const P = progi(Math.max(szerokosc, wysokosc));
+
+  gadaj(`Święto:   ${o.swieto} (${lokalizacje.length} lokalizacji w kadrze` +
+        (pozaKadrem.length ? `, ${pozaKadrem.length} poza: ${pozaKadrem.map(l => l.id).join(', ')}` : '') + ')');
+  gadaj(`Kadr:     ${szerokosc} x ${wysokosc} m, margines ${o.margines} m` +
+        (o.zapas ? `  (pobranie z zapasem ${o.zapas} m, nadmiar obetnie viewBox)` : ''));
+  gadaj(`Skala:    ${P.plac ? 'PLAC — trawnik i mała zabudowa to treść, nie szum' : 'dzielnica'}` +
+        ` (zieleń > ${P.zielen} m², budynki > ${P.budynek} m²${P.bezNazwy ? ', także bez nazwy' : ''})`);
   gadaj(`Epsilon:  ${o.epsilon} m\n`);
 
   // 2. Dane z OSM.
   const surowe = o.zPliku
     ? JSON.parse(readFileSync(path.resolve(KORZEN, o.zPliku), 'utf8'))
-    : await pobierz(bbox);
+    : await pobierz(bboxPobrania, gadaj);
   if (o.zapiszSurowe) writeFileSync(path.resolve(KORZEN, o.zapiszSurowe), JSON.stringify(surowe));
   gadaj(`Z OSM:    ${surowe.elements.length} elementów${o.zPliku ? ' (z pliku)' : ''}`);
 
@@ -202,7 +281,7 @@ async function glowna() {
   const parki = surowe.elements
     .filter(e => e.tags?.leisure === 'park' && e.geometry?.length > 3)
     .map(e => ({ e, pkt: wMetrach(e) }))
-    .filter(x => pole(x.pkt) > 5000);
+    .filter(x => pole(x.pkt) > P.park);
 
   // Większość punktów w parku, nie „choć jeden" — inaczej ścieżka, która ledwo
   // muska park, wchodzi na mapę całą swoją kilometrową długością.
@@ -211,12 +290,13 @@ async function glowna() {
     return w > pkt.length / 2;
   };
 
-  const warstwy = { woda: [], zielen: [], budynki: [], ulice: { glowne: [], lokalne: [], pieszo: [] } };
+  const warstwy = { woda: [], zielen: [], budynki: [], ogrodzenia: [],
+                    ulice: { glowne: [], lokalne: [], pieszo: [] } };
   const licznik = { pominiete: 0 };
 
   let punktowPrzed = 0, punktowPo = 0, najwiekszeOdchylenie = 0;
 
-  const dodaj = (cel, e, pkt, zamkniety = false) => {
+  const dodaj = (cel, e, pkt, zamkniety = false, rodzaj = null) => {
     punktowPrzed += pkt.length;
     const u = uprosc(pkt, o.epsilon);
     punktowPo += u.length;
@@ -224,13 +304,32 @@ async function glowna() {
     const obiekt = { p: u.flat().map(v => Math.round(v * 10) / 10) };
     if (e.tags?.name) obiekt.n = e.tags.name;
     if (zamkniety) obiekt.z = 1;
+    // `k` mówi rendererowi, CZYM jest ten obszar. Na dzielnicy wystarczyła jedna
+    // zielona plama; na placu trawnik, zadrzewienie i cmentarz muszą się różnić,
+    // bo to one są punktami orientacyjnymi zamiast ulic.
+    if (rodzaj) obiekt.k = rodzaj;
     cel.push(obiekt);
+  };
+
+  /* Zapas pobrania ma dociągnąć do brzegu to, co przez brzeg przechodzi —
+     nie przynieść całego sąsiedztwa. Obiekt leżący w całości poza kadrem
+     i tak zostałby obcięty przez viewBox, więc jest samą wagą pliku.
+     Margines 20 m zostawiony, żeby kreska przy krawędzi miała skąd wybiec. */
+  const LUZ = 20;
+  const dotykaKadru = pkt => {
+    let minX = Infinity, minY = Infinity, maksX = -Infinity, maksY = -Infinity;
+    for (const [x, y] of pkt) {
+      if (x < minX) minX = x; if (x > maksX) maksX = x;
+      if (y < minY) minY = y; if (y > maksY) maksY = y;
+    }
+    return maksX >= -LUZ && minX <= szerokosc + LUZ && maksY >= -LUZ && minY <= wysokosc + LUZ;
   };
 
   for (const e of surowe.elements) {
     const t = e.tags || {};
     const pkt = wMetrach(e);
     if (pkt.length < 2) continue;
+    if (!dotykaKadru(pkt)) { licznik.pominiete++; continue; }
     const zamkniety = pkt.length > 3 &&
       Math.hypot(pkt[0][0] - pkt.at(-1)[0], pkt[0][1] - pkt.at(-1)[1]) < 0.5;
 
@@ -238,30 +337,76 @@ async function glowna() {
       if (GLOWNE.includes(t.highway))       dodaj(warstwy.ulice.glowne, e, pkt);
       else if (LOKALNE.includes(t.highway)) dodaj(warstwy.ulice.lokalne, e, pkt);
       else if (PIESZO.includes(t.highway)) {
-        // Chodniki wzdłuż ulic tylko dublują siatkę i zatykają mapę.
-        // Zostają deptaki i to, co prowadzi przez park.
-        if (t.highway === 'pedestrian' || wParku(pkt)) dodaj(warstwy.ulice.pieszo, e, pkt);
+        // Na dzielnicy chodniki wzdłuż ulic tylko dublują siatkę i zatykają mapę,
+        // więc zostają deptaki i to, co prowadzi przez park. Na placu jest odwrotnie:
+        // ulic prawie nie ma, a ścieżka jest jedyną drogą, którą ktoś naprawdę idzie.
+        if (P.wszystkieSciezki || t.highway === 'pedestrian' || wParku(pkt)) dodaj(warstwy.ulice.pieszo, e, pkt);
         else licznik.pominiete++;
       }
       continue;
     }
 
-    if (t.natural === 'water' || t.waterway === 'river') { dodaj(warstwy.woda, e, pkt, zamkniety); continue; }
+    if (t.natural === 'water' || t.waterway === 'river' || t.amenity === 'fountain') {
+      dodaj(warstwy.woda, e, pkt, zamkniety);
+      continue;
+    }
 
-    if (t.leisure === 'park' || t.landuse === 'forest' || t.landuse === 'allotments' ||
-        t.landuse === 'cemetery' || t.landuse === 'meadow' || t.natural === 'wood') {
-      // Skrawki zieleni między kamienicami to szum — liczy się park i las.
-      if (pole(pkt) > 2000) dodaj(warstwy.zielen, e, pkt, zamkniety);
+    if (t.barrier === 'fence' || t.barrier === 'wall' || t.barrier === 'hedge') {
+      // Płot rysujemy tylko na placu — tam tłumaczy, którędy w ogóle się wchodzi.
+      // Na dzielnicy byłby siatką bez znaczenia wzdłuż każdej posesji.
+      if (P.ogrodzenia) dodaj(warstwy.ogrodzenia, e, pkt, zamkniety);
       else licznik.pominiete++;
       continue;
     }
 
-    if (t.building) {
+    if (t.leisure === 'park' || t.landuse === 'forest' || t.landuse === 'allotments' ||
+        t.landuse === 'cemetery' || t.landuse === 'meadow' || t.landuse === 'grass' ||
+        t.natural === 'wood' || t.natural === 'scrub' || t.natural === 'grassland' ||
+        t.natural === 'tree_row') {
+      const rodzaj =
+        t.landuse === 'cemetery' ? 'cmentarz' :
+        (t.natural === 'wood' || t.landuse === 'forest') ? 'las' :
+        t.natural === 'tree_row' ? 'szpaler' :
+        (t.landuse === 'grass' || t.natural === 'grassland' || t.landuse === 'meadow') ? 'trawa' :
+        t.landuse === 'allotments' ? 'dzialki' :
+        t.natural === 'scrub' ? 'zarosla' : 'park';
+      if (pole(pkt) > P.zielen || t.natural === 'tree_row') dodaj(warstwy.zielen, e, pkt, zamkniety, rodzaj);
+      else licznik.pominiete++;
+      continue;
+    }
+
+    /* Znak terenu bez taga `building` to nie budynek, tylko obszar — na
+       Chełmińskim `man_made=water_works` obejmuje 257 x 160 m całego terenu
+       wodociągów i wrzucony do budynków zamalowywał park na głucho.
+       Idzie do obszarów, rysowanych pod spodem: to jest granica terenu święta. */
+    if (ZNAKI_TERENU.includes(t.man_made) && !t.building) {
+      dodaj(warstwy.zielen, e, pkt, zamkniety, 'teren');
+      continue;
+    }
+
+    if (t.building || ZNAKI_TERENU.includes(t.man_made)) {
+      const znakTerenu = ZNAKI_TERENU.includes(t.man_made);
       const publiczny = t.amenity || BUDYNKI_PUBLICZNE.includes(t.building) || t.tourism || t.historic;
-      if ((publiczny || t.name) && pole(pkt) > 150) dodaj(warstwy.budynki, e, pkt, zamkniety);
+      const warty = znakTerenu || publiczny || t.name || P.bezNazwy;
+      const rodzaj = znakTerenu ? t.man_made : (t.historic ? 'zabytek' : null);
+      if (warty && (znakTerenu || pole(pkt) > P.budynek)) dodaj(warstwy.budynki, e, pkt, zamkniety, rodzaj);
       else licznik.pominiete++;
     }
   }
+
+  /* Obszary od największego do najmniejszego. Renderer rysuje po kolei, więc bez
+     tego teren wodociągów (25 000 m²) kładzie się na parku, park na trawniku,
+     a cmentarz znika pod wszystkim. Kolejność jest częścią danych, nie stylu. */
+  const poleObiektu = o => {
+    const n = o.p.length / 2;
+    let s = 0;
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+      s += (o.p[j * 2] + o.p[i * 2]) * (o.p[j * 2 + 1] - o.p[i * 2 + 1]);
+    }
+    return Math.abs(s / 2);
+  };
+  warstwy.zielen.sort((a, b) => poleObiektu(b) - poleObiektu(a));
+  warstwy.budynki.sort((a, b) => poleObiektu(b) - poleObiektu(a));
 
   // 4. Zapis.
   const dane = {
@@ -293,6 +438,7 @@ Warstwy:
   zieleń           ${String(warstwy.zielen.length).padStart(5)} obiektów ${String(ile(warstwy.zielen)).padStart(6)} pkt
   woda             ${String(warstwy.woda.length).padStart(5)} obiektów ${String(ile(warstwy.woda)).padStart(6)} pkt
   budynki          ${String(warstwy.budynki.length).padStart(5)} obiektów ${String(ile(warstwy.budynki)).padStart(6)} pkt
+  ogrodzenia       ${String(warstwy.ogrodzenia.length).padStart(5)} obiektów ${String(ile(warstwy.ogrodzenia)).padStart(6)} pkt
   odfiltrowane     ${String(licznik.pominiete).padStart(5)} obiektów
 
 Punkty: ${punktowPrzed} -> ${punktowPo} (${(100 - punktowPo / punktowPrzed * 100).toFixed(1)}% mniej)

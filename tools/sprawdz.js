@@ -95,9 +95,19 @@ for (const l of D.lokalizacje) {
     blad(`lokalizacja "${l.id}": współrzędne nie są liczbami`);
     continue;
   }
-  if (M && (l.gps.lat < M.bbox.poludnie || l.gps.lat > M.bbox.polnoc ||
-            l.gps.lng < M.bbox.zachod  || l.gps.lng > M.bbox.wschod)) {
-    blad(`lokalizacja "${l.id}": współrzędne wypadają poza wycinek mapy — pin byłby niewidoczny`);
+  /* `pozaKadrem: true` znaczy „wiem, że to jest poza mapą i tak ma być" —
+     punkt dostaje strzałkę z odległością zamiast pinu (wieża ciśnień na
+     Chełmińskim). Bez tej flagi wyjście poza wycinek zostaje błędem. */
+  if (M) {
+    const poza = l.gps.lat < M.bbox.poludnie || l.gps.lat > M.bbox.polnoc ||
+                 l.gps.lng < M.bbox.zachod  || l.gps.lng > M.bbox.wschod;
+    if (poza && !l.pozaKadrem) {
+      blad(`lokalizacja "${l.id}": współrzędne wypadają poza wycinek mapy — pin byłby niewidoczny`);
+    } else if (poza) {
+      uwaga(`lokalizacja "${l.id}": poza wycinkiem mapy, zgodnie z flagą pozaKadrem — musi dostać strzałkę z odległością`);
+    } else if (l.pozaKadrem) {
+      uwaga(`lokalizacja "${l.id}": ma flagę pozaKadrem, ale mieści się w wycinku — flaga jest nieaktualna`);
+    }
   }
   if (!l.zrodloGps) uwaga(`lokalizacja "${l.id}": brak notatki, skąd wzięta współrzędna`);
 }
