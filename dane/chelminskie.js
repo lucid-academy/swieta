@@ -37,6 +37,37 @@ window.DANE = {
       { id: 'niedziela', nazwa: 'Niedziela', data: '2026-09-13' }
     ],
 
+    /* Stoiska mieszczą się w 67 x 73 m wewnątrz kadru 147 x 154 — otwieramy
+       na tym, co się dzieje, nie na całości pobranego wycinka. Bez tego
+       33 piny robiły jedną plamę w środku ekranu. */
+    kadrPoczatkowy: 'lokalizacje',
+
+    /* Paleta wyciągnięta z plakatu IX święta i z pocztówek Małgorzaty
+       Iwanowskiej-Ludwińskiej. Plakat daje pergaminowe tło i terakotę,
+       pocztówki — kredkową kreskę i chłodne błękity. Bydgoskie miało
+       gęstą sepię; tutaj papier jest jaśniejszy, a akcent ceglany.
+       Silnik nie zna żadnej z tych palet, tylko wpisuje to, co dostanie. */
+    paleta: {
+      'papier':        '#EDDCBC',
+      'papier-cien':   '#E0CBA4',
+      'papier-jasny':  '#F8EDD6',
+      'tusz':          '#463A2B',
+      'tusz-jasny':    '#6B5F47',
+      'akcent':        '#A8382C',
+      'akcent-jasny':  '#E07A63',
+      'pasek-tlo':     '#3B3025',
+      'pasek-tekst':   '#F2E7CE',
+      'park':          '#B9C08E',
+      'park-obrys':    '#8B9460',
+      'woda':          '#9FBEC6',
+      'woda-obrys':    '#4F7480',
+      'budynek':       '#DBC49B',
+      'budynek-obrys': '#8A6A4A',
+      'ulica-glowna':  '#5A4A31',
+      'ulica-lokalna': '#82704F',
+      'ulica-pieszo':  '#A48D68',
+    },
+
     /* Adres i wejście. Zaproszenie podaje 37-49, zrzut z Map Google przy
        bramie pokazuje 46-50 — to nie jest sprzeczność. OSM potwierdza
        `Stacja pomp Stare Bielany`, addr:housenumber=37-49, operator

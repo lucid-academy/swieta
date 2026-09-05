@@ -264,6 +264,8 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   border-top-color: var(--kolor, var(--akcent));
 }
 .pin svg { width: 16px; height: 16px; fill: currentColor; display: block; }
+/* Numer organizatorów zamiast ikony — dwucyfrowy musi się zmieścić bez ściskania. */
+.pin .numer { font: 700 14px/1 var(--bezszeryf); letter-spacing: -.02em; }
 .pin .ile {
   position: absolute; top: -5px; right: -6px;
   min-width: 17px; height: 17px; padding: 0 4px;
@@ -871,8 +873,25 @@ header p  { color: var(--pasek-tekst-mgla); }
   </button>
 </div>
 
-<script src="dane/bydgoskie.js"></script>
-<script src="dane/mapa-bydgoskie.js"></script>
+<script>
+/* Które święto wczytać. Silnik jest jeden, dane są dwa — wybór idzie z adresu
+   (?swieto=chelminskie), a bez niego z ustawienia poniżej.
+
+   document.write, bo to musi się wykonać w trakcie parsowania: skrypt niżej
+   zaczyna od `window.DANE` i liczy na gotowe dane, a strona ma działać także
+   otwarta z dysku, gdzie fetch jest zablokowany przez przeglądarkę.
+
+   Lista dozwolonych nazw nie jest ozdobą — bez niej dowolny adres wstrzyknąłby
+   ścieżkę do <script src>. */
+(function () {
+  var DOMYSLNE = 'bydgoskie';
+  var DOZWOLONE = { bydgoskie: 1, chelminskie: 1 };
+  var m = /[?&]swieto=([a-z]+)/.exec(location.search);
+  var s = (m && DOZWOLONE[m[1]]) ? m[1] : DOMYSLNE;
+  document.write('<scr' + 'ipt src="dane/' + s + '.js"><\/scr' + 'ipt>');
+  document.write('<scr' + 'ipt src="dane/mapa-' + s + '.js"><\/scr' + 'ipt>');
+})();
+</script>
 <script>
 (function () {
   'use strict';
@@ -1229,6 +1248,10 @@ header p  { color: var(--pasek-tekst-mgla); }
   /* ═══════════════ piny ═══════════════ */
 
   var piny = [];
+  /* Czy to święto numeruje swoje punkty. Rozstrzyga się raz: jeśli tak,
+     liczby na mapie znaczą wyłącznie „numer stoiska od organizatorów”. */
+  var NUMEROWANE = DANE.lokalizacje.some(function (l) { return l.numer != null; });
+
   function zbudujPiny() {
     var wezel = $('piny');
     DANE.lokalizacje.forEach(function (l) {
@@ -1269,9 +1292,17 @@ header p  { color: var(--pasek-tekst-mgla); }
          kategorii — inaczej cyrk i warsztaty plastyczne dostają te same
          nożyczki, bo obie rzeczy siedzą w kategorii „warsztaty". */
       var nazwaIkony = (lista.length === 1 && lista[0].ikona) || (kat && kat.ikona);
-      p.medalion.innerHTML =
-        ikona(IKONY[nazwaIkony] || IKONY.punkt) +
-        (lista.length > 1 ? '<span class="ile">' + lista.length + '</span>' : '');
+      /* Jeśli lokalizacja ma numer od organizatorów, to on idzie na pin, nie ikona.
+         Na Chełmińskim numery 1-32 są wspólnym językiem strony, wydrukowanego
+         programu i tabliczek przy namiotach — ikona nożyczek nie powie nikomu,
+         że stoi przed stoiskiem numer 30, a numer powie. */
+      p.medalion.innerHTML = (p.lok.numer != null)
+        ? '<span class="numer">' + p.lok.numer + '</span>'
+        : ikona(IKONY[nazwaIkony] || IKONY.punkt) +
+          /* Odznaka z licznikiem tylko tam, gdzie piny nie noszą numerów.
+             Inaczej scena z 15 punktami programu dostaje odznakę „15”
+             obok wieży z numerem 15 i obie liczby znaczą co innego. */
+          (lista.length > 1 && !NUMEROWANE ? '<span class="ile">' + lista.length + '</span>' : '');
 
       var wPlan = lista.some(function (w) { return wPlanie(w.id); });
       p.wezel.classList.toggle('wplanie', wPlan);
@@ -1722,6 +1753,35 @@ header p  { color: var(--pasek-tekst-mgla); }
     else pokazProgram();
   }
 
+  /* Czy całe święto stoi pod jednym adresem. Jeśli tak, powtarzanie go przy
+     każdym z 32 stoisk niczego nie mówi — adres należy wtedy do nagłówka,
+     nie do karty. Na Bydgoskim adresy były różne i zostają na kartach. */
+  var ADRES_SWIETA = (function () {
+    var licz = {}, najlepszy = null, ile = 0, wszystkich = 0;
+    DANE.lokalizacje.forEach(function (l) {
+      if (!l.adres) return;
+      wszystkich++;
+      licz[l.adres] = (licz[l.adres] || 0) + 1;
+      if (licz[l.adres] > ile) { ile = licz[l.adres]; najlepszy = l.adres; }
+    });
+    // Adres wspólny dla większości punktów jest adresem święta, nie punktu.
+    return (wszystkich && ile >= wszystkich * 0.66) ? najlepszy : null;
+  })();
+
+  /** Linijka „gdzie” pod tytułem: numer stoiska, nazwa miejsca, adres — bez powtórek. */
+  function gdzieOpis(w, l) {
+    var czesci = [];
+    if (l && l.numer != null) czesci.push('Stoisko ' + l.numer);
+    /* Nazwa miejsca bywa dłuższą wersją tytułu — pełna nazwa z arkusza kontra
+       skrót w nagłówku panelu. Powtarzanie jej pod tytułem to szum. */
+    var m = w.miejsce || '';
+    var t = w.tytul || '';
+    var powtorka = m && t && (m.indexOf(t) === 0 || t.indexOf(m) === 0);
+    if (m && !powtorka) czesci.push(m);
+    if (l && l.adres && l.adres !== ADRES_SWIETA && m.indexOf(l.adres) === -1) czesci.push(l.adres);
+    return czesci.join(' · ') || (l ? l.nazwa : '');
+  }
+
   function pokazWydarzenie(id, naWstecz) {
     var w = DANE.wydarzenia.filter(function (x) { return x.id === id; })[0];
     if (!w) return;
@@ -1731,9 +1791,7 @@ header p  { color: var(--pasek-tekst-mgla); }
     var html = '<div class="meta">' +
       '<span><b>' + bezpiecznie(d.nazwa) + '</b> ' + d.data.split('-').reverse().join('.') + '</span>' +
       '<span><b>' + bezpiecznie(godziny(w)) + '</b></span></div>' +
-      // Nazwa miejsca z programu często niesie już adres — nie dopisujemy go drugi raz.
-      '<div class="meta"><span>' + bezpiecznie(w.miejsce) +
-        (l && w.miejsce.indexOf(l.adres) === -1 ? ', ' + bezpiecznie(l.adres) : '') + '</span></div>';
+      '<div class="meta"><span>' + bezpiecznie(gdzieOpis(w, l)) + '</span></div>';
 
     /* Ostrzeżenie o przybliżonym pinie musi stać przy wydarzeniu, a nie tylko
        w widoku lokalizacji — punkt z jednym wydarzeniem otwiera się od razu tutaj. */
@@ -2500,10 +2558,15 @@ header p  { color: var(--pasek-tekst-mgla); }
 
   (function zbudujDni() {
     var pojemnik = $('dni');
+    /* Jednodniowe święto nie ma czego przełączać. Chełmińskie trwa trzy godziny
+       w jedną niedzielę, a pasek i tak pokazywał „Oba dni" — czyli pytanie
+       bez sensu, zajmujące pasmo na górze ekranu. */
+    if (DANE.swieto.dni.length < 2) { pojemnik.hidden = true; return; }
+
     var opcje = DANE.swieto.dni.map(function (d) {
       return { id: d.id, etykieta: d.nazwa + ' ' + (+d.data.split('-')[2]) + '.' + d.data.split('-')[1] };
     });
-    opcje.push({ id: 'wszystkie', etykieta: 'Oba dni' });
+    opcje.push({ id: 'wszystkie', etykieta: DANE.swieto.dni.length === 2 ? 'Oba dni' : 'Wszystkie dni' });
 
     opcje.forEach(function (o) {
       var b = document.createElement('button');
@@ -2550,9 +2613,46 @@ header p  { color: var(--pasek-tekst-mgla); }
   /* ═══════════════ start ═══════════════ */
 
   var s = DANE.swieto;
+
+  /* Paleta z danych nadpisuje domyślną. Barwy Bydgoskiego wyszły ze zdjęć
+     tamtej dzielnicy i nie ma powodu, żeby Chełmińskie je dziedziczyło —
+     ma własny plakat i własne pocztówki. Kod nie zna żadnej z tych palet,
+     tylko wpisuje to, co dostał. */
+  if (s.paleta) {
+    for (var zmienna in s.paleta) {
+      if (Object.prototype.hasOwnProperty.call(s.paleta, zmienna)) {
+        document.documentElement.style.setProperty('--' + zmienna, s.paleta[zmienna]);
+      }
+    }
+  }
+
   $('tytul').textContent = s.nazwa;
   document.title = s.nazwa;
-  $('podtytul').textContent = s.dzielnica + ', ' + s.miasto;
+  /* Przy jednodniowym święcie pod tytułem ma stać termin, nie dzielnica.
+     Kto otwiera mapę Chełmionki, wie, że jest na Chełmińskim — nie musi
+     natomiast wiedzieć, że rzecz trwa trzy godziny i kończy się o 15. */
+  var MIESIACE = ['stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca',
+                  'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia'];
+  function terminSkrotem() {
+    if (!s.dni || s.dni.length !== 1) return null;
+    var d = s.dni[0], cz = d.data.split('-');
+    return d.nazwa + ' ' + (+cz[2]) + ' ' + MIESIACE[+cz[1] - 1] +
+           (s.godziny ? ', ' + s.godziny.replace('-', '–') : '');
+  }
+  $('podtytul').textContent = terminSkrotem() || (s.dzielnica + ', ' + s.miasto);
+
+  /** Prostokąt obejmujący piny, w jednostkach płótna. Null, gdy pinów nie ma. */
+  function ramkaPinow() {
+    if (!piny.length) return null;
+    var minX = Infinity, minY = Infinity, maksX = -Infinity, maksY = -Infinity;
+    piny.forEach(function (p) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maksX) maksX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maksY) maksY = p.y;
+    });
+    return { x: minX, y: minY, w: Math.max(1, maksX - minX), h: Math.max(1, maksY - minY) };
+  }
 
   function przelicz(pierwszy) {
     var poprzednie = kDopasowane;
@@ -2563,9 +2663,22 @@ header p  { color: var(--pasek-tekst-mgla); }
       if (chciana !== OBROT) { zastosujOrientacje(chciana, !pierwszy); return; }
     }
     if (pierwszy) {
-      k = kDopasowane;
-      tx = (wPx - PLOTNO.w * k) / 2;
-      ty = (hPx - PLOTNO.h * k) / 2;
+      /* Domyślnie kadrujemy całe płótno. Ale gdy święto zajmuje ułamek wycinka —
+         na Chełmińskim stoiska mieszczą się w 67 x 73 m wewnątrz kadru 147 x 154 —
+         otwieranie na całości robi z pinów jedną plamę w środku ekranu.
+         `kadrPoczatkowy: 'lokalizacje'` każe zacząć od tego, co się dzieje,
+         a nie od tego, co pobraliśmy. Mapa dalej jest cała, tylko dalej. */
+      var ramka = (DANE.swieto.kadrPoczatkowy === 'lokalizacje') && ramkaPinow();
+      if (ramka) {
+        k = Math.min(wPx / ramka.w, hPx / ramka.h) * 0.86;
+        k = Math.min(kDopasowane * 9, Math.max(kDopasowane, k));
+        tx = wPx / 2 - (ramka.x + ramka.w / 2) * k;
+        ty = hPx / 2 - (ramka.y + ramka.h / 2) * k;
+      } else {
+        k = kDopasowane;
+        tx = (wPx - PLOTNO.w * k) / 2;
+        ty = (hPx - PLOTNO.h * k) / 2;
+      }
     } else if (poprzednie > 0) {
       k *= kDopasowane / poprzednie;
     }
