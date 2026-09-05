@@ -40,6 +40,11 @@ window.DANE = {
     /* Stoiska mieszczą się w 67 x 73 m wewnątrz kadru 147 x 154 — otwieramy
        na tym, co się dzieje, nie na całości pobranego wycinka. Bez tego
        33 piny robiły jedną plamę w środku ekranu. */
+    /* Planer liczy czas przejścia i ostrzega, gdy plan się nie spina. Przy trzech
+       godzinach na terenie 67 x 73 m, gdzie wszystkie stoiska są otwarte cały czas,
+       odpowiadałby na pytanie, którego nikt tam nie zadaje. Zdjęty razem z trasą. */
+    planer: false,
+
     kadrPoczatkowy: 'lokalizacje',
 
     /* Paleta wyciągnięta z plakatu IX święta i z pocztówek Małgorzaty
@@ -85,7 +90,7 @@ window.DANE = {
 
     licznik: {
       kod: null,
-      domena: 'lucid-academy.github.io',
+      domena: 'lucidacademy.pl',
       nota: 'Zliczamy anonimowe odsłony — bez ciasteczek i bez danych osobowych.'
     }
   },

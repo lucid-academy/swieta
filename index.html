@@ -1218,6 +1218,14 @@ header p  { color: var(--pasek-tekst-mgla); }
   function wPlanie(id) { return !!stan.plan[id]; }
   function ilePlanu() { return Object.keys(stan.plan).length; }
 
+  /* Planer liczy czas przejścia między punktami i ostrzega, gdy plan się nie spina.
+     To ma sens na Bydgoskim, gdzie wydarzenia dzieli kilkaset metrów i cały dzień.
+     Na Chełmińskim całe święto trwa trzy godziny na terenie 67 x 73 m, wszystkie
+     stoiska są otwarte przez cały czas, a przejście między nimi zajmuje pół minuty
+     — planer odpowiadałby na pytanie, którego nikt tam nie zadaje.
+     `planer: false` w danych wycina go razem z trasą na mapie. */
+  var PLANER = DANE.swieto.planer !== false;
+
   function ileWybrano(zbior) { return Object.keys(zbior).length; }
 
   function pasuje(w) {
@@ -1318,6 +1326,7 @@ header p  { color: var(--pasek-tekst-mgla); }
   /* ═══════════════ trasa planu ═══════════════ */
 
   function odswiezTrase() {
+    if (!PLANER) return;
     var wybrane = posortowane(DANE.wydarzenia.filter(function (w) {
       return wPlanie(w.id) && (stan.dzien === 'wszystkie' || w.dzien === stan.dzien);
     }));
@@ -1839,10 +1848,13 @@ header p  { color: var(--pasek-tekst-mgla); }
        Dane niosą już `w.dodatki`; kiedy poznamy zakres, treść wchodzi tutaj,
        między linki a przyciski. Świadomie nie projektuję pod nieznane funkcje. */
 
-    html += '<div class="dzialania">' +
-      '<button type="button" class="przycisk pusty" id="do-planu" aria-pressed="' + (wPlanie(w.id) ? 'true' : 'false') + '">' +
-        ikona(IKONY_UI.plan) + '<span>' + (wPlanie(w.id) ? 'W moim planie' : 'Dodaj do planu') + '</span></button>' +
-      '</div>' + przyciskNawigacji(l);
+    if (PLANER) {
+      html += '<div class="dzialania">' +
+        '<button type="button" class="przycisk pusty" id="do-planu" aria-pressed="' + (wPlanie(w.id) ? 'true' : 'false') + '">' +
+          ikona(IKONY_UI.plan) + '<span>' + (wPlanie(w.id) ? 'W moim planie' : 'Dodaj do planu') + '</span></button>' +
+        '</div>';
+    }
+    html += przyciskNawigacji(l);
 
     otworzArkusz(w.tytul, html, naWstecz);
 
@@ -2411,11 +2423,11 @@ header p  { color: var(--pasek-tekst-mgla); }
 
   var SEKCJE = [
     { id: 'program', nazwa: 'Program',  ikona: IKONY_UI.program, otworz: pokazProgram },
-    { id: 'plan',    nazwa: 'Mój plan', ikona: IKONY_UI.plan,    otworz: pokazPlan, licznik: ilePlanu },
+    PLANER ? { id: 'plan', nazwa: 'Mój plan', ikona: IKONY_UI.plan, otworz: pokazPlan, licznik: ilePlanu } : null,
     { id: 'filtry',  nazwa: 'Filtry',   ikona: IKONY_UI.filtry,  otworz: pokazFiltry, licznik: function () { return ileWybrano(stan.kategorie) + ileWybrano(stan.tagi) + ileWybrano(stan.nurty); } },
     { id: 'przyjaciele', nazwa: 'Przyjaciele', ikona: IKONY_UI.serce, otworz: pokazPrzyjaciol },
     { id: 'onas',        nazwa: 'O nas',       ikona: IKONY_UI.koperta, otworz: pokazONas }
-  ];
+  ].filter(Boolean);
 
   (function zbudujPasek() {
     var pasek = $('pasek');
