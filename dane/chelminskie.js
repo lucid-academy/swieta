@@ -45,6 +45,15 @@ window.DANE = {
        odpowiadałby na pytanie, którego nikt tam nie zadaje. Zdjęty razem z trasą. */
     /* Program w dwóch sekcjach: scena z godzinami, stoiska bez. Jeden wykaz
        zlewał je w ścianę jednakowych „12:00–15:00”. */
+    /* Zegar sceny w pasku nad mapą: co jest teraz i co za chwilę. Przy trzech
+       godzinach i punkcie co kwadrans to jedyna informacja, której ktoś stojący
+       w parku naprawdę szuka. */
+    zegarSceny: {
+      nurt: 'scena',
+      haslo: 'Teraz na scenie',
+      hasloPrzed: 'Scena główna zaczyna',
+    },
+
     programWgNurtow: true,
     planer: false,
 
@@ -1620,26 +1629,41 @@ window.DANE = {
      Tytuły pocztówek są pisane ołówkiem i częściowo nieczytelne — zgadywanie
      tytułu cudzej pracy byłoby gorszym błędem niż jego brak, więc `podpis: null`
      czeka na listę od organizatorów. */
+  /* PAMIĘĆ — dziewięć edycji święta. Zgoda na publikację: Piotr, 3 września 2026.
+     Magnesy biorą pliki z img/magnesy/, przygotowane przez tools/magnesy-intro.js:
+     ten sam zestaw obsługuje intro, więc obrazki nie są kopiowane dwa razy.
+     Pocztówki są w img/pocztowki/, po „n”.webp i „n”-mini.webp.
+
+     Tytuły pocztówek są pisane ołówkiem i częściowo nieczytelne. Pytaliśmy
+     organizatorów o listę i jej nie dostaliśmy, więc „podpis” zostaje pusty —
+     zgadywanie tytułu cudzej pracy byłoby gorszym błędem niż jego brak.
+
+     Rok przy III edycji: na samym magnesie go nie ma. W img/magnesy/ plik nazywa
+     się 2020.webp, bo taki wynika z ciągu I=2018 … IX=2026, ale to wniosek
+     z kolejności, nie odczyt ze źródła — zostaje „rok: null” i nota. */
   pamiec: {
     zgoda: 'Zgoda organizatorów na publikację magnesów i pocztówek — potwierdzona 3 września 2026.',
     wstep: 'To już dziewiąte Święto Chełmińskiego Przedmieścia. Po każdym zostaje magnes — inny budynek dzielnicy co roku.',
     magnesy: [
-      { rok: 2018, edycja: 'I',    tytul: 'Dawny dworzec Toruń Północ',    plik: null, opis: null },
-      { rok: 2019, edycja: 'II',   tytul: 'Czarny Kot',                    plik: null, opis: 'Ze zbiorów Muzeum Etnograficznego w Toruniu.' },
-      { rok: null, edycja: 'III',  tytul: null,                            plik: null, opis: 'Kamienica rysowana węglem; rok nie jest podany ani na magnesie, ani w nazwie pliku.' },
-      { rok: 2021, edycja: 'IV',   tytul: 'Anioł Chełmionki',              plik: null, opis: null },
-      { rok: 2022, edycja: 'V',    tytul: null,                            plik: null, opis: null },
-      { rok: 2024, edycja: 'VII',  tytul: null,                            plik: null, opis: 'Panorama dzielnicy z balonem.' },
-      { rok: 2025, edycja: 'VIII', tytul: null,                            plik: null, opis: 'Grawerowany w drewnie: dom w kratę, dwoje dzieci i kot.' }
+      { rok: 2018, edycja: 'I',    tytul: 'Dawny dworzec Toruń Północ', plik: 'img/magnesy/2018.webp', opis: null },
+      { rok: 2019, edycja: 'II',   tytul: 'Czarny Kot',                 plik: 'img/magnesy/2019.webp', opis: 'Ze zbiorów Muzeum Etnograficznego w Toruniu.' },
+      { rok: null, edycja: 'III',  tytul: null,                         plik: 'img/magnesy/2020.webp', opis: 'Kamienica rysowana węglem. Roku nie ma na magnesie — z kolejności edycji wypada rok 2020.' },
+      { rok: 2021, edycja: 'IV',   tytul: 'Anioł Chełmionki',           plik: 'img/magnesy/2021.webp', opis: null },
+      { rok: 2022, edycja: 'V',    tytul: null,                         plik: 'img/magnesy/2022.webp', opis: null },
+      { rok: 2023, edycja: 'VI',   tytul: null,                         plik: 'img/magnesy/2023.webp', opis: 'Wieża ciśnień i stacja pomp na dawnej pocztówce — te same budynki, przy których stoi tegoroczne święto.' },
+      { rok: 2024, edycja: 'VII',  tytul: null,                         plik: 'img/magnesy/2024.webp', opis: 'Panorama dzielnicy z balonem.' },
+      { rok: 2025, edycja: 'VIII', tytul: null,                         plik: 'img/magnesy/2025.webp', opis: 'Grawerowany w drewnie: dom w kratę, dwoje dzieci i kot.' },
+      { rok: 2026, edycja: 'IX',   tytul: null,                         plik: 'img/magnesy/2026.webp', opis: 'Tegoroczny. Do odebrania w namiocie informacyjnym (stoisko 9). Własny, z drewna z odzysku, zrobicie u Szkoły Leśnej na Barbarce i Tilii (stoisko 30).' }
     ],
     pocztowki: [
-      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: null, podpis: null },
-      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: null, podpis: null },
-      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: null, podpis: null },
-      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: null, podpis: null },
-      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: null, podpis: null },
-      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: null, podpis: null }
-    ]
+      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: 'img/pocztowki/1.webp', podpis: null },
+      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: 'img/pocztowki/2.webp', podpis: null },
+      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: 'img/pocztowki/3.webp', podpis: null },
+      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: 'img/pocztowki/4.webp', podpis: null },
+      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: 'img/pocztowki/5.webp', podpis: null },
+      { tytul: null, autor: 'Małgorzata Iwanowska-Ludwińska', rok: 2013, plik: 'img/pocztowki/6.webp', podpis: null }
+    ],
+    pocztowkiOpis: 'Sześć rysunków kredką dla Chełmińskiego Przedmieścia. Tej samej autorce poświęcona jest część wystawy „Przywróćmy Pamięć o Chełmionce” (stoisko 6), a jej szkice trafiły na karty quizu Rady Okręgu (stoisko 10).'
   },
 
   /* LUKI — czego jeszcze nie wiemy. To funkcja, nie wstyd. */

@@ -425,6 +425,23 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   font-variant-numeric: tabular-nums; font-weight: 700;
   color: var(--tusz); text-align: center;
 }
+/* ── siatka pamiątek ── */
+.pamiec-wstep { margin: 0 0 .2rem; font-size: .9rem; line-height: 1.5; color: var(--tusz-jasny); }
+.pamiec-siatka { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin: .1rem 0 .6rem; }
+.pamiec-kafel {
+  border: 0; padding: 0; background: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.pamiec-kafel img {
+  width: 100%; aspect-ratio: 4 / 3; object-fit: contain;
+  background: var(--papier-cien); border: 1px solid var(--kreska);
+  border-radius: 6px; padding: 4px;
+}
+.pamiec-kafel span { font: 600 .72rem/1.2 var(--bezszeryf); color: var(--tusz-jasny); }
+.pamiec-kafel:focus-visible img { outline: 3px solid var(--tusz); outline-offset: 2px; }
+.pamiec-opisy { list-style: none; margin: 0 0 .6rem; padding: 0; font-size: .82rem; line-height: 1.45; color: var(--tusz-jasny); }
+.pamiec-opisy li { margin: 0 0 .3rem; }
+.pamiec-opisy b { color: var(--tusz); }
 .wydarzenie .godz {
   grid-column: 1; grid-row: 1 / 3;
   font-variant-numeric: tabular-nums; font-size: .8rem; font-weight: 600;
@@ -1945,8 +1962,12 @@ header p  { color: var(--pasek-tekst-mgla); }
     }
 
     html += '<div class="znaczki">';
-    if (nurtObcy(w) && NURTY[nurtem(w)]) {
-      html += '<span class="znaczek nurt-znaczek">' + bezpiecznie(NURTY[nurtem(w)].nazwa) + '</span>';
+    /* Plakietka nurtu tylko wtedy, gdy mówi coś ponad kategorię. Na Chełmińskim
+       nurt „Scena główna” i kategoria „Scena główna” to ta sama nazwa, więc
+       panel konkursu wypisywał ją dwa razy pod rząd. */
+    var nurtW = nurtObcy(w) ? NURTY[nurtem(w)] : null;
+    if (nurtW && nurtW.nazwa !== (kat.nazwa || w.kategoria)) {
+      html += '<span class="znaczek nurt-znaczek">' + bezpiecznie(nurtW.nazwa) + '</span>';
     }
     html += '<span class="znaczek kat" style="--kolor:' + bezpiecznie(kat.kolor || '#888') + '">' +
       bezpiecznie(kat.nazwa || w.kategoria) + '</span>';
@@ -2476,6 +2497,80 @@ header p  { color: var(--pasek-tekst-mgla); }
     });
   }
 
+  /* ═══════════════ widok: pamięć ═══════════════
+
+     Dorobek dziewięciu edycji: magnesy i pocztówki. To jedyne miejsce na tej
+     stronie, które nie służy dzisiejszemu dniu — pokazuje, że święto ma swoją
+     ciągłość, i tłumaczy, skąd biorą się rysunki widoczne na stoiskach 6 i 10.
+
+     Bez `DANE.pamiec` zakładka w ogóle się nie pojawia. */
+
+  function kafelki(pozycje, wszystkiePliki) {
+    return '<div class="pamiec-siatka">' + pozycje.map(function (x, i) {
+      var mini = x.plik.replace(/(\.\w+)$/, '-mini$1');
+      var etykieta = x.etykieta || '';
+      return '<button type="button" class="pamiec-kafel" data-pamiec="' + i + '">' +
+        '<img src="' + bezpiecznie(mini) + '" alt="' + bezpiecznie(etykieta || 'pamiątka') + '" loading="lazy">' +
+        (etykieta ? '<span>' + bezpiecznie(etykieta) + '</span>' : '') +
+        '</button>';
+    }).join('') + '</div>';
+  }
+
+  function pokazPamiec() {
+    var p = DANE.pamiec;
+    if (!p) return;
+    stan.widok = 'pamiec'; stan.widokArg = null;
+
+    var magnesy = (p.magnesy || []).filter(function (m) { return m.plik; }).map(function (m) {
+      var lata = m.rok ? String(m.rok) : (m.edycja ? m.edycja + ' Święto' : '');
+      return { plik: m.plik, etykieta: lata, opis: m.opis, tytul: m.tytul, edycja: m.edycja, rok: m.rok };
+    });
+    var pocztowki = (p.pocztowki || []).filter(function (x) { return x.plik; }).map(function (x) {
+      return { plik: x.plik, etykieta: '', opis: null, tytul: x.tytul, autor: x.autor };
+    });
+
+    var html = (p.wstep ? '<p class="pamiec-wstep">' + bezpiecznie(p.wstep) + '</p>' : '');
+
+    if (magnesy.length) {
+      html += '<div class="nurt-sekcja"><h3>Magnesy<span>' + magnesy.length + '</span></h3></div>' +
+        kafelki(magnesy) +
+        '<ul class="pamiec-opisy">' + magnesy.map(function (m) {
+          var glowa = (m.edycja ? m.edycja + ' Święto' : '') + (m.rok ? ' · ' + m.rok : '');
+          var reszta = [m.tytul, m.opis].filter(Boolean).join(' — ');
+          return reszta ? '<li><b>' + bezpiecznie(glowa) + '</b> ' + bezpiecznie(reszta) + '</li>' : '';
+        }).join('') + '</ul>';
+    }
+
+    if (pocztowki.length) {
+      html += '<div class="nurt-sekcja"><h3>Pocztówki<span>' + pocztowki.length + '</span></h3>' +
+        (p.pocztowkiOpis ? '<p>' + bezpiecznie(p.pocztowkiOpis) + '</p>' : '') + '</div>' +
+        kafelki(pocztowki);
+      var autor = pocztowki[0] && pocztowki[0].autor;
+      if (autor) html += '<p class="przypis">Rysunki: ' + bezpiecznie(autor) +
+        '. Tytuły są na oryginałach dopisane ołówkiem i częściowo nieczytelne — nie zgadujemy ich.</p>';
+    }
+
+    if (p.zgoda) html += '<p class="przypis">' + bezpiecznie(p.zgoda) + '</p>';
+
+    otworzArkusz(p.naglowek || 'Pamięć Chełmionki', html);
+
+    // Podpięcie po wstawieniu treści: każda grupa przewija się osobno w lupie.
+    var grupy = [magnesy, pocztowki];
+    var siatki = tresc.querySelectorAll('.pamiec-siatka');
+    Array.prototype.forEach.call(siatki, function (siatka, nr) {
+      var grupa = grupy[nr] || [];
+      var pliki = grupa.map(function (x) { return x.plik; });
+      Array.prototype.forEach.call(siatka.querySelectorAll('[data-pamiec]'), function (b) {
+        b.addEventListener('click', function () {
+          var i = Number(b.getAttribute('data-pamiec'));
+          var x = grupa[i] || {};
+          var podpis = [x.etykieta, x.tytul, x.opis].filter(Boolean).join(' — ');
+          otworzLupe(pliki[i], podpis || 'Pamiątka ze święta', pliki);
+        });
+      });
+    });
+  }
+
   /* ═══════════════ widok: o nas ═══════════════ */
 
   function pokazONas() {
@@ -2559,7 +2654,11 @@ header p  { color: var(--pasek-tekst-mgla); }
   function pokazZdjecie(i) {
     if (!galeria.length) return;
     wGalerii = (i + galeria.length) % galeria.length;      // zawija się w kółko
-    $('lupa-obraz').src = 'img/' + galeria[wGalerii] + '.jpg';
+    /* Nazwa bez rozszerzenia znaczy zdjęcie wydarzenia z img/. Pozycja z kropką
+       jest już gotową ścieżką — tak trafiają tu magnesy i pocztówki, które leżą
+       w podkatalogach i są WebP-ami. */
+    var poz = galeria[wGalerii];
+    $('lupa-obraz').src = /\.\w+$/.test(poz) ? poz : 'img/' + poz + '.jpg';
     $('lupa-obraz').alt = 'Zdjęcie ' + (wGalerii + 1) + ' z ' + galeria.length + ': ' + podpisGalerii;
     $('lupa-podpis').innerHTML = bezpiecznie(podpisGalerii) +
       (galeria.length > 1 ? '<br><span class="licznik-zdjec">' + (wGalerii + 1) + ' z ' + galeria.length + '</span>' : '');
@@ -2605,6 +2704,7 @@ header p  { color: var(--pasek-tekst-mgla); }
     { id: 'program', nazwa: 'Program',  ikona: IKONY_UI.program, otworz: pokazProgram },
     PLANER ? { id: 'plan', nazwa: 'Mój plan', ikona: IKONY_UI.plan, otworz: pokazPlan, licznik: ilePlanu } : null,
     { id: 'filtry',  nazwa: 'Filtry',   ikona: IKONY_UI.filtry,  otworz: pokazFiltry, licznik: function () { return ileWybrano(stan.kategorie) + ileWybrano(stan.tagi) + ileWybrano(stan.nurty); } },
+    DANE.pamiec ? { id: 'pamiec', nazwa: 'Pamięć', ikona: IKONY.paleta, otworz: pokazPamiec } : null,
     { id: 'przyjaciele', nazwa: 'Przyjaciele', ikona: IKONY_UI.serce, otworz: pokazPrzyjaciol },
     { id: 'onas',        nazwa: 'O nas',       ikona: IKONY_UI.koperta, otworz: pokazONas }
   ].filter(Boolean);
@@ -2673,9 +2773,88 @@ header p  { color: var(--pasek-tekst-mgla); }
     return 'za ' + sek + ' s';
   }
 
+  /* ═══════════════ zegar sceny ═══════════════
+
+     Święto, które trwa trzy godziny i ma punkt co kwadrans, potrzebuje nie
+     odliczania do jednego koncertu, tylko odpowiedzi na pytanie „co jest teraz
+     i co za chwilę”. Ktoś stoi w parku o 13:10 i nie będzie przewijał wykazu
+     piętnastu pozycji, żeby się zorientować.
+
+     Siedzi w tym samym pasku co zapowiedź, bo to ta sama rola na ekranie —
+     jedna linijka nad mapą — i ten sam mechanizm tykania. Włącza je pole
+     `swieto.zegarSceny` w danych; bez niego pasek działa jak dotąd. */
+  (function zegarSceny() {
+    var cfg = DANE.swieto.zegarSceny;
+    var pasek = $('promo');
+    if (!cfg || !pasek) return;
+
+    var punkty = DANE.wydarzenia
+      .filter(function (w) { return nurtem(w) === cfg.nurt && kiedy(w); })
+      .sort(function (a, b) { return kiedy(a) - kiedy(b); });
+    if (!punkty.length) return;
+
+    $('promo-sluchaj').hidden = true;
+    $('promo-zwin').hidden = true;
+    var znak = $('promo-znak');
+    znak.style.setProperty('--kolor', (KATEGORIE[punkty[0].kategoria] || {}).kolor || 'var(--akcent)');
+    znak.innerHTML = ikona(IKONY.nuta);
+
+    var licznik = null, okres = 0;
+
+    /* Ostatni punkt programu nie ma godziny zakończenia, a domyślne dwie godziny
+       z `kiedyKoniec` sprawiały, że o 15:30 — pół godziny po święcie — pasek
+       dalej ogłaszał „teraz: Uroczyste zakończenie”. Punkt bez `do` dostaje tu
+       tyle, ile wynosi rytm tego programu, czyli kwadrans. */
+    var DOMYSLNA_DLUGOSC = 15 * 60e3;
+    function koniecPunktu(w) {
+      return w.do ? kiedyKoniec(w).getTime() : kiedy(w).getTime() + DOMYSLNA_DLUGOSC;
+    }
+
+    function tyknij() {
+      var teraz = Date.now();
+      var trwa = null, nastepne = null;
+      for (var i = 0; i < punkty.length; i++) {
+        var start = kiedy(punkty[i]).getTime();
+        if (start <= teraz && teraz < koniecPunktu(punkty[i])) trwa = punkty[i];
+        if (start > teraz && !nastepne) nastepne = punkty[i];
+      }
+
+      /* Po ostatnim punkcie pasek znika — zegar, który po święcie dalej coś
+         obiecuje, jest gorszy niż jego brak. */
+      if (!trwa && !nastepne) { pasek.hidden = true; clearInterval(licznik); return; }
+
+      var doStartu = nastepne ? kiedy(nastepne).getTime() - teraz : 0;
+      if (trwa) {
+        $('promo-haslo').textContent = cfg.haslo || 'Teraz na scenie';
+        $('promo-co').textContent = trwa.tytul;
+        $('promo-zegar').textContent = nastepne
+          ? 'do ' + trwa.do + ' · potem ' + nastepne.od + ' ' + nastepne.tytul
+          : (trwa.do ? 'do ' + trwa.do : 'ostatni punkt programu');
+        $('promo-zegar').classList.add('trwa');
+        $('promo-tresc').onclick = function () { pokazWydarzenie(trwa.id); };
+      } else {
+        $('promo-haslo').textContent = cfg.hasloPrzed || 'Scena główna zaczyna';
+        $('promo-co').textContent = nastepne.tytul;
+        $('promo-zegar').textContent = odliczanie(doStartu) + ' · ' + nastepne.od;
+        $('promo-zegar').classList.remove('trwa');
+        $('promo-tresc').onclick = function () { pokazWydarzenie(nastepne.id); };
+      }
+      pasek.hidden = false;
+
+      // Sekundy tykają dopiero na finiszu; wcześniej wystarcza pół minuty.
+      var chciany = (doStartu > 3600e3) ? 30000 : 1000;
+      if (okres !== chciany) {
+        clearInterval(licznik);
+        licznik = setInterval(tyknij, chciany);
+        okres = chciany;
+      }
+    }
+    tyknij();
+  })();
+
   (function pasekPromo() {
     var pasek = $('promo');
-    if (!pasek) return;
+    if (!pasek || DANE.swieto.zegarSceny) return;   // zegar sceny zajął ten pasek
     try { if (localStorage.getItem(KLUCZ_PROMO) === 'tak') return; } catch (e) {}
 
     var promowane = DANE.wydarzenia.filter(function (w) { return w.promocja && kiedy(w); });
