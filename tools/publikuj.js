@@ -97,16 +97,36 @@ async function obrazkiSwieta() {
   return wynik;
 }
 
+const wHtml = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 /** index.html z podmienionym domyślnym świętem — żeby adres nie potrzebował ?swieto=. */
 async function zlozIndeks() {
-  const zrodlo = await readFile(path.join(KORZEN, 'index.html'), 'utf8');
+  let zrodlo = await readFile(path.join(KORZEN, 'index.html'), 'utf8');
+
   const wzorzec = /var DOMYSLNE = '[a-z]+';/;
   if (!wzorzec.test(zrodlo)) {
     console.error('\nNie znalazłem w index.html linijki `var DOMYSLNE = ...`.');
     console.error('Mechanizm wyboru święta się zmienił — popraw tools/publikuj.js.\n');
     process.exit(1);
   }
-  return zrodlo.replace(wzorzec, `var DOMYSLNE = '${swieto}';`);
+  zrodlo = zrodlo.replace(wzorzec, `var DOMYSLNE = '${swieto}';`);
+
+  /* Tytuł i opis w <head> też są zależne od święta, a JavaScript ustawia je
+     dopiero po wczytaniu strony. Człowiek tego nie zauważy, ale Facebook,
+     Google i podgląd linku czytają sam HTML — i pokazywały wszystkim mapom
+     to samo „Święto dzielnicy”. Skoro adres ma być do wklejania, tytuł musi
+     być w pliku, nie dopisany po fakcie. */
+  const okno = {};
+  new Function('window', await readFile(path.join(KORZEN, 'dane', `${swieto}.js`), 'utf8'))(okno);
+  const s = okno.DANE.swieto;
+
+  zrodlo = zrodlo.replace(/<title>[^<]*<\/title>/, `<title>${wHtml(s.nazwa)}</title>`);
+  if (s.opisMeta) {
+    zrodlo = zrodlo.replace(/<meta name="description" content="[^"]*">/,
+      `<meta name="description" content="${wHtml(s.opisMeta)}">`);
+  }
+  return zrodlo;
 }
 
 async function glowna() {

@@ -79,6 +79,10 @@ window.DANE = {
        Toruńskie Wodociągi: 37-49 to adres terenu, 46-50 numeracja przy bramie. */
     adres: 'Park przy Toruńskich Wodociągach, ul. Świętego Józefa 37-49',
     godziny: '12:00-15:00',
+
+    /* Opis dla podglądu linku i wyszukiwarek. Domyślny w index.html mówi
+       o planerze i czasach przejścia, których to święto nie ma. */
+    opisMeta: 'Plan terenu IX Święta Chełmińskiego Przedmieścia: 32 stoiska, scena godzina po godzinie i mapa parku przy Toruńskich Wodociągach. Niedziela 13 września 2026, 12:00-15:00.',
     wejscie: 'brama',
     dostepnosc: 'Wydarzenie dostępne dla wszystkich. Masz pytania o dostępność? Zadzwoń: 500 484 458',
 
