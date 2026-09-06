@@ -403,6 +403,28 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   border-bottom: 1px solid var(--kreska); cursor: pointer;
 }
 .wydarzenie:last-child { border-bottom: 0; }
+/* ── nagłówek sekcji programu (nurt) ── */
+.nurt-sekcja { margin: 1.25rem 0 .4rem; }
+.nurt-sekcja:first-child { margin-top: .25rem; }
+.nurt-sekcja h3 {
+  margin: 0 0 .25rem;
+  display: flex; align-items: baseline; gap: .5rem;
+  font: 600 1.02rem/1.25 var(--szeryf); color: var(--tusz);
+}
+.nurt-sekcja h3::after {
+  content: ''; flex: 1; height: 1px; background: var(--kreska); margin-left: .1rem;
+}
+.nurt-sekcja h3 span {
+  order: 3; flex: none;
+  font: 600 .72rem/1 var(--bezszeryf); color: var(--tusz-mgla);
+  background: var(--papier-cien); border-radius: 9px; padding: 3px 7px;
+}
+.nurt-sekcja p { margin: 0; font-size: .82rem; line-height: 1.45; color: var(--tusz-jasny); }
+/* Numer stoiska w miejscu godziny — ten sam, co na pinie. */
+.wydarzenie .godz.numer-stoiska {
+  font-variant-numeric: tabular-nums; font-weight: 700;
+  color: var(--tusz); text-align: center;
+}
 .wydarzenie .godz {
   grid-column: 1; grid-row: 1 / 3;
   font-variant-numeric: tabular-nums; font-size: .8rem; font-weight: 600;
@@ -1825,8 +1847,9 @@ header p  { color: var(--pasek-tekst-mgla); }
 
   /* ═══════════════ widok: wydarzenie ═══════════════ */
 
-  function listaWydarzen(lista, bezMiejsca) {
+  function listaWydarzen(lista, bezMiejsca, opcje) {
     var poprzedniDzien = null, html = '';
+    var numerZamiastGodzin = opcje && opcje.numerZamiastGodzin;
     lista.forEach(function (w) {
       if (!bezMiejsca && w.dzien !== poprzedniDzien) {
         poprzedniDzien = w.dzien;
@@ -1836,10 +1859,21 @@ header p  { color: var(--pasek-tekst-mgla); }
       var kat = KATEGORIE[w.kategoria] || {};
       // Wydarzenia spoza głównego nurtu dostają plakietkę, żeby nikt nie wziął
       // SUPERfestynu za punkt programu Święta.
-      var znak = nurtObcy(w) && NURTY[nurtem(w)]
+      /* W programie rozbitym na sekcje po nurtach plakietka powtarzałaby
+         nagłówek nad sobą przy każdej pozycji — piętnaście razy „Scena główna”
+         pod nagłówkiem „Scena główna”. */
+      var znak = (!(opcje && opcje.bezZnakuNurtu) && nurtObcy(w) && NURTY[nurtem(w)])
         ? '<span class="nurt">' + bezpiecznie(NURTY[nurtem(w)].nazwa) + '</span> ' : '';
+      /* Tam, gdzie wszystko trwa dokładnie tyle samo, godzina przy każdej pozycji
+         to trzydzieści dwa razy „12:00–15:00” — szum, przez który nie widać nazw.
+         Zamiast niej idzie numer stoiska: ten sam, co na pinie i w drukowanym
+         programie, więc lista, mapa i kartka mówią jednym językiem. */
+      var lok = LOKALIZACJE[w.lokalizacja] || {};
+      var wiodace = (numerZamiastGodzin && lok.numer != null)
+        ? '<span class="godz numer-stoiska">' + bezpiecznie(String(lok.numer)) + '</span>'
+        : '<span class="godz">' + bezpiecznie(godziny(w)) + '</span>';
       html += '<button type="button" class="wydarzenie" data-wydarzenie="' + bezpiecznie(w.id) + '">' +
-        '<span class="godz">' + bezpiecznie(godziny(w)) + '</span>' +
+        wiodace +
         '<span class="kropka" style="--kolor:' + bezpiecznie(kat.kolor || '#888') + '"></span>' +
         '<span class="tyt">' + znak + bezpiecznie(w.tytul) + '</span>' +
         (bezMiejsca ? '' : '<span class="msc">' + bezpiecznie(w.miejsce) + '</span>') +
@@ -1982,11 +2016,56 @@ header p  { color: var(--pasek-tekst-mgla); }
 
   /* ═══════════════ widok: program ═══════════════ */
 
+  /* Program w sekcjach po nurtach.
+
+     Na Chełmińskim jeden wykaz zlewa dwie zupełnie różne rzeczy: piętnaście
+     punktów sceny, które mają godziny i po kolei mijają, oraz trzydzieści dwa
+     stoiska, które stoją otwarte cały czas. Wrzucone razem dawały ścianę
+     jednakowych „12:00–15:00”, w której nie dało się znaleźć ani jednego,
+     ani drugiego. Nurt niesie też własny opis, więc sekcja od razu tłumaczy,
+     czym jest — na przykład że godziny sceny są orientacyjne. */
+  function programWSekcjach(lista) {
+    var kolejnosc = (DANE.nurty || []).map(function (n) { return n.id; });
+    var wgNurtu = {};
+    lista.forEach(function (w) {
+      var id = nurtem(w);
+      (wgNurtu[id] = wgNurtu[id] || []).push(w);
+    });
+    // Nurty nieznane danym (albo wydarzenia bez nurtu) idą na koniec, nie giną.
+    Object.keys(wgNurtu).forEach(function (id) {
+      if (kolejnosc.indexOf(id) === -1) kolejnosc.push(id);
+    });
+
+    var html = '';
+    kolejnosc.forEach(function (id) {
+      var grupa = wgNurtu[id];
+      if (!grupa || !grupa.length) return;
+      var n = NURTY[id] || {};
+      /* Sekcja bez godzin jest numerowana, więc porządkuje ją numer, a nie zegar.
+         Sortowanie po czasie wypychało wieżę ciśnień (wejście 12:15) na sam koniec,
+         za stoisko 33 — w wykazie, który poza tym biegnie 1, 2, 3… */
+      if (n.bezGodzin) {
+        grupa = grupa.slice().sort(function (a, b) {
+          var la = LOKALIZACJE[a.lokalizacja] || {}, lb = LOKALIZACJE[b.lokalizacja] || {};
+          var na = la.numer == null ? 1e9 : la.numer, nb = lb.numer == null ? 1e9 : lb.numer;
+          return na - nb;
+        });
+      }
+      html += '<div class="nurt-sekcja">' +
+        '<h3>' + bezpiecznie(n.nazwa || 'Pozostałe') +
+          '<span>' + grupa.length + '</span></h3>' +
+        (n.opis ? '<p>' + bezpiecznie(n.opis) + '</p>' : '') +
+        '</div>' +
+        listaWydarzen(grupa, false, { numerZamiastGodzin: !!n.bezGodzin, bezZnakuNurtu: true });
+    });
+    return html;
+  }
+
   function pokazProgram() {
     stan.widok = 'program'; stan.widokArg = null;
     var lista = posortowane(DANE.wydarzenia.filter(pasuje));
     var html = lista.length
-      ? listaWydarzen(lista, false)
+      ? (DANE.swieto.programWgNurtow ? programWSekcjach(lista) : listaWydarzen(lista, false))
       : '<p class="pusto">Żadne wydarzenie nie pasuje do wybranych filtrów.<br>Spróbuj odznaczyć któryś.</p>';
     // Kredyt organizatora — z danych, nie z kodu. Miejsce na mapie zajmuje
     // atrybucja podkładu, wymagana licencją, więc ten idzie tutaj.
