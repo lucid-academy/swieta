@@ -17,6 +17,9 @@ window.DANE = {
     skrot: 'Święto Bydgoskiego',
     miasto: 'Toruń',
     dzielnica: 'Bydgoskie Przedmieście',
+    /* Kanoniczny adres opublikowanej mapy — stąd bierze go tools/qr.js.
+       Małe litery, bo taki wychodzi po przekierowaniu na serwerze. */
+    url: 'https://lucidacademy.pl/projekty/swietobp/',
     stopka: 'Zrealizowano dzięki wsparciu Gminy Miasta Toruń',
     dni: [
       { id: 'sobota',    nazwa: 'Sobota',    data: '2026-08-29' },

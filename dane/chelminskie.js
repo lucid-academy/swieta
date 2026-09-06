@@ -62,8 +62,12 @@ window.DANE = {
       'akcent-jasny':  '#E07A63',
       'pasek-tlo':     '#3B3025',
       'pasek-tekst':   '#F2E7CE',
-      'park':          '#B9C08E',
+      'park':          '#C6CB9E',   // jaśniej niż na Bydgoskim: piny muszą się na tym utrzymać
       'park-obrys':    '#8B9460',
+      'trawa':         '#D8DAB4',   // trawnik płaski, bez koron — po tym się chodzi
+      'cmentarz':      '#BCB2A0',
+      'teren-obrys':   '#9C8A6A',
+      'plot':          '#A18F70',   // ogrodzenie terenu — cieńsze i jaśniejsze niż obrys   // obrys terenu wodociągów, czyli granica święta
       'woda':          '#9FBEC6',
       'woda-obrys':    '#4F7480',
       'budynek':       '#DBC49B',
@@ -78,6 +82,9 @@ window.DANE = {
        `Stacja pomp Stare Bielany`, addr:housenumber=37-49, operator
        Toruńskie Wodociągi: 37-49 to adres terenu, 46-50 numeracja przy bramie. */
     adres: 'Park przy Toruńskich Wodociągach, ul. Świętego Józefa 37-49',
+    /* Kanoniczny adres opublikowanej mapy — stąd bierze go tools/qr.js.
+       Małe litery, bo taki wychodzi po przekierowaniu na serwerze. */
+    url: 'https://lucidacademy.pl/projekty/swietochp/',
     godziny: '12:00-15:00',
 
     /* Opis dla podglądu linku i wyszukiwarek. Domyślny w index.html mówi

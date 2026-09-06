@@ -205,7 +205,29 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 }
 
 .zielen  { fill: url(#korony);   stroke: var(--park-obrys);    stroke-width: 1; }
+
+/* ── rodzaje zieleni ──
+   Dane niosą `k`: trawa, park, las, cmentarz, teren. Bez tego wszystko szło
+   jednym stipplingiem koron i trawnik wyglądał jak las — na dzielnicy nieszkodliwe,
+   bo zieleń była tłem, na placu zieleń JEST mapą i to po niej się orientujemy.
+   Święta bez tego pola (Bydgoskie) rysują się jak dotąd. */
+.zielen.r-trawa    { fill: var(--trawa, #D8DAB4); }
+.zielen.r-park     { fill: url(#korony-lekkie); }
+.zielen.r-las      { fill: url(#korony-gest); }
+.zielen.r-zarosla  { fill: url(#korony-gest); opacity: .75; }
+.zielen.r-cmentarz { fill: var(--cmentarz, #BCB2A0); stroke: var(--tusz-mgla); stroke-width: 1.4; }
+.zielen.r-szpaler  { fill: none; stroke: var(--park-obrys); stroke-width: 2.6; stroke-linecap: round; }
+/* Granica terenu, na którym stoi święto — sama linia, bez wypełnienia:
+   to jest obrys placu, a nie kolejna plama zieleni. */
+.zielen.r-teren    {
+  fill: none;
+  stroke: var(--teren-obrys, #9C8A6A);
+  stroke-width: 1.6; stroke-dasharray: 7 4; stroke-linejoin: round;
+}
 .woda    { fill: url(#fale);     stroke: var(--woda-obrys);    stroke-width: 1.2; }
+/* Płot — cienka kreska z kropkami, jak na planach terenu. Ma być czytelny,
+   ale nie ma konkurować z pinami: to informacja o granicy, nie atrakcja. */
+.plot    { fill: none; stroke: var(--plot, #9C8A6A); stroke-width: 1.1; stroke-dasharray: 2 2.6; stroke-linecap: round; }
 .rzeka   { fill: none;           stroke: var(--woda);          stroke-width: 3; stroke-linecap: round; }
 .budynek { fill: url(#mur);      stroke: var(--budynek-obrys); stroke-width: 1; }
 .pieszo  { fill: none; stroke: var(--ulica-pieszo);  stroke-width: 1;   stroke-dasharray: 3 2.5; stroke-linecap: round; }
@@ -277,6 +299,28 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
 .pin.wplanie .medalion { box-shadow: 0 0 0 3px var(--akcent), 0 3px 7px rgba(74,59,38,.4); }
 .pin:focus-visible .medalion { outline: 3px solid var(--tusz); outline-offset: 3px; }
 .pin.przyblizony .medalion { border-style: dashed; }
+
+/* ── punkt poza planem, przyklejony do krawędzi ──
+   Strzałka pokazuje kierunek, podpis mówi ile stąd. Bez tego punkt leżący
+   za kadrem po prostu znika i nikt się o nim nie dowie. */
+.pin.przy-krawedzi { margin-top: -22px; }
+.pin.przy-krawedzi .medalion { box-shadow: 0 0 0 2px var(--papier), 0 2px 6px rgba(74,59,38,.45); }
+.pin.przy-krawedzi .medalion::after {
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(var(--kat, 0deg)) translateX(21px);
+  border: 6px solid transparent;
+  border-left-color: var(--kolor, var(--akcent));
+  border-right: 0;
+}
+.pin.przy-krawedzi::after {
+  content: var(--dystans, "");
+  position: absolute; top: 100%; left: 50%;
+  transform: translate(-50%, 2px);
+  padding: 1px 5px;
+  background: var(--papier-jasny); color: var(--tusz);
+  border: 1px solid var(--kreska-mocna); border-radius: 8px;
+  font: 600 10px/14px var(--bezszeryf); white-space: nowrap;
+}
 
 /* ─────────── dolny pasek ─────────── */
 #pasek {
@@ -790,6 +834,28 @@ header p  { color: var(--pasek-tekst-mgla); }
           <circle cx="5" cy="10" r="2.3"/><circle cx="12" cy="12" r="1.8"/>
         </g>
       </pattern>
+      <!-- Park pod stoiskami: korony rzadsze i bledsze niż w lesie. Pod pinami
+           ma być spokojnie — numer stoiska czyta się na jednolitym tle, a nie
+           na gęstej fakturze. Osobny wzór, bo `korony` rysują też Bydgoskie
+           i tamtej mapy nie ruszamy. -->
+      <pattern id="korony-lekkie" width="14" height="14" patternUnits="userSpaceOnUse">
+        <rect width="14" height="14" fill="var(--park)"/>
+        <g fill="var(--park-obrys)" opacity=".42">
+          <circle cx="3" cy="3.5" r="1.9"/><circle cx="9.5" cy="6" r="2.2"/>
+          <circle cx="5" cy="10" r="2"/><circle cx="12" cy="12" r="1.6"/>
+        </g>
+      </pattern>
+      <!-- Zadrzewienie: ten sam papier, gęstsze korony. Tożsamość warstwy niesie
+           faktura, nie nasycenie — dzięki temu tło zostaje jasne i piny na nim
+           nie gasną, a las i tak odróżnia się od trawnika na pierwszy rzut oka. -->
+      <pattern id="korony-gest" width="14" height="14" patternUnits="userSpaceOnUse">
+        <rect width="14" height="14" fill="var(--park)"/>
+        <g fill="var(--park-obrys)" opacity=".95">
+          <circle cx="3" cy="3.5" r="2.9"/><circle cx="9.5" cy="5.5" r="3.2"/>
+          <circle cx="4.5" cy="10.5" r="3"/><circle cx="11.5" cy="11.5" r="2.7"/>
+          <circle cx="7" cy="1" r="1.9"/><circle cx="0.5" cy="7.5" r="2"/>
+        </g>
+      </pattern>
       <!-- Woda: kreskowanie jak na starych mapach, na zachowanym błękicie. -->
       <pattern id="fale" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)">
         <rect width="9" height="9" fill="var(--woda)"/>
@@ -804,6 +870,10 @@ header p  { color: var(--pasek-tekst-mgla); }
     <g id="scena">
       <g id="w-zielen"></g>
       <g id="w-woda"></g>
+      <!-- Ogrodzenia pod budynkami, nad zielenią: na terenie zamkniętym płot
+           mówi, którędy w ogóle da się wejść. Święta bez tej warstwy
+           (Bydgoskie) po prostu jej nie mają i grupa zostaje pusta. -->
+      <g id="w-ogrodzenia"></g>
       <g id="w-budynki"></g>
       <g id="w-pieszo"></g>
       <g id="w-lokalne"></g>
@@ -1149,12 +1219,18 @@ header p  { color: var(--pasek-tekst-mgla); }
       for (var i = 0; i < obiekty.length; i++) {
         var o = obiekty[i];
         if (tylkoZamkniete && !o.z) continue;
-        k.push('<path class="' + klasa + '" d="' + doSciezki(o.p, !!o.z) + '"/>');
+        /* `o.k` mówi, CZYM jest obszar: trawnik, zadrzewienie, cmentarz, teren.
+           Bez tego wszystko szło jednym stipplingiem koron drzew i trawnik
+           wyglądał jak las — na dzielnicy nie przeszkadzało, bo zieleń była
+           tłem, na placu zieleń JEST mapą. */
+        k.push('<path class="' + klasa + (o.k ? ' r-' + o.k : '') +
+               '" d="' + doSciezki(o.p, !!o.z) + '"/>');
       }
       $(wezel).innerHTML = k.join('');
     }
     warstwa('w-zielen',  W.zielen,        'zielen');
     warstwa('w-woda',    W.woda,          'woda', true);
+    warstwa('w-ogrodzenia', W.ogrodzenia || [], 'plot');
     warstwa('w-budynki', W.budynki,       'budynek');
     warstwa('w-pieszo',  W.ulice.pieszo,  'pieszo');
     warstwa('w-lokalne', W.ulice.lokalne, 'lokalne');
@@ -1494,8 +1570,33 @@ header p  { color: var(--pasek-tekst-mgla); }
       var ox = poz[i].x - poz[i].bx, oy = poz[i].y - poz[i].by;
       var dl = Math.hypot(ox, oy);
       if (dl > MAKS_ODSUNIECIE) { ox = ox / dl * MAKS_ODSUNIECIE; oy = oy / dl * MAKS_ODSUNIECIE; }
+      var px = poz[i].bx + ox, py = poz[i].by + oy;
+
+      /* Punkty z `pozaKadrem` leżą poza planem terenu i przy zwykłym otwarciu
+         wypadają za ekran. Zamiast znikać bez śladu, przyklejają się do
+         krawędzi ze strzałką w swoją stronę i odległością — inaczej wieża
+         ciśnień, jedyne miejsce z biletami i limitem wejść, byłaby niewidoczna
+         dla kogoś, kto nie wpadnie na to, żeby przewinąć mapę w górę. */
+      var lok = obiekty[i].lok;
+      if (lok && lok.pozaKadrem) {
+        var m = 26;
+        var cx = Math.min(wPx - m, Math.max(m, px));
+        var cy = Math.min(hPx - m, Math.max(m, py));
+        var przyKrawedzi = (cx !== px || cy !== py);
+        obiekty[i].wezel.classList.toggle('przy-krawedzi', przyKrawedzi);
+        if (przyKrawedzi) {
+          var kat = Math.atan2(py - cy, px - cx) * 180 / Math.PI;
+          obiekty[i].wezel.style.setProperty('--kat', kat.toFixed(1) + 'deg');
+          // 1 jednostka płótna = 1 metr, więc odległość liczy się wprost.
+          var metry = Math.hypot(px - wPx / 2, py - hPx / 2) / k;
+          obiekty[i].wezel.style.setProperty('--dystans',
+            '"' + (Math.round(metry / 10) * 10) + ' m"');
+          px = cx; py = cy;
+        }
+      }
+
       obiekty[i].wezel.style.transform =
-        'translate(' + (poz[i].bx + ox).toFixed(1) + 'px,' + (poz[i].by + oy).toFixed(1) + 'px)';
+        'translate(' + px.toFixed(1) + 'px,' + py.toFixed(1) + 'px)';
       // Odsunięty znak nie stoi już dokładnie na swoim miejscu, więc
       // zaznaczamy prawdziwy punkt kropką. Mapa ma nie kłamać.
       if (dl > 2 && liczySie(obiekty[i])) kotwice.push([poz[i].bx, poz[i].by]);
@@ -1506,7 +1607,7 @@ header p  { color: var(--pasek-tekst-mgla); }
      z przybliżeniem — przy dziewięciokrotnym zoomie korony drzew zrobiłyby się
      wielkimi kołami. Kontrskalujemy je, tak samo jak kreski trzymamy
      w non-scaling-stroke: tusz jest na ekranie, geometria pod spodem. */
-  var WZORY = [['korony', ''], ['fale', ' rotate(-18)'], ['mur', ' rotate(45)']];
+  var WZORY = [['korony', ''], ['korony-gest', ''], ['korony-lekkie', ''], ['fale', ' rotate(-18)'], ['mur', ' rotate(45)']];
   function skalujWzory() {
     var s = (1 / k).toFixed(4);
     for (var i = 0; i < WZORY.length; i++) {
@@ -2657,11 +2758,16 @@ header p  { color: var(--pasek-tekst-mgla); }
   }
   $('podtytul').textContent = terminSkrotem() || (s.dzielnica + ', ' + s.miasto);
 
-  /** Prostokąt obejmujący piny, w jednostkach płótna. Null, gdy pinów nie ma. */
+  /** Prostokąt obejmujący piny, w jednostkach płótna. Null, gdy pinów nie ma.
+      Punkty z `pozaKadrem` nie liczą się do kadru: wieża ciśnień stoi 57 m za
+      ostatnim namiotem i sama rozciągałaby widok o połowę, zostawiając na górze
+      pas pustej zieleni. Do niej i tak dojeżdża się przewijaniem. */
   function ramkaPinow() {
-    if (!piny.length) return null;
+    var brane = piny.filter(function (p) { return !p.lok.pozaKadrem; });
+    if (!brane.length) brane = piny;
+    if (!brane.length) return null;
     var minX = Infinity, minY = Infinity, maksX = -Infinity, maksY = -Infinity;
-    piny.forEach(function (p) {
+    brane.forEach(function (p) {
       if (p.x < minX) minX = p.x;
       if (p.x > maksX) maksX = p.x;
       if (p.y < minY) minY = p.y;
@@ -2686,7 +2792,12 @@ header p  { color: var(--pasek-tekst-mgla); }
          a nie od tego, co pobraliśmy. Mapa dalej jest cała, tylko dalej. */
       var ramka = (DANE.swieto.kadrPoczatkowy === 'lokalizacje') && ramkaPinow();
       if (ramka) {
-        k = Math.min(wPx / ramka.w, hPx / ramka.h) * 0.86;
+        /* Zapas liczony w pikselach, nie procentem skali: pin ma 44 px i jest
+           rysowany wokół swojego punktu, więc mnożnik typu 0,86 zostawiał
+           skrajnym pinom za mało miejsca i ucinał je na krawędzi ekranu.
+           Tu zapas jest zawsze wielkości pinu, niezależnie od przybliżenia. */
+        var zapas = 34;
+        k = Math.min((wPx - 2 * zapas) / ramka.w, (hPx - 2 * zapas) / ramka.h);
         k = Math.min(kDopasowane * 9, Math.max(kDopasowane, k));
         tx = wPx / 2 - (ramka.x + ramka.w / 2) * k;
         ty = hPx / 2 - (ramka.y + ramka.h / 2) * k;
