@@ -1638,16 +1638,15 @@ window.DANE = {
      organizatorów o listę i jej nie dostaliśmy, więc „podpis” zostaje pusty —
      zgadywanie tytułu cudzej pracy byłoby gorszym błędem niż jego brak.
 
-     Rok przy III edycji: na samym magnesie go nie ma. W img/magnesy/ plik nazywa
-     się 2020.webp, bo taki wynika z ciągu I=2018 … IX=2026, ale to wniosek
-     z kolejności, nie odczyt ze źródła — zostaje „rok: null” i nota. */
+     Rok przy III edycji nie jest wydrukowany na samym magnesie — 2020 wynika
+     z ciągu I=2018 … IX=2026 i tak zdecydował Piotr (6 września 2026).  */
   pamiec: {
     zgoda: 'Zgoda organizatorów na publikację magnesów i pocztówek — potwierdzona 3 września 2026.',
     wstep: 'To już dziewiąte Święto Chełmińskiego Przedmieścia. Po każdym zostaje magnes — inny budynek dzielnicy co roku.',
     magnesy: [
       { rok: 2018, edycja: 'I',    tytul: 'Dawny dworzec Toruń Północ', plik: 'img/magnesy/2018.webp', opis: null },
       { rok: 2019, edycja: 'II',   tytul: 'Czarny Kot',                 plik: 'img/magnesy/2019.webp', opis: 'Ze zbiorów Muzeum Etnograficznego w Toruniu.' },
-      { rok: null, edycja: 'III',  tytul: null,                         plik: 'img/magnesy/2020.webp', opis: 'Kamienica rysowana węglem. Roku nie ma na magnesie — z kolejności edycji wypada rok 2020.' },
+      { rok: 2020, edycja: 'III',  tytul: null,                         plik: 'img/magnesy/2020.webp', opis: 'Kamienica rysowana węglem.' },
       { rok: 2021, edycja: 'IV',   tytul: 'Anioł Chełmionki',           plik: 'img/magnesy/2021.webp', opis: null },
       { rok: 2022, edycja: 'V',    tytul: null,                         plik: 'img/magnesy/2022.webp', opis: null },
       { rok: 2023, edycja: 'VI',   tytul: null,                         plik: 'img/magnesy/2023.webp', opis: 'Wieża ciśnień i stacja pomp na dawnej pocztówce — te same budynki, przy których stoi tegoroczne święto.' },
