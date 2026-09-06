@@ -2606,8 +2606,12 @@ header p  { color: var(--pasek-tekst-mgla); }
      `await` ani niczego, co by na niego czekało. */
   (function licznik() {
     var l = DANE.swieto.licznik;
-    if (!l || !l.kod) return;
-    if (location.protocol !== 'https:' || location.hostname !== l.domena) return;
+    if (!l || !l.kod || !l.domeny) return;
+    if (location.protocol !== 'https:') return;
+    /* `domeny` to lista, nie pojedynczy wpis. Gdy nazwa hosta się nie zgadza,
+       licznik milczy bez śladu w konsoli — to awaria, której nie widać.
+       Lista obejmuje wariant z `www` i przetrwa przeprowadzkę na inną domenę. */
+    if (l.domeny.indexOf(location.hostname) === -1) return;
 
     var s = document.createElement('script');
     s.async = true;

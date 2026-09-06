@@ -88,9 +88,13 @@ window.DANE = {
     /* Intro świadomie usunięte — to święto nie ma własnego wstępu,
        a brak pola `intro` wyłącza je w całości. */
 
+    /* Ten sam licznik co Bydgoskie — jedna witryna GoatCountera na obie mapy.
+       `domeny` jest listą, nie pojedynczym wpisem: gdy nazwa hosta się nie
+       zgadza, licznik milczy bez śladu w konsoli, więc wariant z `www`
+       musi być wymieniony wprost. */
     licznik: {
-      kod: null,
-      domena: 'lucidacademy.pl',
+      kod: 'https://lucidacademy.goatcounter.com/count',
+      domeny: ['lucidacademy.pl', 'www.lucidacademy.pl'],
       nota: 'Zliczamy anonimowe odsłony — bez ciasteczek i bez danych osobowych.'
     }
   },

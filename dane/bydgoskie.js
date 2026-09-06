@@ -45,14 +45,19 @@ window.DANE = {
        strona nie odpytuje wtedy żadnego obcego serwera.
 
        GoatCounter nie stawia ciasteczek i nie przechowuje adresów IP.
-       Licznik działa TYLKO na wskazanej domenie: z dysku i z localhosta
+       Licznik działa TYLKO na wymienionych domenach: z dysku i z localhosta
        milczy, więc wymóg „działa otwarta z dysku" zostaje nietknięty.
 
-       Jak uruchomić: załóż witrynę na goatcounter.com, wklej tutaj adres
-       postaci https://twojkod.goatcounter.com/count i wpisz domenę. */
+       `domeny` to lista, nie pojedynczy wpis, bo gdy nazwa hosta się nie
+       zgadza, licznik milczy bez śladu w konsoli — to awaria, której nie
+       widać. Lista obejmuje wariant z `www` i przetrwa przeprowadzkę na
+       inną domenę bez zgadywania.
+
+       Jak uruchomić: załóż witrynę na goatcounter.com i wklej w `kod` adres
+       postaci https://twojkod.goatcounter.com/count. */
     licznik: {
-      kod: null,
-      domena: 'lucid-academy.github.io',
+      kod: 'https://lucidacademy.goatcounter.com/count',
+      domeny: ['lucidacademy.pl', 'www.lucidacademy.pl'],
       nota: 'Zliczamy anonimowe odsłony — bez ciasteczek i bez danych osobowych.'
     }
   },
