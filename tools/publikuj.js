@@ -81,6 +81,16 @@ async function obrazkiSwieta() {
     for (const n of (w.zdjecia || [])) { chciane.add(`${n}.jpg`); chciane.add(`${n}-mini.jpg`); }
   }
 
+  /* Miniatury bywają składane dopiero w przeglądarce — sekcja pamięci robi
+     `2018.webp` -> `2018-mini.webp` w locie, więc w danych ich nie widać
+     i bez tego jechałyby na serwer same duże pliki, a kafelki pokazałyby
+     puste ramki. Do każdego znalezionego obrazka dobieramy jego miniaturę,
+     o ile taka leży obok. */
+  for (const nazwa of [...chciane]) {
+    const mini = nazwa.replace(/(\.\w+)$/, '-mini$1');
+    if (mini !== nazwa && existsSync(path.join(KORZEN, 'img', mini))) chciane.add(mini);
+  }
+
   const wynik = [];
   const brakujace = [];
   for (const nazwa of chciane) {
