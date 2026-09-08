@@ -107,6 +107,31 @@ async function obrazkiSwieta() {
   return wynik;
 }
 
+/* Dźwięk spod intra. Ten sam mechanizm co przy img/ i z tego samego powodu:
+   katalog jest wspólny, a bierzemy tylko to, do czego dane się odwołują.
+   Brak pliku zatrzymuje publikację — nieme intro zauważyłby dopiero ktoś
+   na miejscu, a wtedy jest już za późno. */
+async function dzwiekiSwieta() {
+  const tresc = await readFile(path.join(KORZEN, 'dane', `${swieto}.js`), 'utf8');
+  const chciane = new Set();
+  for (const m of tresc.matchAll(/['"]dzwiek\/([^'"]+)['"]/g)) chciane.add(m[1]);
+
+  const wynik = [];
+  const brakujace = [];
+  for (const nazwa of chciane) {
+    const plik = path.join(KORZEN, 'dzwiek', nazwa);
+    if (!existsSync(plik)) { brakujace.push(nazwa); continue; }
+    wynik.push({ sciezka: plik, wzgledna: path.join('dzwiek', nazwa), bajty: (await stat(plik)).size });
+  }
+  if (brakujace.length) {
+    console.error(`\nDane wskazują na pliki, których nie ma w dzwiek/:`);
+    brakujace.forEach(n => console.error(`  dzwiek/${n}`));
+    console.error('Publikacja wstrzymana — intro pojechałoby bez muzyki.\n');
+    process.exit(1);
+  }
+  return wynik;
+}
+
 const wHtml = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
   .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -156,6 +181,7 @@ async function glowna() {
   }
 
   const pliki = await obrazkiSwieta();
+  pliki.push(...await dzwiekiSwieta());
   for (const wzgledna of DANE_SWIETA) {
     pliki.push(...await zbierz(path.join(KORZEN, wzgledna), wzgledna.replace('/', path.sep)));
   }
@@ -173,6 +199,8 @@ async function glowna() {
     DANE_SWIETA.forEach(d => console.log(`  ${d.padEnd(14)} 1 plik`));
     const ile = pliki.filter(p => p.wzgledna.startsWith('img')).length;
     console.log(`  img            ${ile} ${ile === 1 ? 'plik' : 'plików'}`);
+    const dzw = pliki.filter(p => p.wzgledna.startsWith('dzwiek')).length;
+    if (dzw) console.log(`  dzwiek         ${dzw} ${dzw === 1 ? 'plik' : 'pliki'}`);
   };
 
   if (naSucho) {

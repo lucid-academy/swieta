@@ -830,6 +830,412 @@ header p  { color: var(--pasek-tekst-mgla); }
 @media (prefers-reduced-motion: reduce) {
   #arkusz, #nazwy, .pin { transition: none; }
 }
+
+/* ═══════════════ INTRO Z MAGNESAMI ═══════════════
+   Przelot kamery przez dziewięć edycji, włączany danymi
+   (`intro: { rodzaj: 'magnesy' }`). Wszystko ma przedrostek mg-, bo
+   strona ma już własne `#intro` i własną `.scena` — bez tego wstęp
+   Bydgoskiego i ten deptałyby sobie po nazwach.
+
+   Kamera stoi, przestrzeń płynie na nią: każdy magnes to warstwa na
+   własnej głębokości Z w jednym kontekście 3D, więc karty naprawdę
+   mijają się i przenikają.
+
+   Animujemy wyłącznie transform i opacity. Blur jest tylko statyczny,
+   bo animowany to repaint co klatkę i koniec z 60 fps na telefonie.
+
+   Dwie pułapki 3D, obchodzone celowo:
+     · filter na elemencie spłaszcza go w preserve-3d, więc blur
+       i cienie siedzą na <img>, nigdy na .mg-karta
+     · overflow: hidden robi to samo, więc kadrowanie jest na #mg-intro,
+       a preserve-3d dopiero na .mg-scena w środku
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  --mg-ciemne:   #14100e;
+  --mg-ciemniej: #080605;
+  --mg-kremowe:  #f1e3c8;
+  --mg-perspektywa: 1200px;
+  --mg-tempo: 1;
+}
+
+/* ─────────── bramka startowa ─────────── */
+/* Leży nad intrem, znika po kliknięciu. Póki stoi, grafiki dociągają się
+   w tle, więc czekanie na decyzję człowieka jest jednocześnie buforem. */
+
+#mg-brama {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  /* Kolor wprost, nie dziedziczy po stronie: index.html ma własną regułę
+     dla h1 i bez tego nagłówek wychodzi ciemnobrązowy na czarnym tle. */
+  color: var(--mg-kremowe);            /* nad wszystkim w stronie — najwyższe tam to 60 */
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: .5rem;
+  text-align: center;
+  padding: 2rem;
+  background:
+    radial-gradient(130% 100% at 50% 45%, #241b16 0%, #120e0c 48%, #060404 100%);
+  transition: opacity .45s ease;
+}
+#mg-brama.znika { opacity: 0; pointer-events: none; }
+#mg-brama[hidden] { display: none; }
+
+#mg-brama .nad {
+  margin: 0;
+  font-size: clamp(.72rem, 2.9vw, .84rem);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(241,227,200,.6);
+}
+#mg-brama h1 {
+  color: var(--mg-kremowe);
+  margin: .3rem 0 0;
+  font-size: clamp(1.5rem, 6.4vw, 2.5rem);
+  font-weight: 400;
+  line-height: 1.22;
+}
+#mg-brama .lata {
+  margin: .1rem 0 1.4rem;
+  font-size: clamp(.84rem, 3.2vw, .98rem);
+  letter-spacing: .3em;
+  color: rgba(241,227,200,.5);
+}
+#mg-brama .guziki { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; }
+#mg-brama button {
+  appearance: none;
+  font: inherit;
+  font-size: .95rem;
+  letter-spacing: .03em;
+  padding: .85rem 1.5rem;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+#mg-brama .glowny {
+  background: var(--mg-kremowe);
+  color: #16110d;
+  border: 1px solid var(--mg-kremowe);
+}
+#mg-brama .glowny svg { width: 17px; height: 17px; fill: currentColor; }
+#mg-brama .glowny:hover { background: #fff6e6; }
+#mg-brama .drugi {
+  background: transparent;
+  color: var(--mg-kremowe);
+  border: 1px solid rgba(241,227,200,.42);
+}
+#mg-brama .drugi:hover { background: rgba(241,227,200,.14); }
+#mg-brama button:focus-visible { outline: 3px solid var(--mg-kremowe); outline-offset: 3px; }
+
+/* ─────────── nakładka intra ─────────── */
+
+#mg-intro {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;               /* kadr — poza tym kontekstem 3D */
+  background:
+    radial-gradient(130% 100% at 50% 50%, #241b16 0%, #120e0c 48%, #060404 100%);
+  transition: opacity .5s ease;
+  z-index: 90;
+  touch-action: manipulation;
+}
+#mg-intro.znika { opacity: 0; pointer-events: none; }
+#mg-intro[hidden] { display: none; }
+
+/* Delikatne pojaśnienie w chwili największego natłoku — jeden element,
+   animowana sama opacity. */
+#mg-poswiata {
+  position: absolute;
+  inset: -10%;
+  pointer-events: none;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(241,227,200,.14), transparent 70%);
+  opacity: 0;
+  animation: mg-poswiata calc(30.3s * var(--mg-tempo)) ease-in-out both;
+  animation-play-state: paused;
+}
+@keyframes mg-poswiata {
+  0%, 20% { opacity: 0; }
+  62%     { opacity: 1; }
+  72%     { opacity: .35; }
+  76%     { opacity: 0; }   /* oddech przed finałem — kadr ciemnieje */
+  86%     { opacity: .5; }
+  100%    { opacity: .32; }
+}
+
+/* ─────────── scena 3D ─────────── */
+
+.mg-scena {
+  position: absolute;
+  inset: 0;
+  perspective: var(--mg-perspektywa);
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+}
+
+/* Karta trzyma wyłącznie transform i opacity, żeby została czystym
+   liściem kontekstu 3D i mogła się sortować z resztą. */
+.mg-karta {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--w);
+  animation-name: mg-przelot;
+  animation-duration: calc(var(--t) * var(--mg-tempo) * 1s);
+  animation-delay: calc(var(--d) * var(--mg-tempo) * 1s);
+  animation-timing-function: linear;   /* stała prędkość w przestrzeni =
+                                          perspektywa sama robi przyspieszenie */
+  animation-fill-mode: both;
+  animation-play-state: paused;
+  backface-visibility: hidden;
+}
+.mg-karta img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Prostokąty dostają ciepły kant i cień — dziewięć różnych rąk zaczyna
+   wyglądać jak dziewięć przedmiotów wyjętych z jednego pudełka. */
+.mg-karta.mg-papier img {
+  border: .45vmin solid rgba(246,238,222,.92);
+  box-shadow: 0 2vmin 5.5vmin rgba(0,0,0,.62);
+}
+
+/* Sylwetki lecą bez cienia — drop-shadow w ruchu jest drogi. */
+.mg-karta.mg-sylwetka img { box-shadow: none; border: 0; }
+
+/* Drugi plan: węgiel z 2020. Blur statyczny, na <img>, nie na karcie. */
+.mg-karta.mg-drugi-plan img {
+  filter: blur(1.6px) brightness(.78) contrast(.92);
+}
+
+@keyframes mg-przelot {
+  0% {
+    transform: translate3d(calc(-50% + var(--x0)), calc(-50% + var(--y0)), var(--z0))
+               rotate(var(--r0)) rotateY(var(--ry));
+    opacity: 0;
+  }
+  14%  { opacity: var(--jasnosc, 1); }
+  55% {
+    transform: translate3d(calc(-50% + var(--xm)), calc(-50% + var(--ym)), var(--zm))
+               rotate(var(--rm)) rotateY(var(--ry));
+  }
+  84%  { opacity: var(--jasnosc, 1); }
+  100% {
+    transform: translate3d(calc(-50% + var(--x1)), calc(-50% + var(--y1)), var(--z1))
+               rotate(var(--r1)) rotateY(var(--ry));
+    opacity: 0;
+  }
+}
+
+/* ─────────── tory lotu ───────────
+
+   x/y to przesunięcia w PRZESTRZENI, nie na ekranie. Perspektywa sama
+   je rozciąga w miarę zbliżania: karta z ustalonym x odpływa na bok tym
+   szybciej, im bliżej kamery. Dlatego część kart wychodzi z głębi
+   (2018, 2019, 2020, 2023, 2026), a część wpada z boku kadru już z
+   bliska (2021, 2022, 2024, 2025) — inaczej wszystko rodziłoby się
+   w jednym punkcie zbiegu.
+
+   Skala na ekranie = 1200 / (1200 − z).
+   z = −2800 → 0,30    z = −200 → 0,86    z = 0 → 1,00    z = +700 → 2,40   */
+
+/* 2018 — z głębi, mija kamerę górą-prawo. 3,4 s całkiem sam w kadrze. */
+.mg-k2018 { --d: 0.60; --t: 5.60; --w: 84vmin; --ry: 16deg;
+  --x0: -10vw; --y0:  6vh; --z0: -2800px; --r0: -8deg;
+  --xm:   2vw; --ym:  0vh; --zm:  -150px; --rm: -2deg;
+  --x1:  32vw; --y1:-16vh; --z1:   620px; --r1:  4deg; }
+
+/* 2019 — lustrzanie: wylot dołem-lewo. Pierwsze skrzyżowanie torów. */
+.mg-k2019 { --d: 4.00; --t: 5.40; --w: 84vmin; --ry: -18deg;
+  --x0:  11vw; --y0: -7vh; --z0: -2900px; --r0:  9deg;
+  --xm:  -3vw; --ym:  0vh; --zm:  -190px; --rm:  2deg;
+  --x1: -32vw; --y1: 17vh; --z1:   600px; --r1: -5deg; }
+
+/* 2020 — węgiel. Nie zbliża się do kamery, przechodzi skosem po tle. */
+.mg-k2020 { --d: 7.20; --t: 3.60; --w: 70vmin; --ry: 0deg; --jasnosc: .5;
+  --x0: -34vw; --y0:-24vh; --z0: -2900px; --r0:-12deg;
+  --xm:  -2vw; --ym: -4vh; --zm: -2100px; --rm: -7deg;
+  --x1:  30vw; --y1: 20vh; --z1: -1400px; --r1: -2deg; }
+
+/* 2021 — wpada z lewej krawędzi, przecina kadr, wychodzi prawą. */
+.mg-k2021 { --d: 10.10; --t: 5.00; --w: 80vmin; --ry: 26deg;
+  --x0:-140vw; --y0: 22vh; --z0: -1100px; --r0:  7deg;
+  --xm: -12vw; --ym:  3vh; --zm:  -320px; --rm:  1deg;
+  --x1:  32vw; --y1:-12vh; --z1:   620px; --r1: -6deg; }
+
+/* 2022 — z prawej-góry, w przeciwną stronę niż 2021. Mijają się. */
+.mg-k2022 { --d: 12.70; --t: 4.80; --w: 80vmin; --ry: -24deg;
+  --x0: 145vw; --y0:-26vh; --z0: -1150px; --r0: -7deg;
+  --xm:  12vw; --ym: -3vh; --zm:  -300px; --rm: -1deg;
+  --x1: -30vw; --y1: 14vh; --z1:   640px; --r1:  6deg; }
+
+/* 2023 — owal wjeżdża od dołu i wiruje. Sylwetka czyta się jak przedmiot. */
+.mg-k2023 { --d: 15.10; --t: 4.40; --w: 74vmin; --ry: 0deg;
+  --x0:  18vw; --y0:115vh; --z0: -1000px; --r0:-26deg;
+  --xm:   2vw; --ym:  8vh; --zm:  -280px; --rm: -6deg;
+  --x1: -16vw; --y1:-46vh; --z1:   660px; --r1: 18deg; }
+
+/* 2024 — z lewej-dołu, bardzo blisko obiektywu. Wychodzi w skali ~2,4×. */
+.mg-k2024 { --d: 17.30; --t: 4.20; --w: 82vmin; --ry: 30deg;
+  --x0:-130vw; --y0: 40vh; --z0: -1050px; --r0: 10deg;
+  --xm: -14vw; --ym:  4vh; --zm:  -260px; --rm:  2deg;
+  --x1:  34vw; --y1:-10vh; --z1:   700px; --r1: -7deg; }
+
+/* 2025 — najbliżej obiektywu. Krążek sklejki przechodzi tuż przy kamerze. */
+.mg-k2025 { --d: 19.30; --t: 3.80; --w: 72vmin; --ry: 0deg;
+  --x0: 120vw; --y0:-60vh; --z0:  -950px; --r0:-34deg;
+  --xm:   6vw; --ym: -4vh; --zm:  -220px; --rm:  0deg;
+  --x1: -22vw; --y1: 34vh; --z1:   740px; --r1: 44deg; }
+
+/* ─────────── finał 2026 ─────────── */
+
+.mg-k2026 {
+  --w: 78vmin;
+  animation-name: mg-final;
+  animation-duration: calc(4.0s * var(--mg-tempo));
+  animation-delay: calc(24.1s * var(--mg-tempo));
+  animation-timing-function: cubic-bezier(.18,.66,.22,1); /* połowa drogi w pierwsze
+                                                             0,9 s, reszta hamuje */
+}
+/* Cień statyczny, na <img> — rasteryzuje się raz i jedzie z transformem. */
+.mg-k2026 img { filter: drop-shadow(0 2.2vmin 3vmin rgba(0,0,0,.62)); }
+
+@keyframes mg-final {
+  0%   { transform: translate3d(-50%, -50%, -2600px) rotate(-5deg); opacity: 0; }
+  12%  { opacity: 1; }
+  100% { transform: translate3d(-50%, -50%, 0) rotate(0deg); opacity: 1; }
+}
+
+/* Po wyhamowaniu: 1,5 s bezruchu. Jedyny ruch to ledwo widoczny oddech. */
+.mg-k2026.stoi {
+  animation-name: mg-oddech;
+  animation-duration: calc(3s * var(--mg-tempo));
+  animation-delay: 0s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes mg-oddech {
+  0%, 100% { transform: translate3d(-50%, -50%, 0) scale(1); }
+  50%      { transform: translate3d(-50%, -50%, 0) scale(1.015); }
+}
+
+/* ─────────── podpis pod finałem ─────────── */
+
+#mg-podpis {
+  position: absolute;
+  left: 50%;
+  bottom: 13vh;
+  transform: translateX(-50%) translateY(1.4rem);
+  width: min(88vw, 40rem);
+  text-align: center;
+  font-size: clamp(.82rem, 3.1vw, 1.05rem);
+  line-height: 1.5;
+  letter-spacing: .05em;
+  color: rgba(241,227,200,.94);   /* czytane w parku, w słońcu — nie oszczędzamy na kontraście */
+  opacity: 0;
+  transition: opacity .6s ease, transform .6s ease;
+  pointer-events: none;
+  text-shadow: 0 .2rem 1.2rem rgba(0,0,0,.8);
+}
+#mg-podpis.widac { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─────────── sterowanie ─────────── */
+
+#mg-pomin {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 3;
+  appearance: none;
+  border: 1px solid rgba(241,227,200,.4);
+  background: rgba(10,8,7,.55);
+  color: var(--mg-kremowe);
+  font: inherit;
+  font-size: .88rem;
+  letter-spacing: .04em;
+  padding: .7rem 1.1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  min-height: 44px;              /* cel dotykowy dla ręki w parku */
+}
+#mg-pomin:hover  { background: rgba(241,227,200,.16); }
+#mg-pomin:focus-visible { outline: 3px solid var(--mg-kremowe); outline-offset: 3px; }
+
+/* Przełącznik dźwięku — pod „Pomiń intro", żeby kciuk trafiał w oba. */
+#mg-glosnik {
+  position: absolute;
+  top: calc(max(1rem, env(safe-area-inset-top)) + 3.5rem);
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 3;
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(241,227,200,.4);
+  background: rgba(10,8,7,.55);
+  color: var(--mg-kremowe);
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+#mg-glosnik svg { width: 22px; height: 22px; }
+#mg-glosnik .tuba { fill: currentColor; }
+#mg-glosnik .fale, #mg-glosnik .krzyz {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+/* aria-pressed="true" = dźwięk gra, więc widać fale, a krzyżyk jest schowany. */
+#mg-glosnik[aria-pressed="true"]  .krzyz { display: none; }
+#mg-glosnik[aria-pressed="false"] .fale  { display: none; }
+#mg-glosnik:hover { background: rgba(241,227,200,.16); }
+#mg-glosnik:focus-visible { outline: 3px solid var(--mg-kremowe); outline-offset: 3px; }
+/* Bez muzyki nie ma czego wyciszać. */
+#mg-glosnik[hidden] { display: none; }
+
+#mg-pasek {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: rgba(241,227,200,.5);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  animation: mg-pasek calc(30.3s * var(--mg-tempo)) linear both;
+  animation-play-state: paused;
+  opacity: .45;
+}
+@keyframes mg-pasek { to { transform: scaleX(1); } }
+
+/* Animacje ruszają dopiero, gdy JS doda .gra — czyli po wczytaniu
+   dwóch pierwszych grafik albo po 2,5 s, co przyjdzie pierwsze. */
+#mg-intro.gra .mg-karta,
+#mg-intro.gra #mg-poswiata,
+#mg-intro.gra #mg-pasek { animation-play-state: running; }
+
+
+/* ─────────── ograniczony ruch ─────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  #mg-intro { transition: opacity .3s ease; }
+  .mg-karta, #mg-poswiata, #mg-pasek { animation: none !important; }
+  #mg-pasek { display: none; }
+  .mg-karta:not(.mg-k2026) { opacity: 0 !important; }
+  .mg-k2026 {
+    opacity: 1 !important;
+    transform: translate3d(-50%, -50%, 0) !important;
+  }
+  #mg-podpis { transition: none; }
+}
+
 </style>
 </head>
 <body>
@@ -966,6 +1372,55 @@ header p  { color: var(--pasek-tekst-mgla); }
     <p class="podpis" id="intro-autor" hidden></p>
   </div>
   <button type="button" id="intro-pomin">Pomiń intro</button>
+</div>
+
+
+<!-- Intro z magnesami — włączane danymi: intro: { rodzaj: "magnesy" }.
+     Osobne od wstępu z księgą, bo tamten należy do Bydgoskiego i ma
+     zupełnie inną mechanikę. Grafiki i dźwięk mają puste src: kto intro
+     już widział, nie pobiera 670 kB obrazków ani 350 kB muzyki. Ścieżki
+     wpisuje JavaScript dopiero w chwili pokazania. -->
+<audio id="mg-muzyka" preload="none" playsinline></audio>
+
+<div id="mg-brama" hidden>
+  <p class="nad"></p>
+  <h1></h1>
+  <p class="lata"></p>
+  <div class="guziki">
+    <button type="button" class="glowny" id="mg-start">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z"/></svg>
+      Odtwórz intro
+    </button>
+    <button type="button" class="drugi" id="mg-start-cicho">Bez dźwięku</button>
+  </div>
+</div>
+
+<div id="mg-intro" hidden>
+  <div id="mg-poswiata"></div>
+
+  <div class="mg-scena">
+    <div class="mg-karta mg-papier mg-k2018"><img data-plik="img/magnesy/2018.webp" alt="Magnes z I Święta Chełmińskiego Przedmieścia, 2018" decoding="async"></div>
+    <div class="mg-karta mg-papier mg-k2019"><img data-plik="img/magnesy/2019.webp" alt="Magnes z II Święta, 2019" decoding="async"></div>
+    <div class="mg-karta mg-papier mg-drugi-plan mg-k2020"><img data-plik="img/magnesy/2020.webp" alt="Magnes z III Święta, 2020" decoding="async"></div>
+    <div class="mg-karta mg-papier mg-k2021"><img data-plik="img/magnesy/2021.webp" alt="Magnes z IV Święta, 2021" decoding="async"></div>
+    <div class="mg-karta mg-papier mg-k2022"><img data-plik="img/magnesy/2022.webp" alt="Magnes z V Święta, 2022" decoding="async"></div>
+    <div class="mg-karta mg-sylwetka mg-k2023"><img data-plik="img/magnesy/2023.webp" alt="Magnes z VI Święta, 2023" decoding="async"></div>
+    <div class="mg-karta mg-papier mg-k2024"><img data-plik="img/magnesy/2024.webp" alt="Magnes z VII Święta, 2024" decoding="async"></div>
+    <div class="mg-karta mg-sylwetka mg-k2025"><img data-plik="img/magnesy/2025.webp" alt="Magnes z VIII Święta, 2025" decoding="async"></div>
+    <div class="mg-karta mg-sylwetka mg-k2026" id="mg-final"><img data-plik="img/magnesy/2026.webp" alt="Magnes z IX Święta Chełmińskiego Przedmieścia, 2026" decoding="async"></div>
+  </div>
+
+  <p id="mg-podpis"></p>
+
+  <button type="button" id="mg-pomin">Pomiń intro</button>
+  <button type="button" id="mg-glosnik" hidden aria-pressed="true" aria-label="Wycisz muzykę" title="Wycisz muzykę">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path class="tuba" d="M4 9.5h3.4L12 5.4v13.2L7.4 14.5H4z"/>
+      <g class="fale"><path d="M15.4 9.2a4 4 0 0 1 0 5.6"/><path d="M17.9 6.8a7.5 7.5 0 0 1 0 10.4"/></g>
+      <path class="krzyz" d="M15.6 9.6l5 4.8M20.6 9.6l-5 4.8"/>
+    </svg>
+  </button>
+  <div id="mg-pasek"></div>
 </div>
 
 <div id="lupa" hidden>
@@ -1110,6 +1565,215 @@ header p  { color: var(--pasek-tekst-mgla); }
           wezel.addEventListener('click', naDotyk);
         }
       });
+    };
+
+    // ?intro w adresie wymusza wstęp mimo zapisanej wizyty — wygodne przy pokazach.
+    var wymuszone = /(^|[?&#])intro(=|&|$)/.test(location.search + location.hash);
+    var widziane = false;
+    try { widziane = localStorage.getItem(KLUCZ) === 'tak'; } catch (e) {}
+    if (wymuszone || !widziane) pokazIntro();
+  })();
+
+
+  /* ═══════════════ intro z magnesami ═══════════════
+     Drugi rodzaj wstępu, obok tego z księgą. Włącza go `intro.rodzaj`
+     ustawione na 'magnesy'; wstęp z księgą wymaga `intro.film`, więc oba
+     wykluczają się same, bez dodatkowych warunków.
+
+     Punkty na osi czasu w sekundach. Nagranie urywa się w 28,1 s i tam
+     właśnie ląduje finał — magnes staje w chwili, gdy muzyka milknie. */
+  (function introMagnesy() {
+    var cfg = DANE.swieto.intro;
+    var wezel = $('mg-intro'), brama = $('mg-brama');
+    if (!cfg || cfg.rodzaj !== 'magnesy' || !wezel || !brama) return;
+
+    var PODPIS = 27.3, LADOWANIE = 28.1, WYJSCIE = 29.8, WYGASZANIE = 0.5;
+
+    var KLUCZ = 'intro:' + (DANE.swieto.id || 'swieto');
+    var muzyka = $('mg-muzyka'), glosnik = $('mg-glosnik'), final = $('mg-final');
+    var podpis = $('mg-podpis');
+    var bezRuchu = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var timery = [], pokolenie = 0, dzwiek = false, zaczeloGrac = false, zrodlaGotowe = false;
+    var gotowosc = [];
+
+    /* iOS nie pozwala ustawiać volume z kodu, więc sprawdzamy raz i tam,
+       gdzie się nie da, zamiast ściszać po prostu zatrzymujemy. */
+    var mozeSciszac = (function () {
+      try {
+        muzyka.volume = 0.5;
+        var dziala = Math.abs(muzyka.volume - 0.5) < 0.01;
+        muzyka.volume = 1;
+        return dziala;
+      } catch (e) { return false; }
+    })();
+
+    /* Nic nie waży, dopóki ktoś nie zechce obejrzeć. Ścieżki wpisujemy
+       dopiero tutaj, więc powracający z zapamiętaną wizytą nie pobiera
+       ani magnesów, ani muzyki. */
+    function dociagnij() {
+      if (zrodlaGotowe) return;
+      zrodlaGotowe = true;
+      var obrazki = wezel.querySelectorAll('.mg-karta img');
+      for (var i = 0; i < obrazki.length; i++) {
+        var p = obrazki[i].getAttribute('data-plik');
+        if (p) { obrazki[i].src = p; gotowosc.push(obrazki[i]); }
+      }
+      if (cfg.muzyka) {
+        var mp4 = muzyka.canPlayType && muzyka.canPlayType('audio/mp4');
+        muzyka.src = (mp4 && cfg.muzyka.m4a) ? cfg.muzyka.m4a : cfg.muzyka.mp3;
+        muzyka.preload = 'auto';
+      }
+    }
+
+    function odblokuj() {
+      /* Musi paść w obsłudze kliknięcia, inaczej przeglądarka odmówi.
+         Gramy i od razu pauzujemy — element zostaje odblokowany na potem.
+         Strażnik, bo ta pauza jest asynchroniczna i potrafi trafić już
+         po starcie właściwego odtwarzania. */
+      try {
+        var p = muzyka.play();
+        if (p && p.then) p.then(function () { if (!zaczeloGrac) muzyka.pause(); }, function () {});
+        else if (!zaczeloGrac) muzyka.pause();
+      } catch (e) {}
+    }
+
+    /* Między play() a pierwszą realną próbką mija nawet pół sekundy —
+       bufor i dekoder, na telefonie więcej niż na laptopie. Gdyby obraz
+       ruszył od razu, finał stawałby przed urwaniem muzyki, a to jedyne
+       miejsce, które musi trafić co do klatki. */
+    function gdyDzwiekRuszy(dalej) {
+      var poszlo = false, koniec = Date.now() + 800;
+      (function sprawdz() {
+        if (poszlo) return;
+        if (muzyka.currentTime > 0 || Date.now() > koniec) { poszlo = true; dalej(); return; }
+        setTimeout(sprawdz, 16);   // nie rAF: w tle przeglądarka wstrzymuje klatki
+      })();
+    }
+
+    function przycisz(ms) {
+      if (muzyka.paused) return;
+      if (!mozeSciszac) { muzyka.pause(); return; }
+      var v0 = muzyka.volume, t0 = Date.now();
+      (function krok() {
+        var p = (Date.now() - t0) / ms;
+        if (p >= 1) { muzyka.pause(); muzyka.volume = v0; return; }
+        muzyka.volume = v0 * (1 - p);
+        requestAnimationFrame(krok);
+      })();
+    }
+
+    function posprzataj() { timery.forEach(clearTimeout); timery = []; }
+    function zaplanuj(fn, s) { timery.push(setTimeout(fn, s * 1000)); }
+
+    function zamknij() {
+      posprzataj();
+      pokolenie++;
+      try { localStorage.setItem(KLUCZ, 'tak'); } catch (e) {}
+      przycisz(WYGASZANIE * 1000);
+      wezel.classList.add('znika');
+      setTimeout(function () {
+        wezel.hidden = true;
+        wezel.classList.remove('gra');
+      }, WYGASZANIE * 1000);
+    }
+
+    function graj() {
+      posprzataj();
+      var moje = ++pokolenie;
+
+      wezel.hidden = false;
+      wezel.classList.remove('znika', 'gra');
+      final.classList.remove('stoi');
+      podpis.classList.remove('widac');
+      void wezel.offsetWidth;          // wymuszony reflow, żeby animacje ruszyły od zera
+
+      if (bezRuchu) {
+        podpis.classList.add('widac');
+        zaplanuj(zamknij, 1.2);
+        return;
+      }
+
+      function ruszObraz() {
+        if (moje !== pokolenie) return;
+        wezel.classList.add('gra');
+        zaplanuj(function () { podpis.classList.add('widac'); }, PODPIS);
+        zaplanuj(function () { final.classList.add('stoi'); }, LADOWANIE);
+        zaplanuj(zamknij, WYJSCIE);
+      }
+
+      if (dzwiek) {
+        zaczeloGrac = true;
+        try {
+          muzyka.currentTime = 0;
+          muzyka.volume = 1;
+          var p = muzyka.play();
+          if (p && p.catch) p.catch(function () {});
+        } catch (e) {}
+        gdyDzwiekRuszy(ruszObraz);
+      } else {
+        try { muzyka.pause(); } catch (e) {}
+        ruszObraz();
+      }
+    }
+
+    function zamknijBrame() {
+      brama.classList.add('znika');
+      setTimeout(function () { brama.hidden = true; }, 450);
+    }
+
+    /* Dekodowanie dziewięciu magnesów potrafi zająć wątek główny na ponad
+       sekundę i zagłodzić każdą pętlę, która pilnuje startu. Puszczamy więc
+       obraz dopiero, gdy dwa pierwsze są rozpakowane — reszta ma czas, bo
+       trzeci wchodzi dopiero w 7,2 sekundzie. Limit, żeby zacięty dekoder
+       nie zablokował wejścia na mapę. */
+    function gdyObrazkiGotowe(dalej) {
+      var poszlo = false;
+      function ruszaj() { if (!poszlo) { poszlo = true; dalej(); } }
+      setTimeout(ruszaj, 1500);
+      var dwa = gotowosc.slice(0, 2).map(function (i) {
+        return i.decode ? i.decode()['catch'](function () {}) : Promise.resolve();
+      });
+      Promise.all(dwa).then(ruszaj, ruszaj);
+    }
+
+    function zacznij(zDzwiekiem) {
+      dzwiek = zDzwiekiem;
+      glosnik.hidden = !zDzwiekiem;
+      if (zDzwiekiem) odblokuj();
+      zamknijBrame();
+      gdyObrazkiGotowe(graj);
+    }
+
+    $('mg-start').addEventListener('click', function () { zacznij(true); });
+    $('mg-start-cicho').addEventListener('click', function () { zacznij(false); });
+    $('mg-pomin').addEventListener('click', zamknij);
+
+    glosnik.addEventListener('click', function () {
+      muzyka.muted = !muzyka.muted;
+      glosnik.setAttribute('aria-pressed', String(!muzyka.muted));
+      var opis = muzyka.muted ? 'Włącz muzykę' : 'Wycisz muzykę';
+      glosnik.setAttribute('aria-label', opis);
+      glosnik.title = opis;
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (!wezel.hidden && e.key === 'Escape') zamknij();
+    });
+
+    /* Odpalane przy pierwszej wizycie i ponownie z przycisku w nagłówku. */
+    pokazIntro = function () {
+      dociagnij();
+      posprzataj();
+      wezel.hidden = true;
+      wezel.classList.remove('znika', 'gra');
+      brama.querySelector('.nad').textContent = DANE.swieto.nazwa || '';
+      brama.querySelector('h1').textContent = cfg.naglowek || '';
+      brama.querySelector('.lata').textContent = cfg.lata || '';
+      podpis.textContent = cfg.podpis || '';
+      brama.hidden = false;
+      brama.classList.remove('znika');
+      $('mg-start').focus();
     };
 
     // ?intro w adresie wymusza wstęp mimo zapisanej wizyty — wygodne przy pokazach.

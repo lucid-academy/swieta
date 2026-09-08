@@ -113,8 +113,23 @@ window.DANE = {
     /* ETAP 2 — geometria i proporcje mapy. */
     mapa: { plik: null, szerokosc: null, wysokosc: null },
 
-    /* Intro świadomie usunięte — to święto nie ma własnego wstępu,
-       a brak pola `intro` wyłącza je w całości. */
+    /* Intro: przelot kamery przez dziewięć edycji, z muzyką. Magnesy bierze
+       z img/magnesy/ — tego samego zestawu, co sekcja pamięci, więc obrazki
+       nie jadą na serwer dwa razy.
+
+       Ścieżki dźwięku muszą stać tutaj w całości. Publikacja kopiuje to, do
+       czego dane odwołują się wprost; gdyby powstawały w przeglądarce ze
+       sklejania nazw, na stronę pojechałoby nieme intro.
+
+       Wstęp z księgą (Bydgoskie) wymaga pola `film`, ten wymaga `rodzaj`,
+       więc oba wykluczają się same. */
+    intro: {
+      rodzaj: 'magnesy',
+      naglowek: 'Dziewięć lat wspólnej tradycji',
+      lata: '2018 — 2026',
+      podpis: '13 września 2026 · park przy Toruńskich Wodociągach',
+      muzyka: { m4a: 'dzwiek/intro.m4a', mp3: 'dzwiek/intro.mp3' }
+    },
 
     /* Ten sam licznik co Bydgoskie — jedna witryna GoatCountera na obie mapy.
        `domeny` jest listą, nie pojedynczym wpisem: gdy nazwa hosta się nie
