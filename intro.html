@@ -4,21 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Intro — IX Święto Chełmińskiego Przedmieścia</title>
-<meta name="description" content="Dziewięć edycji Święta Chełmińskiego Przedmieścia w jednym przelocie: magnesy pamiątkowe z lat 2018-2026.">
+<meta name="description" content="Dziewięć lat wspólnej tradycji: magnesy pamiątkowe Święta Chełmińskiego Przedmieścia z lat 2018-2026.">
 
 <!-- Strona jest do wysłania linkiem, nie do wyszukiwarki. -->
 <meta name="robots" content="noindex">
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="IX Święto Chełmińskiego Przedmieścia">
-<meta property="og:description" content="13 września 2026, park przy Toruńskich Wodociągach. Dziewięć edycji w jednym przelocie.">
+<meta property="og:description" content="13 września 2026, park przy Toruńskich Wodociągach. Dziewięć lat wspólnej tradycji.">
 <meta property="og:image" content="https://lucid-academy.github.io/swieta/img/intro-podglad.jpg">
 <meta property="og:url" content="https://lucid-academy.github.io/swieta/intro.html">
 <meta name="twitter:card" content="summary_large_image">
 
 <!-- Krytyczna ścieżka: dwie pierwsze grafiki i finał. Reszta dociąga się
      w tle, w trakcie grania intra — pierwsza z nich jest potrzebna dopiero
-     w 3,4 sekundzie. -->
+     w 7,2 sekundzie. -->
 <link rel="preload" as="image" href="img/magnesy/2018.webp" fetchpriority="high">
 <link rel="preload" as="image" href="img/magnesy/2019.webp" fetchpriority="high">
 <link rel="preload" as="image" href="img/magnesy/2026.webp">
@@ -129,6 +129,75 @@ html, body {
   outline: 3px solid var(--kremowe); outline-offset: 3px;
 }
 
+/* ─────────── bramka startowa ─────────── */
+/* Leży nad intrem, znika po kliknięciu. Póki stoi, grafiki dociągają się
+   w tle, więc czekanie na decyzję człowieka jest jednocześnie buforem. */
+
+#brama {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: .5rem;
+  text-align: center;
+  padding: 2rem;
+  background:
+    radial-gradient(130% 100% at 50% 45%, #241b16 0%, #120e0c 48%, #060404 100%);
+  transition: opacity .45s ease;
+}
+#brama.znika { opacity: 0; pointer-events: none; }
+#brama[hidden] { display: none; }
+
+#brama .nad {
+  margin: 0;
+  font-size: clamp(.72rem, 2.9vw, .84rem);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(241,227,200,.6);
+}
+#brama h1 {
+  margin: .3rem 0 0;
+  font-size: clamp(1.5rem, 6.4vw, 2.5rem);
+  font-weight: 400;
+  line-height: 1.22;
+}
+#brama .lata {
+  margin: .1rem 0 1.4rem;
+  font-size: clamp(.84rem, 3.2vw, .98rem);
+  letter-spacing: .3em;
+  color: rgba(241,227,200,.5);
+}
+#brama .guziki { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; }
+#brama button {
+  appearance: none;
+  font: inherit;
+  font-size: .95rem;
+  letter-spacing: .03em;
+  padding: .85rem 1.5rem;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+#brama .glowny {
+  background: var(--kremowe);
+  color: #16110d;
+  border: 1px solid var(--kremowe);
+}
+#brama .glowny svg { width: 17px; height: 17px; fill: currentColor; }
+#brama .glowny:hover { background: #fff6e6; }
+#brama .drugi {
+  background: transparent;
+  color: var(--kremowe);
+  border: 1px solid rgba(241,227,200,.42);
+}
+#brama .drugi:hover { background: rgba(241,227,200,.14); }
+#brama button:focus-visible { outline: 3px solid var(--kremowe); outline-offset: 3px; }
+
 /* ─────────── nakładka intra ─────────── */
 
 #intro {
@@ -152,7 +221,7 @@ html, body {
   pointer-events: none;
   background: radial-gradient(50% 50% at 50% 50%, rgba(241,227,200,.14), transparent 70%);
   opacity: 0;
-  animation: poswiata calc(13.4s * var(--tempo)) ease-in-out both;
+  animation: poswiata calc(30.3s * var(--tempo)) ease-in-out both;
   animation-play-state: paused;
 }
 @keyframes poswiata {
@@ -242,50 +311,50 @@ html, body {
    Skala na ekranie = 1200 / (1200 − z).
    z = −2800 → 0,30    z = −200 → 0,86    z = 0 → 1,00    z = +700 → 2,40   */
 
-/* 2018 — z głębi, mija kamerę górą-prawo. 1,5 s całkiem sam w kadrze. */
-.k2018 { --d: .45; --t: 3.40; --w: 84vmin; --ry: 16deg;
+/* 2018 — z głębi, mija kamerę górą-prawo. 3,4 s całkiem sam w kadrze. */
+.k2018 { --d: 0.60; --t: 5.60; --w: 84vmin; --ry: 16deg;
   --x0: -10vw; --y0:  6vh; --z0: -2800px; --r0: -8deg;
   --xm:   2vw; --ym:  0vh; --zm:  -150px; --rm: -2deg;
   --x1:  32vw; --y1:-16vh; --z1:   620px; --r1:  4deg; }
 
 /* 2019 — lustrzanie: wylot dołem-lewo. Pierwsze skrzyżowanie torów. */
-.k2019 { --d: 2.00; --t: 3.20; --w: 84vmin; --ry: -18deg;
+.k2019 { --d: 4.00; --t: 5.40; --w: 84vmin; --ry: -18deg;
   --x0:  11vw; --y0: -7vh; --z0: -2900px; --r0:  9deg;
   --xm:  -3vw; --ym:  0vh; --zm:  -190px; --rm:  2deg;
   --x1: -32vw; --y1: 17vh; --z1:   600px; --r1: -5deg; }
 
 /* 2020 — węgiel. Nie zbliża się do kamery, przechodzi skosem po tle. */
-.k2020 { --d: 3.40; --t: 2.30; --w: 70vmin; --ry: 0deg; --jasnosc: .5;
+.k2020 { --d: 7.20; --t: 3.60; --w: 70vmin; --ry: 0deg; --jasnosc: .5;
   --x0: -34vw; --y0:-24vh; --z0: -2900px; --r0:-12deg;
   --xm:  -2vw; --ym: -4vh; --zm: -2100px; --rm: -7deg;
   --x1:  30vw; --y1: 20vh; --z1: -1400px; --r1: -2deg; }
 
 /* 2021 — wpada z lewej krawędzi, przecina kadr, wychodzi prawą. */
-.k2021 { --d: 4.60; --t: 2.40; --w: 80vmin; --ry: 26deg;
+.k2021 { --d: 10.10; --t: 5.00; --w: 80vmin; --ry: 26deg;
   --x0:-140vw; --y0: 22vh; --z0: -1100px; --r0:  7deg;
   --xm: -12vw; --ym:  3vh; --zm:  -320px; --rm:  1deg;
   --x1:  32vw; --y1:-12vh; --z1:   620px; --r1: -6deg; }
 
 /* 2022 — z prawej-góry, w przeciwną stronę niż 2021. Mijają się. */
-.k2022 { --d: 5.65; --t: 2.00; --w: 80vmin; --ry: -24deg;
+.k2022 { --d: 12.70; --t: 4.80; --w: 80vmin; --ry: -24deg;
   --x0: 145vw; --y0:-26vh; --z0: -1150px; --r0: -7deg;
   --xm:  12vw; --ym: -3vh; --zm:  -300px; --rm: -1deg;
   --x1: -30vw; --y1: 14vh; --z1:   640px; --r1:  6deg; }
 
 /* 2023 — owal wjeżdża od dołu i wiruje. Sylwetka czyta się jak przedmiot. */
-.k2023 { --d: 6.60; --t: 1.70; --w: 74vmin; --ry: 0deg;
+.k2023 { --d: 15.10; --t: 4.40; --w: 74vmin; --ry: 0deg;
   --x0:  18vw; --y0:115vh; --z0: -1000px; --r0:-26deg;
   --xm:   2vw; --ym:  8vh; --zm:  -280px; --rm: -6deg;
   --x1: -16vw; --y1:-46vh; --z1:   660px; --r1: 18deg; }
 
 /* 2024 — z lewej-dołu, bardzo blisko obiektywu. Wychodzi w skali ~2,4×. */
-.k2024 { --d: 7.45; --t: 1.45; --w: 82vmin; --ry: 30deg;
+.k2024 { --d: 17.30; --t: 4.20; --w: 82vmin; --ry: 30deg;
   --x0:-130vw; --y0: 40vh; --z0: -1050px; --r0: 10deg;
   --xm: -14vw; --ym:  4vh; --zm:  -260px; --rm:  2deg;
   --x1:  34vw; --y1:-10vh; --z1:   700px; --r1: -7deg; }
 
-/* 2025 — najszybszy. Krążek sklejki rzucony w kamerę, granica czytelności. */
-.k2025 { --d: 8.20; --t: 1.20; --w: 72vmin; --ry: 0deg;
+/* 2025 — najbliżej obiektywu. Krążek sklejki przechodzi tuż przy kamerze. */
+.k2025 { --d: 19.30; --t: 3.80; --w: 72vmin; --ry: 0deg;
   --x0: 120vw; --y0:-60vh; --z0:  -950px; --r0:-34deg;
   --xm:   6vw; --ym: -4vh; --zm:  -220px; --rm:  0deg;
   --x1: -22vw; --y1: 34vh; --z1:   740px; --r1: 44deg; }
@@ -295,10 +364,10 @@ html, body {
 .k2026 {
   --w: 78vmin;
   animation-name: final;
-  animation-duration: calc(1.6s * var(--tempo));
-  animation-delay: calc(9.8s * var(--tempo));
-  animation-timing-function: cubic-bezier(.13,.75,.16,1); /* 60% drogi w pierwsze
-                                                             0,5 s, reszta wolno */
+  animation-duration: calc(4.0s * var(--tempo));
+  animation-delay: calc(24.1s * var(--tempo));
+  animation-timing-function: cubic-bezier(.18,.66,.22,1); /* połowa drogi w pierwsze
+                                                             0,9 s, reszta hamuje */
 }
 /* Cień statyczny, na <img> — rasteryzuje się raz i jedzie z transformem. */
 .k2026 img { filter: drop-shadow(0 2.2vmin 3vmin rgba(0,0,0,.62)); }
@@ -365,6 +434,40 @@ html, body {
 #pomin:hover  { background: rgba(241,227,200,.16); }
 #pomin:focus-visible { outline: 3px solid var(--kremowe); outline-offset: 3px; }
 
+/* Przełącznik dźwięku — pod „Pomiń intro", żeby kciuk trafiał w oba. */
+#glosnik {
+  position: absolute;
+  top: calc(max(1rem, env(safe-area-inset-top)) + 3.5rem);
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 3;
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(241,227,200,.4);
+  background: rgba(10,8,7,.55);
+  color: var(--kremowe);
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+#glosnik svg { width: 22px; height: 22px; }
+#glosnik .tuba { fill: currentColor; }
+#glosnik .fale, #glosnik .krzyz {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+/* aria-pressed="true" = dźwięk gra, więc widać fale, a krzyżyk jest schowany. */
+#glosnik[aria-pressed="true"]  .krzyz { display: none; }
+#glosnik[aria-pressed="false"] .fale  { display: none; }
+#glosnik:hover { background: rgba(241,227,200,.16); }
+#glosnik:focus-visible { outline: 3px solid var(--kremowe); outline-offset: 3px; }
+/* Bez muzyki nie ma czego wyciszać. */
+#glosnik[hidden] { display: none; }
+
 #pasek {
   position: absolute;
   left: 0; right: 0; bottom: 0;
@@ -372,7 +475,7 @@ html, body {
   background: rgba(241,227,200,.5);
   transform-origin: 0 50%;
   transform: scaleX(0);
-  animation: pasek calc(13.4s * var(--tempo)) linear both;
+  animation: pasek calc(30.3s * var(--tempo)) linear both;
   animation-play-state: paused;
   opacity: .45;
 }
@@ -433,6 +536,30 @@ html, body {
 </head>
 <body>
 
+<!-- Muzyka. Dwa formaty, bo AAC jest lżejszy, a MP3 nie odmówi nigdzie.
+     Fragment 4,00-32,50 s utworu, wycięty w tools/muzyka-intro.sh. -->
+<audio id="muzyka" preload="auto" playsinline>
+  <source src="dzwiek/intro.m4a" type="audio/mp4">
+  <source src="dzwiek/intro.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Bramka startowa.
+     Nie jest ozdobą: przeglądarki blokują dźwięk, dopóki człowiek czegoś
+     nie dotknie, więc bez tego kliknięcia intro leciałoby po cichu. Przy
+     okazji daje wybór od razu — w parku nie każdy chce, żeby zagrało. -->
+<div id="brama">
+  <p class="nad">Święto Chełmińskiego Przedmieścia</p>
+  <h1>Dziewięć lat<br>wspólnej tradycji</h1>
+  <p class="lata">2018 — 2026</p>
+  <div class="guziki">
+    <button type="button" class="glowny" id="start">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z"/></svg>
+      Odtwórz intro
+    </button>
+    <button type="button" class="drugi" id="start-cicho">Bez dźwięku</button>
+  </div>
+</div>
+
 <!-- Karta pod intrem. Ładuje się równolegle, intro jej nie blokuje. -->
 <div id="pod-spodem">
   <h1>IX Święto Chełmińskiego Przedmieścia</h1>
@@ -461,6 +588,13 @@ html, body {
   <p id="podpis">13 września 2026 · park przy Toruńskich Wodociągach</p>
 
   <button type="button" id="pomin">Pomiń intro</button>
+  <button type="button" id="glosnik" hidden aria-pressed="true" aria-label="Wycisz muzykę" title="Wycisz muzykę">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path class="tuba" d="M4 9.5h3.4L12 5.4v13.2L7.4 14.5H4z"/>
+      <g class="fale"><path d="M15.4 9.2a4 4 0 0 1 0 5.6"/><path d="M17.9 6.8a7.5 7.5 0 0 1 0 10.4"/></g>
+      <path class="krzyz" d="M15.6 9.6l5 4.8M20.6 9.6l-5 4.8"/>
+    </svg>
+  </button>
   <div id="pasek"></div>
 
   <!-- Widoczne tylko przy ?rytm — patrz komentarz przy #panel w stylach. -->
@@ -479,15 +613,18 @@ html, body {
   var final   = document.getElementById('final');
   var podpis  = document.getElementById('podpis');
   var zegar   = document.getElementById('zegar');
+  var muzyka  = document.getElementById('muzyka');
+  var brama   = document.getElementById('brama');
+  var glosnik = document.getElementById('glosnik');
 
   /* Punkty na osi czasu, w sekundach przy tempie 1×.
      PODPIS    — data wchodzi jeszcze w trakcie hamowania, żeby dało się ją
                  przeczytać: pauza trwa 1,5 s, a sam fade zjada 0,6 s.
      LADOWANIE — finał dojechał na środek i staje.
      WYJSCIE   — start wygaszenia do mapy. */
-  var PODPIS    = 10.9;
-  var LADOWANIE = 11.4;
-  var WYJSCIE   = 12.9;
+  var PODPIS    = 27.3;
+  var LADOWANIE = 28.1;
+  var WYJSCIE   = 29.8;
   var WYGASZANIE = 0.5;
 
   var malyRuch = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -501,6 +638,81 @@ html, body {
   var timery = [];
   var start = 0;
   var klatka = 0;
+  var pokolenie = 0;              /* numer bieżącego odtworzenia */
+
+  /* ─────────── muzyka ───────────
+     Fragment 4,00-32,50 s utworu. Sekcja urywa się w 32,1 s, czyli
+     w 28,1 s nagrania — dokładnie wtedy finał staje na środku kadru.
+     Ostatnie 1,3 s intra magnes stoi już w ciszy.
+
+     iOS nie pozwala ustawiać volume z kodu, więc sprawdzamy to raz
+     i tam, gdzie się nie da, zamiast ściszać po prostu zatrzymujemy. */
+  var dzwiek = true;
+  var mozeSciszac = (function () {
+    try {
+      muzyka.volume = 0.5;
+      var dziala = Math.abs(muzyka.volume - 0.5) < 0.01;
+      muzyka.volume = 1;
+      return dziala;
+    } catch (e) { return false; }
+  })();
+
+  /* Strażnik wyścigu: odblokowanie pauzuje asynchronicznie, więc gdy
+     grafiki są już w pamięci i intro rusza w tym samym ticku, pauza
+     potrafi trafić PO starcie odtwarzania i uciszyć wszystko. */
+  var zaczeloGrac = false;
+
+  function odblokuj() {
+    /* Musi paść w obsłudze kliknięcia, inaczej przeglądarka odmówi.
+       Gramy i od razu pauzujemy — element zostaje odblokowany na potem. */
+    try {
+      var p = muzyka.play();
+      if (p && p.then) p.then(function () { if (!zaczeloGrac) muzyka.pause(); }, function () {});
+      else if (!zaczeloGrac) muzyka.pause();
+    } catch (e) {}
+  }
+
+  function zagrajMuzyke() {
+    if (!dzwiek) return;
+    zaczeloGrac = true;
+    try {
+      muzyka.currentTime = 0;
+      muzyka.volume = 1;
+      var p = muzyka.play();
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  }
+
+  /* Między play() a pierwszą realną próbką mija nawet pół sekundy — bufor
+     i dekoder, na telefonie więcej niż na laptopie. Gdyby obraz ruszył od
+     razu, finał stawałby przed urwaniem muzyki, a to jedyny moment, który
+     naprawdę musi trafić co do klatki. Czekamy więc, aż nagranie ruszy;
+     currentTime drgnie dopiero przy prawdziwym odtwarzaniu. */
+  function gdyDzwiekRuszy(dalej) {
+    var poszlo = false;
+    var koniec = performance.now() + 800;   /* gdyby dźwięk nie wstał wcale */
+    (function sprawdz() {
+      if (poszlo) return;
+      if (muzyka.currentTime > 0 || performance.now() > koniec) {
+        poszlo = true;
+        dalej();
+        return;
+      }
+      requestAnimationFrame(sprawdz);
+    })();
+  }
+
+  function przyciszMuzyke(ms) {
+    if (muzyka.paused) return;
+    if (!mozeSciszac) { muzyka.pause(); return; }
+    var v0 = muzyka.volume, t0 = performance.now();
+    (function krok() {
+      var p = (performance.now() - t0) / ms;
+      if (p >= 1) { muzyka.pause(); muzyka.volume = v0; return; }
+      muzyka.volume = v0 * (1 - p);
+      requestAnimationFrame(krok);
+    })();
+  }
 
   function tempo() {
     return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tempo')) || 1;
@@ -523,6 +735,9 @@ html, body {
 
   function zakoncz() {
     posprzataj();
+    /* Przy naturalnym końcu muzyki już nie ma — to fade dla „Pomiń intro”,
+       gdzie ucięcie w połowie taktu byłoby brutalne. */
+    przyciszMuzyke(WYGASZANIE * 1000);
     intro.classList.add('znika');
     setTimeout(function () { intro.hidden = true; }, WYGASZANIE * 1000);
   }
@@ -545,12 +760,26 @@ html, body {
     }
 
     var t = tempo();
-    if (rytm) { start = performance.now(); tykaj(); }
+    var moje = ++pokolenie;
 
-    intro.classList.add('gra');
-    zaplanuj(function () { podpis.classList.add('widac'); }, PODPIS * t);
-    zaplanuj(function () { final.classList.add('stoi'); }, LADOWANIE * t);
-    zaplanuj(zakoncz, WYJSCIE * t);
+    function ruszObraz() {
+      if (moje !== pokolenie) return;      /* ktoś w międzyczasie puścił od nowa */
+      if (rytm) { start = performance.now(); tykaj(); }
+      intro.classList.add('gra');
+      zaplanuj(function () { podpis.classList.add('widac'); }, PODPIS * t);
+      zaplanuj(function () { final.classList.add('stoi'); }, LADOWANIE * t);
+      zaplanuj(zakoncz, WYJSCIE * t);
+    }
+
+    /* Przy zmienionym tempie obraz i nagranie rozjeżdżają się, a zmiana
+       playbackRate przestraja utwór. W trybie oceny rytmu gra sam obraz. */
+    if (t === 1 && dzwiek) {
+      zagrajMuzyke();
+      gdyDzwiekRuszy(ruszObraz);
+    } else {
+      muzyka.pause();
+      ruszObraz();
+    }
   }
 
   /* Start: czekamy na dwie pierwsze grafiki, ale nie dłużej niż 2,5 s.
@@ -566,6 +795,35 @@ html, body {
       return i.decode ? i.decode().catch(function () {}) : Promise.resolve();
     })).then(ruszaj);
   }
+
+  /* ─────────── bramka ─────────── */
+
+  function zamknijBrame() {
+    brama.classList.add('znika');
+    setTimeout(function () { brama.hidden = true; }, 450);
+  }
+
+  /* Kliknięcie jest jedynym momentem, w którym wolno odblokować dźwięk,
+     więc odblokowujemy od razu, a gramy dopiero gdy grafiki są gotowe.
+     Limit 1,2 s, bo dwie pierwsze i tak wisiały w preload od startu. */
+  function zacznij(zDzwiekiem) {
+    dzwiek = zDzwiekiem;
+    glosnik.hidden = !zDzwiekiem;
+    if (zDzwiekiem) odblokuj();
+    zamknijBrame();
+    gdyGotowe(['img/magnesy/2018.webp', 'img/magnesy/2019.webp'], 1200, graj);
+  }
+
+  document.getElementById('start').addEventListener('click', function () { zacznij(true); });
+  document.getElementById('start-cicho').addEventListener('click', function () { zacznij(false); });
+
+  glosnik.addEventListener('click', function () {
+    muzyka.muted = !muzyka.muted;
+    glosnik.setAttribute('aria-pressed', String(!muzyka.muted));
+    var opis = muzyka.muted ? 'Włącz muzykę' : 'Wycisz muzykę';
+    glosnik.setAttribute('aria-label', opis);
+    glosnik.title = opis;
+  });
 
   document.getElementById('pomin').addEventListener('click', zakoncz);
   document.getElementById('znowu').addEventListener('click', graj);
@@ -584,7 +842,14 @@ html, body {
     if (e.key === 'Escape' && !intro.hidden) zakoncz();
   });
 
-  gdyGotowe(['img/magnesy/2018.webp', 'img/magnesy/2019.webp'], 2500, graj);
+  /* Kto prosił o mniej ruchu, dostaje sam finał i bez bramki — nie ma po co
+     pytać o dźwięk do animacji, która trwa sekundę. */
+  if (malyRuch) {
+    dzwiek = false;
+    glosnik.hidden = true;
+    brama.hidden = true;
+    graj();
+  }
 })();
 </script>
 </body>
