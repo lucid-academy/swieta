@@ -169,6 +169,11 @@ header p { margin: 0; font-size: .74rem; color: var(--tusz-jasny); }
   border-radius: 6px; font-size: .82rem; text-decoration: none;
 }
 #promo .sluchaj svg { width: 15px; height: 15px; fill: currentColor; }
+/* Bez tego zegar sceny nie umie schować „Posłuchaj”: wbudowane
+   [hidden] { display: none } przegrywa swoistością z regułą wyżej,
+   więc przycisk zostawał na pasku i obiecywał, że da się posłuchać
+   uroczystego przywitania. */
+#promo .sluchaj[hidden] { display: none; }
 #promo .zwin {
   flex: none; width: 34px; height: 40px; background: none; border: 0;
   cursor: pointer; color: var(--tusz-mgla); font-size: 1.1rem; line-height: 1;
