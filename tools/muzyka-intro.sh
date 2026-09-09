@@ -10,6 +10,10 @@
 # zestrojone z tym drugim punktem — finał 2026 staje na środku kadru
 # dokładnie wtedy, gdy muzyka milknie, i ostatnie 1,3 s magnes stoi w ciszy.
 #
+# Pochodzenie: utwór wygenerowany przez AI, Piotr potwierdził 9 września
+# 2026, że można go używać publicznie. Strona jest otwarta, więc gdyby
+# ścieżka kiedyś się zmieniała, to jest miejsce na tę samą notatkę.
+#
 # Dwa formaty, bo AAC jest o połowę lżejszy, a MP3 nie odmówi nigdzie.
 set -euo pipefail
 
